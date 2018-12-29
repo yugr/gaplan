@@ -5,8 +5,8 @@ analyzing [Gaperton's](http://gaperton.livejournal.com)
 (aka Vlad Balin's) *declarative plans*.
 
 It supports plan analysis (mainly checking for common mistakes)
-and generation of various artifacts (PERT charts,
-TaskJuggler plans and burndown charts).
+and generation of various artifacts (e.g PERT diagrams,
+[TaskJuggler](http://taskjuggler.org/) plans and burndown charts).
 
 This is very much a work-in-progress, driven by my own planning needs.
 I'm happy to improve the tool so ping me if you consider using it.
@@ -17,9 +17,9 @@ Declarative planning is a goal-based approach to building plans,
 backed up with an easy-to-use notation for writing them down.
 
 Declarative plannig can be roughly described as building projects
-activity-on-edges [PERT-charts](https://en.wikipedia.org/wiki/Program_evaluation_and_review_technique)
-with focus to well-defined *events* (called *goals*) rather than activities.
-Goals are defined by their accomplishment criteria.
+activity-on-edges [PERT diagrams](https://en.wikipedia.org/wiki/Program_evaluation_and_review_technique)
+with focus on well-defined *events* (called *goals*) rather than activities.
+Goals are defined through their accomplishment criteria.
 Declarative plans are often called *goal maps* (probably to pun on
 Alistair Cockburn's *project maps*).
 
@@ -30,13 +30,12 @@ Declarative plans are
 
 For more information on declarative planning see
 [Vlad's presentation on SoftwarePeople 2009](http://www.slideshare.net/gaperton/auftragsplanning-pre-final-1479467)
-or his numerous blogposts:
+or his numerous blogposts (sadly all in Russian):
 * [Как составлять планы, или "декларативное планирование"](http://gaperton.livejournal.com/16087.html)
 * [Инструмент планирования - notepad](http://gaperton.livejournal.com/56976.html)
 * [Инструмент планирования - notepad (2)](http://gaperton.livejournal.com/57204.html)
 * [Аннотация к моему докладу на SoftwarePeople](http://gaperton.livejournal.com/32051.html)
 * [Комментарий к "декларативному планированию"](http://gaperton.livejournal.com/32427.html)
-(sadly all in Russian...).
 
 # How to use
 
@@ -44,6 +43,7 @@ or his numerous blogposts:
 ```
 $ python3 -mpip install
 ```
+in `gaplan`'s folder.
 
 For tooltips, download [wz_tooltip.js](http://www.walterzorn.de/en/tooltip/tooltip_e.htm) to `scripts/` subfolder
 (note that it's distributed under LGPL).
@@ -84,10 +84,27 @@ For additional details run
 $ python3 -mgaplan --help
 ```
 
-# Extensions to original notations
+# Notation
 
-Declarative planning notation has been extended with additional features which turned out to be useful in practice:
-* Tool tries to infer a hierarchical connections between tasks (i.e. WBS) as they allow to produce more readable plans for TaskJuggler.
+The core of the syntax is Vlad's text notation for graphs:
+```
+|Ready for NY celebration
+|<-
+   |Bought food
+   |[X] Bread
+   |[] Cheese
+   |<-
+      |Bought alcohol
+      |[] Wine
+      |[] Vodka
+|<-
+   |Invited friends
+   |[] Alex
+   |[] Max
+```
+
+It has been extended with additional features which turned out to be useful in practice:
+* Tool tries to infer a hierarchical connections between tasks (i.e. [WBS](https://en.wikipedia.org/wiki/Work_breakdown_structure)) as they allow to produce more readable plans for TaskJuggler.
 ```
 # A hierarchy of 3 nested goals
 |Quality requirements fullfilled
@@ -105,11 +122,9 @@ Declarative planning notation has been extended with additional features which t
 # Goal has to be reached by the end of November, has max risk and priority and has to be scheduled in first iteration
 |Symbol visibility in TZ 3.0 reduced  // deadline 2016-11-30, !3, ?3, I0
 ```
-* In addition to normal dependencies (`|<-`, `|->`) tools supports _global dependencies_ (`|<=`, `|=>`). Globality causes all hierarchical children of a goal to depend of RHS. It's useful for splitting plan into disjoint phases, where depending phase can not start until it's global dependency completes. This is an experimental feature.
+* In addition to normal dependencies (`|<-`, `|->`) tools supports _global dependencies_ (`|<=`, `|=>`). Globality causes all hierarchical children of a goal to depend of RHS. It's useful for splitting plan into disjoint phases, where task in depending phase can not start until their global dependency completes. This is an experimental feature.
 
-# Syntax
-
-The core of the syntax is Vlad's graph notation.
+# Attributes
 
 Goals can be annotated with special *attributes* listed in table below.
 
@@ -181,9 +196,10 @@ $ pytest gaplan
 
 # TODO
 
-* Describe tracking info (actual efforts and durations, Jira tasks, etc.).
 * Add example project plan.
 * Add (many) more unittests.
+* Mark time or risk-critical paths in PERT diagram.
+* Describe tracking info (actual efforts and durations, Jira tasks, etc.).
 * Test on Windows, Linux and Cygwin.
 * Fix remaining TODO and FIXME.
 * Implement export to MS Project.
