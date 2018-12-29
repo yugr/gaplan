@@ -7,8 +7,6 @@
 
 import subprocess
 import io
-import sys
-import os
 
 from gaplan.common.error import error, warn
 from gaplan.common import printers as PR
@@ -54,7 +52,7 @@ def export(net, dump=False):
   p = PR.SourcePrinter(io.StringIO())
 
   p.writeln('digraph G {')
-  with p as p:
+  with p:
     p.write('''\
 #graph [rankdir = LR, splines = ortho]
 #graph [rankdir = LR, concentrate = true]

@@ -100,14 +100,16 @@ Examples:
 
   good_actions = ['dump', 'tj', 'msp', 'pert', 'burn', 'burndown']
   if args.action not in good_actions:
-    error("unknown action: %s (supported actions are %s)" % (args.action, ', '.join(good_actions)))
+    error("unknown action: %s (supported actions are %s)"
+          % (args.action, ', '.join(good_actions)))
 
   if args.iter is not None and args.action != 'burn':
     error("--iter/-i is only implemented for burndown charts right now")
 
   good_biases = ['none', 'pessimist', 'optimist']
   if args.bias not in good_biases:
-    error("unknown bias: %s (supported biases are %s)" % (args.bias,', '.join(good_biases)))
+    error("unknown bias: %s (supported biases are %s)"
+          % (args.bias, ', '.join(good_biases)))
   ETA.set_options(estimate_bias=args.bias)
 
   if args.plan is None:
@@ -130,10 +132,10 @@ Examples:
     for name in args.only.split(';'):
       if name not in net.name_to_goal:
         error("goal '%s' not present in plan" % name)
-      roots.append(net.name_to_goal[g])
+      roots.append(net.name_to_goal[name])
     goals = set()
-    G.visit_goals( roots, callback=lambda g: goals.add(g.name), succs=False)
-    net.filter(goals)
+    G.visit_goals(roots, callback=lambda g: goals.add(g.name), succs=False)
+    net.filter(goals, args.W)
 
   if args.action == 'tj':
     tj.export(net, args.dump)

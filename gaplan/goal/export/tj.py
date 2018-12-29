@@ -14,6 +14,7 @@ import re
 
 from gaplan.common.error import error, error_loc
 from gaplan.common import printers as PR
+from gaplan.common import platform
 
 time_format = '%Y-%m-%d'
 
@@ -80,7 +81,7 @@ def _massage_name(name):
 
 def _print_activity(p, act, id, abs_ids, name, complete, all_alloc):
   p.writeln('task %s "%s" {' % (id, _massage_name(name)))
-  with p as p:
+  with p:
     _print_activity_body(p, act, abs_ids, complete, all_alloc)
   p.writeln('}')
 
@@ -220,7 +221,7 @@ task iter_%d "Iteration %d" {
       p.writeln('  depends iter_%d' % (i_num - 1))
 
     for g in net.iter_to_goals[i]:
-      with p as p:
+      with p:
         _print_goal(p, g, ids, abs_ids, all_alloc)
 
     p.writeln('}\n')

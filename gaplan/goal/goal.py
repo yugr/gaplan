@@ -122,7 +122,7 @@ class Activity:
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
         error_loc(loc, "failed to parse attribute: %s" % a)
       k = M.group(1)
-      v = M.group(2)
+#      v = M.group(2)
       if k == 'global':
         self.globl = True
       else:
@@ -422,47 +422,47 @@ class Goal:
 
     if self.checks:
       p.writeln('%d check(s):' % len(self.checks))
-      with p as p:
+      with p:
         for check in self.checks:
           p.writeln('[%s] %s' % (check.status, check.name))
 
     if self.preds:
       p.writeln('%d preceeding activity(s):' % len(self.preds))
-      with p as p:
+      with p:
         for act in self.preds:
           act.dump(p)
 
     if self.global_preds:
       p.writeln('%d global preceeding activity(s):' % len(self.global_preds))
-      with p as p:
+      with p:
         for act in self.global_preds:
           act.dump(p)
 
     if self.succs:
       p.writeln('%d succeeding activity(s):' % len(self.succs))
-      with p as p:
+      with p:
         for act in self.succs:
           act.dump(p)
 
     if self.global_succs:
       p.writeln('%d global succeeding activity(s):' % len(self.global_succs))
-      with p as p:
+      with p:
         for act in self.global_succs:
           act.dump(p)
 
     parents = self.parents()
     if parents:
       p.writeln('%d parent(s):' % len(self.parents()))
-      with p as p:
+      with p:
         for g in parents:
           p.writeln('* %s' % g.name)
 
     if self.children:
       p.writeln('%d child(ren):' % len(self.children))
-      with p as p:
+      with p:
         for i, g in enumerate(self.children):
           p.write('#%d:' % i)
-          with p as p:
+          with p:
             g.dump(p)
 
     p.exit()
@@ -541,7 +541,6 @@ class Net:
 
     # Assign parents for goals which are not explicitly nested
 
-    seen = set()
     for g in self.name_to_goal.values():
       if g.parent is None and g not in self.roots:
         # First successor becomes parent
@@ -569,7 +568,7 @@ class Net:
       self.iter_to_goals.setdefault(g.iter, []).append(g)
     self.visit_goals(callback=update_iter_to_goals)
 
-  def filter(self, filtered_goals):
+  def filter(self, filtered_goals, warn):
     """Change network to include only supplied goals."""
 
     self.visit_goals(before=lambda g: g.filter(filtered_goals))
@@ -579,7 +578,7 @@ class Net:
       error("set of top goals is empty after filtering")
 
     self.roots = new_roots
-    self._recompute()
+    self._recompute(warn)
 
   def visit_goals(self, **args):
     visit_goals(self.roots, **args)
