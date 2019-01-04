@@ -16,8 +16,8 @@ I'm happy to improve the tool so ping me if you consider using it.
 Declarative planning is a goal-based approach to building plans,
 backed up with an easy-to-use notation for writing them down.
 
-Declarative plannig can be roughly described as building projects
-activity-on-edges [PERT diagrams](https://en.wikipedia.org/wiki/Program_evaluation_and_review_technique)
+Declarative plannig can be roughly described as modelling projects
+via activity-on-edges [PERT diagrams](https://en.wikipedia.org/wiki/Program_evaluation_and_review_technique)
 with focus on well-defined *events* (called *goals*) rather than activities.
 Goals are defined through their accomplishment criteria.
 Declarative plans are often called *goal maps* (probably to pun on
@@ -37,16 +37,18 @@ or his numerous blogposts (sadly all in Russian):
 * [Аннотация к моему докладу на SoftwarePeople](http://gaperton.livejournal.com/32051.html)
 * [Комментарий к "декларативному планированию"](http://gaperton.livejournal.com/32427.html)
 
-# How to use
+# Install
 
 `gaplan` is based on `setuptools` so to install simply run
 ```
-$ python3 -mpip install
+$ python3 -mpip install .
 ```
 in `gaplan`'s folder.
 
 For tooltips, download [wz_tooltip.js](http://www.walterzorn.de/en/tooltip/tooltip_e.htm) to `scripts/` subfolder
 (note that it's distributed under LGPL).
+
+# How to use
 
 To use the toolset you first need to write
 a [declarative plan](http://gaperton.livejournal.com/56976.html).
@@ -124,7 +126,7 @@ It has been extended with additional features which turned out to be useful in p
 # Goal has to be reached by the end of November, has max risk and priority and has to be scheduled in first iteration
 |Symbol visibility in TZ 3.0 reduced  // deadline 2016-11-30, !3, ?3, I0
 ```
-* In addition to normal dependencies (`|<-`, `|->`) tools supports _global dependencies_ (`|<=`, `|=>`). Globality causes all hierarchical children of a goal to depend of RHS. It's useful for splitting plan into disjoint phases, where task in depending phase can not start until their global dependency completes. This is an experimental feature.
+* In addition to normal dependencies (`|<-`, `|->`) tools supports _global dependencies_ (`|<=`, `|=>`). Globality causes all hierarchical children of a goal to depend on RHS. It's useful for splitting plan into disjoint phases, where task in depending phase can not start until their global dependency completes. This is an experimental feature.
 
 # Attributes
 
@@ -183,13 +185,18 @@ For example, this activity
 |<-  // @yura/slava, 2h-1d
 ```
 can be done either by "yura" or by "slava" (but not both simultaneously) and may require 2 hours to 2 days of effort.
-Adding `||` would mean that would developers will be able to work on parallel.
+Adding `||` would mean that developers will be able to work on parallel.
 
 Note that you can not
 * assign names to activities (this forces you to focus on goals rather than tasks)
 * assign resources or efforts to goals (these are instantaneous events so they do not take any time to "accomplish")
 
 # Development
+
+Install in editable mode via
+```
+python3 -mpip install -e .
+```
 
 To test, install `pytest` and run
 ```
@@ -199,12 +206,14 @@ $ pytest gaplan
 # TODO
 
 * Add example project plan.
+* Add include directives.
 * Add (many) more unittests.
 * Mark time or risk-critical paths in PERT diagram.
 * Describe tracking info (actual efforts and durations, Jira tasks, etc.).
 * Test on Windows, Linux and Cygwin.
 * Fix remaining TODO and FIXME.
-* Implement export to MS Project.
+* Export to MS Project.
+* Add Travis, codecov, etc.
 
 # Conceptual questions
 
