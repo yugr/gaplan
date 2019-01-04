@@ -60,12 +60,8 @@ $ python3 -mgaplan pert plan.txt
 
 To generate TaskJuggler project:
 ```
-$ python3 -mgaplan --dump tj plan.txt > plan.tjp
-```
-You can later use generated project to create a TJ report:
-```
-$ mkdir -p tjdir
-$ tj3 plan.tjp -o tjdir
+# Requires TaskJuggler in PATH
+$ python3 -mgaplan tj plan.txt
 ```
 
 To generate a burndown chart:
@@ -77,6 +73,12 @@ To display generated files (instead of passing it to Graphviz or TaskJuggler) us
 ```
 $ python3 -mgaplan --dump pert plan.txt > plan.gv
 $ dot -Tpdf < plan.gv > plan.pdf
+```
+or
+```
+$ python3 -mgaplan --dump tj plan.txt > plan.tjp
+$ mkdir -p tjdir
+$ tj3 plan.tjp -o tjdir
 ```
 
 For additional details run
