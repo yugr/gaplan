@@ -46,8 +46,8 @@ def _needs_explicit_depends(act):
   g = act.tail
   return act.head is not None and act.head not in g.children
 
-def _print_activity_body(p, act, abs_ids, complete, all_alloc):
-  _print_jira_links(p, act.jira_tasks)
+def _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link, pr_link):
+  _print_jira_links(p, act.jira_tasks, act.pull_requests, tracker_link, pr_link)
 
   p.writeln('scheduling asap')
 
@@ -79,19 +79,25 @@ def _print_activity_body(p, act, abs_ids, complete, all_alloc):
 def _massage_name(name):
   return re.sub(r'"', '\\"', name)
 
-def _print_activity(p, act, id, abs_ids, name, complete, all_alloc):
+def _print_activity(p, act, id, abs_ids, name, complete, all_alloc,
+                    tracker_link, pr_link):
   p.writeln('task %s "%s" {' % (id, _massage_name(name)))
   with p:
-    _print_activity_body(p, act, abs_ids, complete, all_alloc)
+    _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link,
+                         pr_link)
   p.writeln('}')
 
-def _print_jira_links(p, tasks):
+def _print_jira_links(p, tasks, pull_requests, tracker_link, pr_link):
   for t in tasks:
     # TODO: path from project info
-    p.writeln('JiraLink "http://jira.localhost/browse/%s" {label "%s"}' % (t, t))
+    p.writeln('JiraLink "' + tracker_link + '" {label "%s"}' % (t, t))
     break
+  else:
+    for pr in pull_requests:
+      p.writeln('JiraLink "' + pr_link + '" {label "%s"}' % (t, t))
+      break
 
-def _print_goal(p, goal, ids, abs_ids, all_alloc):
+def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
   id = ids[goal.name]
   abs_id = abs_ids[goal.name]
 
@@ -116,14 +122,15 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc):
     p.writeln('scheduled')
   elif goal.is_atomic():
     # Translate atomic goals to atomic TJ tasks
-    _print_activity_body(p, goal.preds[0], abs_ids, complete, all_alloc)
+    _print_activity_body(p, goal.preds[0], abs_ids, complete, all_alloc, tracker_link)
   else:
     i = 1
     for act in goal.preds:
       if act.is_instant():
         p.writeln('depends %s' % abs_ids[act.head.name])
       else:
-        _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i, complete, all_alloc)
+        _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i,
+                        complete, all_alloc, tracker_link, pr_link)
         i += 1
 
   p.exit()
@@ -162,7 +169,7 @@ project "{project_name}" {start} - {finish} {{
   timezone "Europe/Moscow"
   currency "USD"
   extend task {{
-    reference JiraLink "JIRA link"
+    reference JiraLink "Tracker link"
   }}
 }}
 
@@ -222,7 +229,8 @@ task iter_%d "Iteration %d" {
 
     for g in net.iter_to_goals[i]:
       with p:
-        _print_goal(p, g, ids, abs_ids, all_alloc)
+        _print_goal(p, g, ids, abs_ids, all_alloc,
+                    net.project_info['tracker_link'], project_info['pr_link'])
 
     p.writeln('}\n')
 

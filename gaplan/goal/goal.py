@@ -77,6 +77,7 @@ class Activity:
 
     # TODO: also attach tasks to goals?
     self.jira_tasks = set()
+    self.pull_requests = set()
 
     # TODO: add lags?
 
@@ -111,8 +112,12 @@ class Activity:
         self.start_date, self.finish_date = PA.read_date2(a, loc)
         continue
 
-      if M.match(r'^[A-Z_]+-[0-9]+', a):
-        self.jira_tasks.add(a)
+      if M.match(r'^task\s+(.*)', a):
+        self.jira_tasks.add(M.group(1))
+        continue
+
+      if M.match(r'^PR\s+(.*)', a):
+        self.pull_requests.add(M.group(1))
         continue
 
       if M.match(r'^\|\|$', a):
@@ -142,7 +147,10 @@ class Activity:
     p.enter()
 
     if self.jira_tasks:
-      p.writeln('JIRA tasks: %s' % ', '.join(self.jira_tasks))
+      p.writeln('Tasks in tracker: %s' % ', '.join(self.jira_tasks))
+
+    if self.pull_requests:
+      p.writeln('Pull requests: %s' % ', '.join(self.pull_requests))
 
     avg, dev = self.effort.estimate(self.tail.risk if self.tail else None)
     if avg is not None:

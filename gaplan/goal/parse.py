@@ -142,7 +142,7 @@ def parse_project_attribute(s, loc):
   name = m.group(1)
   val = m.group(2)
 
-  if name == 'name':
+  if name in ['name', 'tracker_link', 'pr_link']:
     return name, val
 
   if name in ['start', 'finish']:
@@ -166,10 +166,12 @@ def parse_goals(filename, f):
 
   year = datetime.datetime.today().year
   project_info = {
-    'name'    : 'Unknown',
-    'start'   : datetime.date(year, 1, 1),
-    'finish'  : datetime.date(year, 12, 31),
-    'members' : []
+    'name'         : 'Unknown',
+    'start'        : datetime.date(year, 1, 1),
+    'finish'       : datetime.date(year, 12, 31),
+    'members'      : [],
+    'tracker_link' : 'http://jira.localhost/browse/%s',
+    'pr_link'      : None,
   }
 
   goals = []
