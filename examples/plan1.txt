@@ -1,0 +1,15 @@
+# A simple plan for a team of 2 developers
+
+name = My project
+start   = 2016-01-01
+finish  = 2017-02-15
+members = dev1 (0.8), dev2
+
+|Main goal  // deadline 2017-02-05
+|<-  // @dev1/dev2, 1w
+   |Subgoal 1  // !1, ?1
+|<-  // @dev2, 1h-1d
+   |Subgoal 2  // !2
+   |<-
+      |Subsubgoal
+      |<-  // @dev1, 2h
