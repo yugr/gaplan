@@ -66,7 +66,8 @@ Examples:
   parser.add_argument(
     'action',
     metavar='ACT',
-    help="Action performed on PLAN.")
+    help="Action performed on PLAN.",
+    choices=['dump', 'tj', 'msp', 'pert', 'burn', 'burndown'])
   parser.add_argument(
     'plan',
     metavar='PLAN',
@@ -77,7 +78,8 @@ Examples:
     help="Limit output to a particular goal and it's predecessors.")
   parser.add_argument(
     '-b', '--bias',
-    help="Estimation bias: pessimist, optimist or none (default).",
+    help="Estimation bias.",
+    choices=['pessimist', 'optimist', 'none'],
     default='none')
   parser.add_argument(
     '--iter', '-i',
@@ -97,11 +99,6 @@ Examples:
     action='store_true')
 
   args = parser.parse_args()
-
-  good_actions = ['dump', 'tj', 'msp', 'pert', 'burn', 'burndown']
-  if args.action not in good_actions:
-    error("unknown action: %s (supported actions are %s)"
-          % (args.action, ', '.join(good_actions)))
 
   if args.iter is not None and args.action != 'burn':
     error("--iter/-i is only implemented for burndown charts right now")
