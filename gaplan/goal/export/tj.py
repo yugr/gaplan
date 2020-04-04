@@ -248,7 +248,7 @@ task now "Now" {
   p.write('''\
 taskreport gantt "GanttChart" {{
   headline "{project_name} - Gantt Chart"
-  timeformat "%%Y-%%m-%%d"
+  timeformat "%Y-%m-%d"
   formats html
   columns bsi {{ title 'ID' }}, name, JiraLink, start, end, effort, resources, chart {{ width 5000 }}
   loadunit weeks
