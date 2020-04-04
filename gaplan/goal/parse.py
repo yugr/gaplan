@@ -26,6 +26,9 @@ def parse_attrs(s, loc):
 def is_goal_decl(s):
   return re.match(r'^ *\|[^\[<>]', s)
 
+def is_root_goal_decl(s):
+  return is_goal_decl(s) and s[0] == '|'
+
 def parse_goal_decl(s, offset, loc, names):
   a, s = parse_attrs(s, loc)
   m = re.search(r'^( *)\|([^\[<>].*)$', s)
@@ -190,8 +193,7 @@ def parse_goals(filename, f):
     s, loc = f.peek()
     if s is None:
       break
-    # TODO: anonymoddus goals
-    elif is_goal_decl(s):
+    elif is_root_goal_decl(s):
       goal = parse_goal(f, 0, names, None)
       goals.append(goal)
     elif is_project_attribute(s):
@@ -199,6 +201,7 @@ def parse_goals(filename, f):
       f.skip()
       prj_attrs[k] = v
     else:
+      # TODO: anonymous goals
       error_loc(loc, 'unexpected line: "%s"' % s)
 
   prj.add_attrs(prj_attrs)

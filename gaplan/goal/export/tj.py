@@ -230,7 +230,8 @@ task iter_%d "Iteration %d" {
     for g in net.iter_to_goals[i]:
       with p:
         _print_goal(p, g, ids, abs_ids, all_alloc,
-                    net.project_info.tracker_link, net.project_info.pr_link)
+                    net.project_info.tracker_link,
+                    net.project_info.pr_link)
 
     p.writeln('}\n')
 
