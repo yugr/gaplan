@@ -109,7 +109,7 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     if act.head:
       p.writeln('depends %s' % abs_ids[act.head.name])
 
-  if goal.is_milestone():
+  if goal.is_instant():
     p.writeln('milestone')
 
   if goal.is_scheduled():
@@ -119,7 +119,7 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     p.writeln('start %s' % d)
     p.writeln('end %s' % d)
     p.writeln('scheduled')
-  elif goal.is_atomic():
+  elif goal.has_single_activity():
     # Translate atomic goals to atomic TJ tasks
     _print_activity_body(p, goal.preds[0], abs_ids, complete, all_alloc,
                          tracker_link, pr_link)

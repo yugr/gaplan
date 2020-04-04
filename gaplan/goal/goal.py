@@ -303,13 +303,12 @@ class Goal:
   def is_completed(self):
     return self.complete() == 100
 
-  # Leaf goals may be identified with their underlying tasks
+  # Such goals may be identified with their underlying activities
   # (which is useful for export to scheduling tools).
-  def is_atomic(self):
-    """Is this a leaf goal?"""
+  def has_single_activity(self):
     return len(self.preds) == 1
 
-  def is_milestone(self):
+  def is_instant(self):
     """Is this a milestone i.e. all preceding edges are instant?"""
     for act in self.preds:
       if not act.is_instant():
