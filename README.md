@@ -98,14 +98,18 @@ The core of the syntax is Vlad's text notation for graphs:
    |[X] Bread
    |[] Cheese
    |<-
-      |Bought alcohol
+      |Bought alcohol  // !3
       |[] Wine
       |[] Vodka
-|<-
-   |Invited friends
+|<-  // @me, 1h-2h
+   |Invited friends  // !3
    |[] Alex
    |[] Max
 ```
+
+It illustrates few core concepts:
+* only goals have names (`Invited friends`), priorities (`!3`) and internal structure (checklists)
+* only activities have duration (`1h-2h`) and assignees (`@me`)
 
 It has been extended with additional features which turned out to be useful in practice:
 * Tool tries to infer a hierarchical connections between tasks (i.e. [WBS](https://en.wikipedia.org/wiki/Work_breakdown_structure)) as they allow to produce more readable plans for TaskJuggler.
@@ -205,7 +209,7 @@ $ pytest gaplan
 
 # TODO
 
-* Add example project plan.
+* Add realistic example project plan.
 * Add include directives.
 * Add (many) more unittests.
 * Mark time or risk-critical paths in PERT diagram.
