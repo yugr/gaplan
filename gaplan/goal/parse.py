@@ -15,18 +15,18 @@ from . import goal as G
 def parse_attrs(s, loc):
   ss = s.split('//')
   if len(ss) == 1:
-    return ss[0], []
+    return [], s
   if len(ss) > 2:
     error_loc(loc, 'unexpected duplicate attributes: %s' % s)
   s = ss[0].rstrip()
   a = re.split(r'\s*[,;]\s*', ss[1].strip())
-  return s, a
+  return a, s
 
 def is_goal_decl(s):
   return re.match(r'^ *\|[^\[<>]', s)
 
 def parse_goal_decl(s, offset, loc, names):
-  s, a = parse_attrs(s, loc)
+  a, s = parse_attrs(s, loc)
   m = re.search(r'^( *)\|(.+)$', s)
   if not m:
     return None, None
@@ -50,7 +50,7 @@ def is_incoming_edge(s):
 def parse_edge(s, loc):
   act = G.Activity(loc)
 
-  s, attrs = parse_attrs(s, loc)
+  attrs, s = parse_attrs(s, loc)
   act.add_attrs(attrs, loc)
 
   m = re.search(r'^( *)\|[<>-][<>-]', s)
@@ -63,7 +63,7 @@ def is_check(s):
   return re.match(r'^ *\|\[', s)
 
 def parse_check(s, loc):
-  s, a = parse_attrs(s, loc)
+  a, s = parse_attrs(s, loc)
   m = re.search(r'^( *)\|\[([^\]]*)\] *(.+)$', s)
   if not m:
     error_loc(loc, 'failed to parse check: %s' % s)
@@ -80,8 +80,8 @@ def parse_checks(f, g, offset):
     if s is None or not is_check(s):
       return
     f.skip()
-    check, check_off = parse_check(s, loc)
-    if offset != check_off:
+    check, check_offset = parse_check(s, loc)
+    if offset != check_offset:
       error_loc(loc, 'check is not properly nested')
     g.add_check(check)
 
