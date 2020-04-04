@@ -121,7 +121,7 @@ Examples:
 
   project_info, roots = PA.parse_goals(filename, f)
 
-  if args.action in ['tj', 'msp'] and 'members' not in project_info:
+  if args.action in ['tj', 'msp'] and not project_info.members:
     error("--tj and --msp require member info in project file")
 
   net = G.Net(project_info, roots, args.W)
@@ -147,8 +147,8 @@ Examples:
     net.dump(PR.SourcePrinter())
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
-      start_date = net.project_info['start']
-      finish_date = net.project_info['finish']
+      start_date = net.project_info.start
+      finish_date = net.project_info.finish
       goal = roots[0]
     else:
       if args.iter not in net.iter_to_goals:

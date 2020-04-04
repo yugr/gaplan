@@ -89,12 +89,11 @@ def _print_activity(p, act, id, abs_ids, name, complete, all_alloc,
 
 def _print_jira_links(p, tasks, pull_requests, tracker_link, pr_link):
   for t in tasks:
-    # TODO: path from project info
-    p.writeln('JiraLink "' + tracker_link + '" {label "%s"}' % (t, t))
+    p.writeln(('JiraLink "' + tracker_link + '" {label "#%s"}') % (t, t))
     break
   else:
     for pr in pull_requests:
-      p.writeln('JiraLink "' + pr_link + '" {label "%s"}' % (t, t))
+      p.writeln(('JiraLink "' + pr_link + '" {label "PR #%s"}') % (pr, pr))
       break
 
 def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
@@ -122,7 +121,8 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     p.writeln('scheduled')
   elif goal.is_atomic():
     # Translate atomic goals to atomic TJ tasks
-    _print_activity_body(p, goal.preds[0], abs_ids, complete, all_alloc, tracker_link)
+    _print_activity_body(p, goal.preds[0], abs_ids, complete, all_alloc,
+                         tracker_link, pr_link)
   else:
     i = 1
     for act in goal.preds:
@@ -175,9 +175,9 @@ project "{project_name}" {start} - {finish} {{
 
 flags internal
 
-'''.format(project_name=net.project_info['name'],
-           start=PR.print_date(net.project_info['start']),
-           finish=PR.print_date(net.project_info['finish']),
+'''.format(project_name=net.project_info.name,
+           start=PR.print_date(net.project_info.start),
+           finish=PR.print_date(net.project_info.finish),
            time_format=time_format,
            now=today.strftime(time_format)))
 
@@ -195,7 +195,7 @@ flags internal
   p.writeln('')
 
   p.writeln('resource dev "Developers" {')
-  for dev in net.project_info['members']:
+  for dev in net.project_info.members:
     p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
     p.writeln('    efficiency %f' % dev.eff)
 # TODO: enable leaves
@@ -205,7 +205,7 @@ flags internal
     p.writeln('  }')
   p.writeln('}')
 
-  all_alloc = list(map(lambda m: m.name, net.project_info['members']))
+  all_alloc = list(map(lambda m: m.name, net.project_info.members))
 
   user_iters = list(filter(lambda i: i is not None, net.iter_to_goals.keys()))
   user_iters.sort()
@@ -230,7 +230,7 @@ task iter_%d "Iteration %d" {
     for g in net.iter_to_goals[i]:
       with p:
         _print_goal(p, g, ids, abs_ids, all_alloc,
-                    net.project_info['tracker_link'], project_info['pr_link'])
+                    net.project_info.tracker_link, net.project_info.pr_link)
 
     p.writeln('}\n')
 
@@ -275,7 +275,7 @@ tracereport trace "TraceReport" {{
 export msproject "{project_name}" {{
   formats mspxml
 }}
-'''.format(project_name=net.project_info['name']))
+'''.format(project_name=net.project_info.name))
 
   if dump:
     print(p.out.getvalue())

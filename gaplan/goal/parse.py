@@ -10,6 +10,7 @@ import datetime
 
 from gaplan.common.error import error, error_loc
 from gaplan.common import parse as P
+from . import project
 from . import goal as G
 
 def parse_attrs(s, loc):
@@ -179,33 +180,27 @@ def parse_project_attribute(s, loc):
 
 def parse_goals(filename, f):
   f = P.Lexer(filename, f)
-
-  year = datetime.datetime.today().year
-  project_info = {
-    'name'         : 'Unknown',
-    'start'        : datetime.date(year, 1, 1),
-    'finish'       : datetime.date(year, 12, 31),
-    'members'      : [],
-    'tracker_link' : 'http://jira.localhost/browse/%s',
-    'pr_link'      : None,
-  }
+  prj = project.ProjectInfo()
 
   goals = []
   names = {}
+  prj_attrs = {}
 
   while True:
     s, loc = f.peek()
     if s is None:
       break
+    # TODO: anonymoddus goals
     elif is_goal_decl(s):
       goal = parse_goal(f, 0, names, None)
       goals.append(goal)
     elif is_project_attribute(s):
       k, v = parse_project_attribute(s, loc)
       f.skip()
-      project_info[k] = v
-    # TODO: anonymous goals
+      prj_attrs[k] = v
     else:
       error_loc(loc, 'unexpected line: "%s"' % s)
 
-  return project_info, goals
+  prj.add_attrs(prj_attrs)
+
+  return prj, goals
