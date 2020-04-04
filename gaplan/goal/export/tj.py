@@ -46,6 +46,13 @@ def _needs_explicit_depends(act):
   g = act.tail
   return act.head is not None and act.head not in g.children
 
+def _is_goal_ignored(g):
+  return g.dummy and not g.preds
+
+# Do not print empty dummy activities
+def _is_activity_ignored(act):
+  return act.head is not None and _is_goal_ignored(act.head)
+
 def _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link, pr_link):
   _print_jira_links(p, act.jira_tasks, act.pull_requests, tracker_link, pr_link)
 
@@ -73,7 +80,7 @@ def _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link, pr_
     p.writeln('scheduled')
     # Can't specify dependencies for fixed tasks
     # due to "XXX must start after end of YYY".
-  elif act.head is not None:
+  elif not _is_activity_ignored(act):
     p.writeln('depends %s' % abs_ids[act.head.name])
 
 def _massage_name(name):
@@ -128,7 +135,7 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     for act in goal.preds:
       if act.is_instant():
         p.writeln('depends %s' % abs_ids[act.head.name])
-      else:
+      elif not _is_activity_ignored(act):
         _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i,
                         complete, all_alloc, tracker_link, pr_link)
         i += 1
@@ -228,10 +235,11 @@ task iter_%d "Iteration %d" {
       p.writeln('  depends iter_%d' % (i_num - 1))
 
     for g in net.iter_to_goals[i]:
-      with p:
-        _print_goal(p, g, ids, abs_ids, all_alloc,
-                    net.project_info.tracker_link,
-                    net.project_info.pr_link)
+      if not _is_goal_ignored(g):
+        with p:
+          _print_goal(p, g, ids, abs_ids, all_alloc,
+                      net.project_info.tracker_link,
+                      net.project_info.pr_link)
 
     p.writeln('}\n')
 
