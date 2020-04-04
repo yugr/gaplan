@@ -100,7 +100,7 @@ class Activity:
     attrs = add_common_attrs(loc, self, attrs)
 
     for a in attrs:
-      if re.search(r'^[0-9]+[hdwmy]', a):
+      if re.search(r'^[0-9]+(\.[0-9]+)?[hdwmy]', a):
         self.effort = PA.read_duration3(a, loc)
         continue
 
