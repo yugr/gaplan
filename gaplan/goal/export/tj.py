@@ -181,8 +181,8 @@ flags internal
            time_format=time_format,
            now=today.strftime(time_format)))
 
-  # TODO: years and holidays should be in project file
-  for y in range(2015, 2020):
+  # TODO: additional holidays in project info?
+  for y in range(net.project_info.start.year, net.project_info.finish.year + 1):
     for name, dates in [
         ('New year holidays', '01-01 + 8d'),
         ('Army day',          '02-23'),
@@ -198,10 +198,10 @@ flags internal
   for dev in net.project_info.members:
     p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
     p.writeln('    efficiency %f' % dev.eff)
-# TODO: enable leaves
-#    leaves = data['leaves']
-#    if leaves:
-#      p.writeln('    leaves annual ' + ', annual '.join(leaves))
+# TODO: enable vacations
+#    vacations = data['vacations']
+#    if vacations:
+#      p.writeln('    leaves annual ' + ', annual '.join(vacations))
     p.writeln('  }')
   p.writeln('}')
 
