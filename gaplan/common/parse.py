@@ -48,6 +48,7 @@ class Lexer:
     return (self.lines[0] if self.lines else None), Location(self.file, self.loc)
 
   def skip(self):
+#    print("Lexer: skipping %s" % self.lines[0])
     del self.lines[0]
     self.loc += 1
 
@@ -92,10 +93,13 @@ def read_date(s, loc):
   # We could allow shorter formats (e.g. 'Jan 10')
   # but what if someone uses this in 2020?
   # TODO: allow UTC dates?
-  m = re.search(r'^\s*([^-\s]*-[^-\s]*-[^-\s]*)\s*(.*)', s)
+  m = re.search(r'^\s*([^-\s]*-[^-\s]*)(-[^-\s]*)?\s*(.*)', s)
   if not m:
     error_loc(loc, 'failed to parse date: %s' % s)
-  return datetime.datetime.strptime(m.group(1), '%Y-%m-%d'), m.group(2)
+  date_str = m.group(1)
+  # If day is omitted, consider first day
+  date_str += m.group(2) if m.group(2) else '-01'
+  return datetime.datetime.strptime(date_str, '%Y-%m-%d'), m.group(3)
 
 # TODO: parse UTC times i.e. 2015-02-01T12:00 ?
 def read_date2(s, loc):
