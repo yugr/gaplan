@@ -68,7 +68,7 @@ $ python3 -mgaplan tj plan.txt
 
 To generate a burndown chart:
 ```
-$ python3 -mgaplan --phase 'Iteration 1 completed' burndown plan.txt
+$ python3 -mgaplan burn --phase 'Iteration 1 completed' burndown plan.txt
 ```
 
 To display generated files (instead of passing it to Graphviz or TaskJuggler) use `--dump` flag e.g.
