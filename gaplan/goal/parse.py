@@ -27,13 +27,13 @@ def is_goal_decl(s):
 
 def parse_goal_decl(s, offset, loc, names):
   a, s = parse_attrs(s, loc)
-  m = re.search(r'^( *)\|(.+)$', s)
+  m = re.search(r'^( *)\|([^\[<>].*)$', s)
   if not m:
-    return None, None
+    return None, []
   name = m.group(2)
   goal_offset = len(m.group(1))
   if goal_offset != offset:
-    return None, None
+    return None, []
   if name in names:
     goal = names[name]
   else:
@@ -98,21 +98,36 @@ def parse_subgoals(f, goal, offset, names):
 
     f.skip()
 
-    subgoal = parse_goal(f, edge_offset + len('|<-'), names, goal)
+    subgoal = parse_goal(f, edge_offset + len('|<-'), names, goal,
+                         allow_empty=True)
     act.set_endpoints(goal, subgoal, is_pred)
     goal.add_activity(act, is_pred)
     if subgoal:
       subgoal.add_activity(act, not is_pred)
 
-def parse_goal(f, offset, names, parent):
-  s, loc = f.peek()
-  if s is None:
-    return None
+dummy_goal_count = 0
 
-  goal, goal_attrs = parse_goal_decl(s, offset, loc, names)
-  if not goal:
-    return None
-  f.skip()
+def _make_dummy_goal(loc, names):
+  count = getattr(_make_dummy_goal, 'count', 0)
+  setattr(_make_dummy_goal, 'count', count + 1)
+  name = 'dummy_%d' % count
+  goal = G.Goal(name, loc, dummy=True)
+  names[name] = goal
+  return goal
+
+def parse_goal(f, offset, names, parent, allow_empty=False):
+  s, loc = f.peek()
+
+  goal = None
+  if s is not None:
+    goal, goal_attrs = parse_goal_decl(s, offset, loc, names)
+    if goal:
+      f.skip()
+
+  if goal is None:
+    if not allow_empty:
+      return None
+    goal = _make_dummy_goal(loc, names)
 
   was_defined = goal.defined
   if goal_attrs:
@@ -122,6 +137,7 @@ def parse_goal(f, offset, names, parent):
 
   # TODO: Gaperton's examples contain interwined checks and deps
   parse_checks(f, goal, offset)
+
   parse_subgoals(f, goal, offset, names)
 
   if not was_defined and (goal.checks or goal_attrs):

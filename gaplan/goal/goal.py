@@ -174,9 +174,10 @@ class Activity:
 class Goal:
   """Class which describes a single goal in plan."""
 
-  def __init__(self, name, loc):
+  def __init__(self, name, loc, dummy=False):
     self.name = name
     self.loc = PA.Location(loc.file, loc.line)
+    self.dummy = dummy
     self.alias = None
 
     # Completion criteria
@@ -406,7 +407,7 @@ class Goal:
     self.children = new_children
 
   def dump(self, p):
-    p.writeln(self.name)
+    p.writeln(self.name + (' (dummy)' if self.dummy else ''))
 
     p.enter()
 

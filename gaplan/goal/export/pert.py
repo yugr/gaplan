@@ -19,33 +19,39 @@ def _get_node_colors(g):
     return 'red', 'black'
   return 'black', 'black'
 
-def _get_node_caption(g):
-  cap = g.name
+def _get_node_label(g, visible=False):
+  # Do not show fake names
+  if g.dummy and visible:
+    return ''
 
-  cap += ' (%d%%' % g.complete()
+  caps = [g.name, ' (']
+  caps.append('%d%%' % g.complete())
   if g.deadline:
-    cap += ', ' + g.deadline.strftime('%b %d')
-  cap += ')'
+    caps.append(', ' + g.deadline.strftime('%b %d'))
+  caps.append(')')
 
 #  if g.tasks:
-#    cap += '\\n' + '/'.join(g.tasks)
+#    caps.append('\\n' + '/'.join(g.tasks))
 
-  return cap
+  return ''.join(caps)
 
 def _print_node(g, p):
   box_color, text_color = _get_node_colors(g)
-  p.writeln('"%s" [ color=%s, fontcolor = %s ];' % (_get_node_caption(g), box_color, text_color))
+  p.writeln('"%s" [ label="%s", color=%s, fontcolor = %s ];'
+            % (_get_node_label(g),
+               _get_node_label(g, True),
+               box_color, text_color))
 
 def _print_node_edges(g, p):
-  cap = _get_node_caption(g)
+  cap = _get_node_label(g)
   for act in g.preds:
     if act.head:
-      p.writeln('"%s" -> "%s";' % (_get_node_caption(act.head), cap))
+      p.writeln('"%s" -> "%s";' % (_get_node_label(act.head), cap))
 
   while g is not None:
     for act in g.global_preds:
       if act.head:
-        p.writeln('"%s" -> "%s";' % (_get_node_caption(act.head), cap))
+        p.writeln('"%s" -> "%s";' % (_get_node_label(act.head), cap))
     g = g.parent
 
 def export(net, dump=False):
