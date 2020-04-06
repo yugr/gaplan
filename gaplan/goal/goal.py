@@ -281,9 +281,18 @@ class Goal:
 
   def priority(self):
     """Combined priority which uses both risk and assigned priority."""
-    alpha = 2.0 / 3
-    return (float(self.prio) / Goal.MAX_PRIO * alpha
-            + float(self.risk) / Goal.MAX_RISK * (1 - alpha))
+    prio = None if self.prio is None else float(self.prio) / Goal.MAX_PRIO
+    risk = None if self.risk is None else float(self.risk) / Goal.MAX_RISK
+    if prio is not None and risk is not None:
+      # TODO: do something more reasonable
+      alpha = 2.0 / 3
+      return prio * alpha + risk * (1 - alpha)
+    elif prio is not None:
+     return prio
+    elif risk is not None:
+      return risk
+    else:
+      return None
 
   def complete(self):
     if self.completion_date is not None:

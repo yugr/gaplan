@@ -29,8 +29,8 @@ def _print_alloc(p, names, parallel):
     p.writeln('allocate %s { %s select minloaded persistent}' % (first, alts))
 
 def _tj_prio(goal):
-  # TODO: take risk into account
-  return int(goal.priority() * 1000)
+  prio = goal.priority()
+  return None if prio is None else int(prio * 1000)
 
 def _tj_effort(act):
   eta = act.effort.real
@@ -118,6 +118,10 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
 
   if goal.is_instant():
     p.writeln('milestone')
+
+  prio = _tj_prio(goal)
+  if prio is not None:
+    p.writeln('priority %d' % prio)
 
   if goal.is_scheduled():
     if goal.preds:
