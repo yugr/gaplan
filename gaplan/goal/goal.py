@@ -360,12 +360,12 @@ class Goal:
       after(self)
 
   def check(self, warn):
-    if warn and not self.defined:
+    if warn and not self.defined and not self.dummy:
       warn_loc(self.loc, 'goal "%s" is undefined' % self.name)
 
-    pending_conds = filter(lambda c: c.done(), self.checks)
+    pending_conds = [c.name for c in self.checks if not c.done()]
     if warn and self.completion_date and pending_conds:
-      warn_loc(self.loc, 'goal "%s" marked as completed but some checks are still pending: %s' % (self.name, ', '.join(pending_conds)))
+      warn_loc(self.loc, 'goal "%s" marked as completed but some checks are still pending:\n  %s' % (self.name, '\n  '.join(pending_conds)))
 
     for act in self.global_preds:
       if not act.is_instant():
@@ -535,7 +535,7 @@ class Net:
       if g.name in inferred_attrs:
         new_attr = inferred_attrs[g.name]
         old_attr = getattr(g, attr_name)
-        if not cmp(new_attr, old_attr):
+        if old_attr is not None and not cmp(new_attr, old_attr):
           warn_loc(g.loc, "inferred (%s) and assigned (%s) %s for goal '%s' do not match" % (new_attr, old_attr, attr_name, g.name))
     self.visit_goals(callback=assign_inferred_attrs)
 
