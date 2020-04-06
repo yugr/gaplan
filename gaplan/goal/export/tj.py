@@ -18,8 +18,8 @@ from gaplan.common import platform
 
 time_format = '%Y-%m-%d'
 
-def _print_alloc(p, names, parallel):
-  if parallel:
+def _print_alloc(p, names, full_parallel):
+  if full_parallel:
     for n in names:
       p.writeln('allocate %s' % n)
   else:
@@ -56,32 +56,49 @@ def _is_activity_ignored(act):
 def _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link, pr_link):
   _print_jira_links(p, act.jira_tasks, act.pull_requests, tracker_link, pr_link)
 
-  p.writeln('scheduling asap')
-
   effort = _tj_effort(act)
-  if effort > 0:
-    if complete == 100:
-      p.writeln('complete %d' % complete)
-    else:
-      effort = effort * (1 - complete / 100.0)
-#      p.writeln('complete %d' % complete)
-      p.writeln('depends now')
+  alloc = act.alloc if act.alloc else all_alloc
 
-    p.writeln('effort %dh' % int(effort))
+  if effort > 0 and act.parallel:
+    # Split activity to several tasks for parallelism
+    num_tasks = min(act.parallel, len(alloc))
+    has_sub_tasks = True
+  else:
+    num_tasks = 1
+    has_sub_tasks = False
 
-    # We print allocated resources only if effort > 0
-    # (TJ aborts otherwise)
-    alloc = act.alloc if act.alloc else all_alloc
-    _print_alloc(p, alloc, act.parallel)
+  for t in range(num_tasks):
+    if has_sub_tasks:
+      p.writeln('task id%d "" {' % t)
 
-  if act.is_scheduled():
-    p.writeln('start %s' % PR.print_date(act.start_date))
-    p.writeln('end %s' % PR.print_date(act.finish_date))
-    p.writeln('scheduled')
-    # Can't specify dependencies for fixed tasks
-    # due to "XXX must start after end of YYY".
-  elif not _is_activity_ignored(act):
-    p.writeln('depends %s' % abs_ids[act.head.name])
+    p.writeln('scheduling asap')
+
+    if effort > 0:
+      task_effort = float(effort) / num_tasks
+      if complete == 100:
+        p.writeln('complete %d' % complete)
+      else:
+        task_effort = task_effort * (1 - complete / 100.0)
+#        p.writeln('complete %d' % complete)
+        p.writeln('depends now')
+
+      p.writeln('effort %dh' % round(task_effort))
+
+      # We print allocated resources only if effort > 0
+      # (TJ aborts otherwise)
+      _print_alloc(p, alloc, False)  # act.is_max_parallel()
+
+    if act.is_scheduled():
+      p.writeln('start %s' % PR.print_date(act.start_date))
+      p.writeln('end %s' % PR.print_date(act.finish_date))
+      p.writeln('scheduled')
+      # Can't specify dependencies for fixed tasks
+      # due to "XXX must start after end of YYY".
+    elif not _is_activity_ignored(act):
+      p.writeln('depends %s' % abs_ids[act.head.name])
+
+    if has_sub_tasks:
+      p.writeln('}')
 
 def _massage_name(name):
   return re.sub(r'"', '\\"', name)
@@ -125,7 +142,7 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
 
   if goal.is_scheduled():
     if goal.preds:
-      error_loc(goal.loc, 'TJ can''t schedule non-milestone goal "%s"' % goal.name)
+      error_loc(goal.loc, "TJ can't schedule non-milestone goal '%s'" % goal.name)
     d = PR.print_date(goal.completion_date)
     p.writeln('start %s' % d)
     p.writeln('end %s' % d)
@@ -135,14 +152,14 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     _print_activity_body(p, goal.preds[0], abs_ids, complete, all_alloc,
                          tracker_link, pr_link)
   else:
-    i = 1
-    for act in goal.preds:
+    # First print dependencies
+    for act in (a for a in goal.preds if a.is_instant()):
       if act.is_instant():
         p.writeln('depends %s' % abs_ids[act.head.name])
-      elif not _is_activity_ignored(act):
-        _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i,
-                        complete, all_alloc, tracker_link, pr_link)
-        i += 1
+    for i, act in enumerate(a for a in goal.preds \
+                            if not a.is_instant() and not _is_activity_ignored(a)):
+      _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i,
+                      complete, all_alloc, tracker_link, pr_link)
 
   p.exit()
   p.writeln('}')

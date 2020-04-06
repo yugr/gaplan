@@ -181,15 +181,16 @@ There is a distinct set of attributes for activities:
 | Parallel impl.     | \|\|                      | \|\|                       | Notes that developers can work on task in parallel |
 
 The exact meaning of resource assignment attribute (@) depends on presense of "parallel" attribute (denoted with `||`):
-* with `||` - developers can work on task in parallel (e.g. it consists of many similar unrelated chunks)
+* with `||` (or `|| NUMBER`) - developers can work on task in parallel (e.g. it consists of many similar unrelated chunks)
 * without - only one of specified engineers will be selected to work on a task
 
 For example, this activity
 ```
-|<-  // @yura/slava, 2h-1d
+|<-  // @yura/slava/max, 2h-1d
 ```
-can be done either by "yura" or by "slava" (but not both simultaneously) and may require 2 hours to 2 days of effort.
-Adding `||` would mean that developers will be able to work on parallel.
+can be done either by "yura", "slava" or by "max" (but not both simultaneously) and may require 2 hours to 2 days of effort.
+Adding `||` (or `|| 3`) would mean that all three developers will be able to work on parallel.
+Adding `|| 2` would mean that any two of them will be able to work in parallel.
 
 Note that you can not
 * assign names to activities (this forces you to focus on goals rather than tasks)

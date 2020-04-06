@@ -5,6 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
+import sys
 import re
 import datetime
 
@@ -73,7 +74,7 @@ class Activity:
     self.start_date = self.finish_date = None
     self.effort = ETA()
     self.alloc = []
-    self.parallel = False
+    self.parallel = 0
 
     # TODO: also attach tasks to goals?
     self.jira_tasks = set()
@@ -92,6 +93,9 @@ class Activity:
 
   def is_scheduled(self):
     return self.start_date is not None and self.finish_date is not None
+
+  def is_max_parallel(self):
+    return self.parallel == sys.maxsize
 
   def is_instant(self):
     return self.effort.real is None and self.effort.min is None
@@ -120,8 +124,8 @@ class Activity:
         self.pull_requests.add(M.group(1))
         continue
 
-      if M.match(r'^\|\|$', a):
-        self.parallel = True
+      if M.match(r'^\|\|(\s*([0-9]+))?$', a):
+        self.parallel = int(M.group(2)) if M.group(2) else sys.maxsize
         continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
@@ -166,8 +170,15 @@ class Activity:
     if self.finish_date is not None:
       p.writeln('fixed end date: %s' % PR.print_date(self.finish_date))
 
-    p.writeln('allocated: %s%s' % (', '.join(self.alloc) if self.alloc else 'any',
-                                   ' (parallel)' if self.parallel else ''))
+    if self.is_max_parallel():
+      par = 'max'
+    elif self.parallel:
+      par = self.parallel
+    else:
+      par = 'non'
+    par
+    p.write('allocated: %s%s' % (', '.join(self.alloc) if self.alloc else 'any',
+                                 par))
 
     p.exit()
 
@@ -288,7 +299,7 @@ class Goal:
       alpha = 2.0 / 3
       return prio * alpha + risk * (1 - alpha)
     elif prio is not None:
-     return prio
+      return prio
     elif risk is not None:
       return risk
     else:
