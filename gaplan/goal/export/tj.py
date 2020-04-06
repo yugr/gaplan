@@ -270,7 +270,7 @@ taskreport gantt "GanttChart" {{
 
 resourcereport resources "ResourceGraph" {{
   headline "{project_name} - Resource Allocation Report"
-  timeformat "%%Y-%%m-%%d"
+  timeformat "%Y-%m-%d"
   formats html
   columns bsi, name, JiraLink, start, end, effort, chart {{ width 5000 }}
 #  loadunit weeks
@@ -281,7 +281,7 @@ resourcereport resources "ResourceGraph" {{
 
 tracereport trace "TraceReport" {{
   columns bsi, name, start, end
-  timeformat "%%Y-%%m-%%d"
+  timeformat "%Y-%m-%d"
   formats csv
 }}
 
