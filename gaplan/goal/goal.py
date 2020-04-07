@@ -616,7 +616,7 @@ class Net:
     visit_goals(self.roots, **args)
 
   def dump(self, p):
-    p.writeln('= %s =\n' % self.project_info.name)
+    self.project_info.dump()
     for g in self.roots:
       g.dump(p)
       p.writeln('')

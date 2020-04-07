@@ -11,6 +11,7 @@ import datetime
 from gaplan.common.error import error, error_loc
 from gaplan.common import parse as P
 from . import goal as G
+from . import resource
 
 class ProjectInfo:
   def __init__(self):
@@ -26,3 +27,7 @@ class ProjectInfo:
     for k, v in attrs.items():
       setattr(self, k, v)
 
+  def dump(self, p):
+    p.writeln('= %s =\n' % self.name)
+    for dev in self.members:
+      dev.dump(p)

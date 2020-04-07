@@ -225,11 +225,10 @@ flags internal
   p.writeln('resource dev "Developers" {')
   for dev in net.project_info.members:
     p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
-    p.writeln('    efficiency %f' % dev.eff)
-# TODO: enable vacations
-#    vacations = data['vacations']
-#    if vacations:
-#      p.writeln('    leaves annual ' + ', annual '.join(vacations))
+    p.writeln('    efficiency %f' % dev.efficiency)
+    for start, finish in dev.vacations:
+      p.writeln('    vacation %s - %s'
+                % (start.strftime(time_format), finish.strftime(time_format)))
     p.writeln('  }')
   p.writeln('}')
 

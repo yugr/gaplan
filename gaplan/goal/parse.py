@@ -175,8 +175,11 @@ def parse_project_attribute(s, loc):
       m = re.search(r'^([A-Za-z_0-9]+)\s*(?:\((.*)\))?$', member)
       if m is None:
         error_loc(loc, 'failed to parse member declaration: %s' % member)
-      eff = float(m.group(2)) if m.group(2) else 1.0
-      members.append(G.Member(m.group(1), eff))
+      member = resource.Resource(m.group(1))
+      members.append(member)
+      if m.group(2):
+        attrs = m.group(2).split(',')
+        member.add_attrs(attrs, loc)
     return name, members
 
   error_loc(loc, 'unknown project attribute: %s' % name)
