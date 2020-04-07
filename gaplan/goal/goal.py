@@ -8,6 +8,7 @@
 import sys
 import re
 import datetime
+import operator
 
 from gaplan.common.error import error, error_loc, warn_loc
 from gaplan.common.ETA import ETA
@@ -512,7 +513,7 @@ class Net:
     self.iter_to_goals = {}
     self._recompute(warn)
 
-  def _propagate_attr(self, attr_name, join, cmp):
+  def _propagate_attr(self, attr_name, join, less):
     """Performs backward propagation of attribute from goals for which it's defined."""
 
     wl = set()
@@ -543,11 +544,14 @@ class Net:
             wl.add(act.head)
 
     def assign_inferred_attrs(g):
-      if g.name in inferred_attrs:
-        new_attr = inferred_attrs[g.name]
+      new_attr = inferred_attrs.get(g.name)
+      if new_attr is not None:
         old_attr = getattr(g, attr_name)
-        if old_attr is not None and not cmp(new_attr, old_attr):
+        if old_attr is None:
+          setattr(g, attr_name, new_attr)
+        elif less(old_attr, new_attr):
           warn_loc(g.loc, "inferred (%s) and assigned (%s) %s for goal '%s' do not match" % (new_attr, old_attr, attr_name, g.name))
+          setattr(g, attr_name, new_attr)
     self.visit_goals(callback=assign_inferred_attrs)
 
   def _recompute(self, warn):
@@ -586,8 +590,8 @@ class Net:
 
     # Propagate assigned priorities and iterations
 
-    self._propagate_attr('prio', sum, lambda x, y: not warn or x == y)
-    self._propagate_attr('iter', min, lambda x, y: not warn or x < y)
+    self._propagate_attr('prio', max, operator.lt)
+    self._propagate_attr('iter', min, operator.ge)
 
     # Index iterations
 
