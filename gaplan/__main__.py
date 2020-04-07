@@ -90,6 +90,11 @@ Examples:
     action='count',
     default=0)
   parser.add_argument(
+    '--hierarchy',
+    help="Generate hierarchical plan (WBS).",
+    action='store_true',
+    default=False)
+  parser.add_argument(
     '--print-stack',
     help="Print call stack on error (INTERNAL).",
     action='store_true')
@@ -121,6 +126,9 @@ Examples:
   if args.action in ['tj', 'msp'] and not project_info.members:
     error("--tj and --msp require member info in project file")
 
+  if args.action not in ['tj', 'msp'] and args.hierarchy:
+    error("--hierarchy supported only for tj and msp actions")
+
   net = G.Net(project_info, roots, args.W)
   net.check(args.W)
 
@@ -135,11 +143,11 @@ Examples:
     net.filter(goals, args.W)
 
   if args.action == 'tj':
-    tj.export(net, args.dump)
+    tj.export(net, args.hierarchy, args.dump)
   elif args.action == 'pert':
     pert.export(net, args.dump)
   elif args.action == 'msp':
-    msp.export(net, args.dump)
+    msp.export(net, args.hierarchy, args.dump)
   elif args.action == 'dump':
     net.dump(PR.SourcePrinter())
   elif args.action in ('burn', 'burndown'):

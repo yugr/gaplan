@@ -172,7 +172,119 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     p.write('  maxstart %s' % goal.deadline.strftime(time_format))
     p.write('}')
 
-def export(net, dump=False):
+def _print_goal_hierarchical(p, goal, ids, abs_ids, children, all_alloc,
+                             tracker_link, pr_link):
+  id = ids[goal.name]
+  abs_id = abs_ids[goal.name]
+
+  complete = goal.complete()
+
+  p.writeln('task %s "%s" {' % (id, _massage_name(goal.name)))
+  p.enter()
+
+  for act in goal.global_preds:
+    if act.head:
+      p.writeln('depends %s' % abs_ids[act.head.name])
+
+#  TODO
+#  if goal.is_instant():
+#    p.writeln('milestone')
+
+  prio = _tj_prio(goal)
+  if prio is not None:
+    p.writeln('priority %d' % prio)
+
+  def is_child(g):
+    return g is None or g.name in children[goal.name]
+
+  if goal.is_scheduled():
+    if goal.preds:
+      error_loc(goal.loc, "TJ can't schedule non-milestone goal '%s'" % goal.name)
+    d = PR.print_date(goal.completion_date)
+    p.writeln('start %s' % d)
+    p.writeln('end %s' % d)
+    p.writeln('scheduled')
+  else:
+    # First print instant dependencies
+    for act in (a for a in goal.preds
+                if a.is_instant() and not is_child(a.head)):
+      p.writeln('depends %s' % abs_ids[act.head.name])
+
+    # Then print goal-specific tasks
+    for i, act in enumerate(a for a in goal.preds
+                            if not a.is_instant()):
+      _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i,
+                      complete, all_alloc, tracker_link, pr_link)
+
+  for g in goal.children:
+    _print_goal_hierarchical(p, g, ids, abs_ids, children, all_alloc, tracker_link, pr_link)
+
+  p.exit()
+  p.writeln('}')
+
+  if goal.deadline is not None:
+    p.writeln('task %s_deadline "%s (deadline)" {' % (id, _massage_name(goal.name)))
+    p.write('  scheduling asap')
+    p.write('  depends %s' % abs_id)
+    #p.write('%s  start %s' % goal.deadline.strftime(time_format))
+    p.write('  maxstart %s' % goal.deadline.strftime(time_format))
+    p.write('}')
+
+def _print_iterative(net, p, ids, all_alloc):
+  user_iters = list(filter(lambda i: i is not None, net.iter_to_goals.keys()))
+  user_iters.sort()
+  last_iter = (user_iters[-1] + 1) if user_iters else 0
+
+  abs_ids = {}
+  def cache_abs_id(g):
+    abs_ids[g.name] = 'iter_%d.%s' % (last_iter if g.iter is None else g.iter, ids[g.name])
+
+  net.visit_goals(callback=cache_abs_id)
+
+  for i in user_iters + [None]:
+    i_num = last_iter if i is None else i
+
+    p.write('''\
+task iter_%d "Iteration %d" {
+''' % (i_num, i_num))
+
+    if i_num > 0:
+      p.writeln('  depends iter_%d' % (i_num - 1))
+
+    for g in net.iter_to_goals[i]:
+      if not _is_goal_ignored(g):
+        with p:
+          _print_goal(p, g, ids, abs_ids, all_alloc,
+                      net.project_info.tracker_link,
+                      net.project_info.pr_link)
+
+    p.writeln('}\n')
+
+def _print_hierarchical(net, p, ids, all_alloc):
+  children = {}
+  def cache_children(g):
+    children[g.name] = set()
+    for child in g.children:
+      children[g.name].add(child.name)
+      children[g.name].update(children[child.name])
+  net.visit_goals(after=cache_children, hierarchical=True)
+
+  abs_ids = {}
+  def cache_abs_id(g):
+    if g.parent is None:
+      abs_ids[g.name] = ids[g.name]
+    else:
+      abs_ids[g.name] = '%s.%s' % (abs_ids[g.parent.name], ids[g.name])
+  net.visit_goals(callback=cache_abs_id, hierarchical=True)
+
+  for g in net.roots:
+    if not _is_goal_ignored(g):
+      with p:
+        _print_goal_hierarchical(p, g, ids, abs_ids, children,
+                                 all_alloc, net.project_info.tracker_link,
+                                 net.project_info.pr_link)
+
+def export(net, hierarchy, dump=False):
   today = datetime.date.today()
 
   next_id = [0]  # Python's craziness
@@ -234,34 +346,10 @@ flags internal
 
   all_alloc = list(map(lambda m: m.name, net.project_info.members))
 
-  user_iters = list(filter(lambda i: i is not None, net.iter_to_goals.keys()))
-  user_iters.sort()
-  last_iter = (user_iters[-1] + 1) if user_iters else 0
-
-  abs_ids = {}
-  def cache_abs_id(g):
-    abs_ids[g.name] = 'iter_%d.%s' % (last_iter if g.iter is None else g.iter, ids[g.name])
-
-  net.visit_goals(callback=cache_abs_id)
-
-  for i in user_iters + [None]:
-    i_num = last_iter if i is None else i
-
-    p.write('''\
-task iter_%d "Iteration %d" {
-''' % (i_num, i_num))
-
-    if i_num > 0:
-      p.writeln('  depends iter_%d' % (i_num - 1))
-
-    for g in net.iter_to_goals[i]:
-      if not _is_goal_ignored(g):
-        with p:
-          _print_goal(p, g, ids, abs_ids, all_alloc,
-                      net.project_info.tracker_link,
-                      net.project_info.pr_link)
-
-    p.writeln('}\n')
+  if hierarchy:
+    _print_hierarchical(net, p, ids, all_alloc)
+  else:
+    _print_iterative(net, p, ids, all_alloc)
 
   # A hack to prevent TJ from scheduling unfinished tasks in the past
   p.write('''\

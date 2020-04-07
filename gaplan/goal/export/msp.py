@@ -137,7 +137,7 @@ def _print_goal(g, uids, ids, out):
   # <PercentWorkComplete>100</PercentWorkComplete>
   # Contact
 
-def export(net, dump=False):
+def export(net, hierarchy, dump=False):
   today = datetime.date.today()
 
   next_uid = [0]  # Python's craziness
