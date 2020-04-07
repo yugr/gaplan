@@ -107,25 +107,26 @@ The core of the syntax is Vlad's text notation for graphs:
    |[] Max
 ```
 
-It illustrates few core concepts:
+Example above illustrates few core concepts:
 * only goals have names (`Invited friends`), priorities (`!3`) and internal structure (checklists)
 * only activities have duration (`1h-2h`) and assignees (`@me`)
 
-It has been extended with additional features which turned out to be useful in practice:
-* Tool tries to infer a hierarchical connections between tasks (i.e. [WBS](https://en.wikipedia.org/wiki/Work_breakdown_structure)) as they allow to produce more readable plans for TaskJuggler.
+Canonical notation has been extended with additional features which turned out to be useful in practice:
+* Tool tries to infer hierarchical connections between tasks (i.e. [WBS](https://en.wikipedia.org/wiki/Work_breakdown_structure)) as they allow to produce more readable plans for TaskJuggler.
 ```
 # A hierarchy of 3 nested goals
 |Quality requirements fullfilled
 |<-
-   |Results of regression testing acceptable for alpha
+   |Results of regression testing acceptable for beta
    |[] Regression testing logs ready
-   |[] Number of regressions against prev. version <= 10%
+   |[] Number of regressions against prev. version <= 1%
+   |[] All regressions against prev. version fixed or explained
    |<-
-      |Results of regression testing acceptable for beta
+      |Results of regression testing acceptable for alpha
       |[] Regression testing logs ready
-      |[] All regressions against prev. version fixed or explained
+      |[] Number of regressions against prev. version <= 5%
 ```
-* Goals can be annotated with various attributes (priority, risk, assignees, iteration, etc.) e.g.
+* Goals can be annotated with various attributes (priority, risk, assignees, etc.) e.g.
 ```
 # Goal has to be reached by the end of November, has max risk and priority and has to be scheduled in first iteration
 |Symbol visibility in TZ 3.0 reduced  // deadline 2016-11-30, !3, ?3, I0
