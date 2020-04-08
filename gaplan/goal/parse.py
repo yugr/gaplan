@@ -11,6 +11,7 @@ import datetime
 from gaplan.common.error import error, error_loc
 from gaplan.common import parse as P
 from . import project
+from . import resource
 from . import goal as G
 
 def parse_attrs(s, loc):
@@ -181,6 +182,14 @@ def parse_project_attribute(s, loc):
         attrs = m.group(2).split(',')
         member.add_attrs(attrs, loc)
     return name, members
+
+  if name == 'teams':
+      m = re.findall(r'([a-zA-Z0-9_]+)\s*\(([^)]*)\)', val)
+      teams = []
+      for team_name, members in m:
+        members = re.split(r'\s*,\s*', members.strip())
+        teams.append(project.Team(team_name, members))
+      return name, teams
 
   error_loc(loc, 'unknown project attribute: %s' % name)
 

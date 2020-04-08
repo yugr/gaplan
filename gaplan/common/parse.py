@@ -98,7 +98,7 @@ def read_date(s, loc):
     error_loc(loc, 'failed to parse date: %s' % s)
   date_str = m.group(1)
   # If day is omitted, consider first day
-  date_str += m.group(2) if m.group(2) else '-01'
+  date_str += m.group(2) or '-01'
   return datetime.datetime.strptime(date_str, '%Y-%m-%d'), m.group(3)
 
 # TODO: parse UTC times i.e. 2015-02-01T12:00 ?

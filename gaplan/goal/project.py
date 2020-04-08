@@ -13,6 +13,18 @@ from gaplan.common import parse as P
 from . import goal as G
 from . import resource
 
+class Team:
+  def __init__(self, name, members):
+    self.name = name
+    self.members = members
+
+  def dump(self, p):
+    p.writeln("Team %s:")
+    p.enter()
+    for rc in self.members:
+      rc.dump(p)
+    p.exit()
+
 class ProjectInfo:
   def __init__(self):
     self.name = 'Unknown'
@@ -20,14 +32,38 @@ class ProjectInfo:
     self.start = datetime.date(year, 1, 1)
     self.finish = datetime.date(year, 12, 31)
     self.members = []
+    self.members_map = {}
+    self.teams = {}
+    self.teams_map = {}
     self.tracker_link = 'http://jira.localhost/browse/%s'
     self.pr_link = None
+
+  def _recompute(self):
+    self.members_map = {m.name : m for m in self.members}
+    self.teams_map = {t.name : t for t in self.teams}
+    if 'all' in self.teams_map:
+      error_loc(self.teams_map['all'].loc, "predefined goal 'all' overriden")
+    self.teams_map['all'] = Team('all', self.members)
+    # Resolve resources
+    for team in self.teams:
+      if team.name in self.members_map:
+        error_loc(team.loc, "team '%s' clashes with developer '%s'" % (team.name, team.name))
+      for i, name in enumerate(team.members):
+        if not isinstance(name, str):
+          continue
+        m = self.members_map.get(name)
+        if m is None:
+          error("no member with name '%s'" % name)
+        team.members[i] = m
 
   def add_attrs(self, attrs):
     for k, v in attrs.items():
       setattr(self, k, v)
+    self._recompute()
 
   def dump(self, p):
     p.writeln('= %s =\n' % self.name)
     for dev in self.members:
       dev.dump(p)
+    for team in self.teams:
+      team.dump(p)

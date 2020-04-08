@@ -23,6 +23,7 @@ def _print_alloc(p, names, full_parallel):
     for n in names:
       p.writeln('allocate %s' % n)
   else:
+    names = list(names)
     first = names[0]
     rest = names[1:]
     alts = ('alternative ' + ', '.join(rest)) if rest else ''
@@ -51,17 +52,27 @@ def _is_goal_ignored(g):
 
 # Do not print empty dummy activities
 def _is_activity_ignored(act):
-  return act.head is not None and _is_goal_ignored(act.head)
+  return act.head is not None \
+    and not act.effort.defined() \
+    and _is_goal_ignored(act.head)
 
-def _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link, pr_link):
+def _print_activity_body(p, act, abs_ids, complete, teams, tracker_link, pr_link):
   _print_jira_links(p, act.jira_tasks, act.pull_requests, tracker_link, pr_link)
 
   effort = _tj_effort(act)
-  alloc = act.alloc if act.alloc else all_alloc
+
+  # TODO: move this to project info
+  resources = set()
+  for a in (['all'] if not act.alloc else act.alloc):
+    team = teams.get(a)
+    if team is not None:
+      resources.update(m.name for m in team.members)
+    else:
+      resources.add(a)
 
   if effort > 0 and act.parallel:
     # Split activity to several tasks for parallelism
-    num_tasks = min(act.parallel, len(alloc))
+    num_tasks = min(act.parallel, len(resources))
     has_sub_tasks = True
   else:
     num_tasks = 1
@@ -86,7 +97,7 @@ def _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link, pr_
 
       # We print allocated resources only if effort > 0
       # (TJ aborts otherwise)
-      _print_alloc(p, alloc, False)  # act.is_max_parallel()
+      _print_alloc(p, resources, False)  # act.is_max_parallel()
 
     if act.is_scheduled():
       p.writeln('start %s' % PR.print_date(act.start_date))
@@ -103,11 +114,11 @@ def _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link, pr_
 def _massage_name(name):
   return re.sub(r'"', '\\"', name)
 
-def _print_activity(p, act, id, abs_ids, name, complete, all_alloc,
+def _print_activity(p, act, id, abs_ids, name, complete, teams,
                     tracker_link, pr_link):
   p.writeln('task %s "%s" {' % (id, _massage_name(name)))
   with p:
-    _print_activity_body(p, act, abs_ids, complete, all_alloc, tracker_link,
+    _print_activity_body(p, act, abs_ids, complete, teams, tracker_link,
                          pr_link)
   p.writeln('}')
 
@@ -120,7 +131,7 @@ def _print_jira_links(p, tasks, pull_requests, tracker_link, pr_link):
       p.writeln(('JiraLink "' + pr_link + '" {label "PR #%s"}') % (pr, pr))
       break
 
-def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
+def _print_goal(p, goal, ids, abs_ids, teams, tracker_link, pr_link):
   id = ids[goal.name]
   abs_id = abs_ids[goal.name]
 
@@ -149,7 +160,7 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     p.writeln('scheduled')
   elif goal.has_single_activity():
     # Translate atomic goals to atomic TJ tasks
-    _print_activity_body(p, goal.preds[0], abs_ids, complete, all_alloc,
+    _print_activity_body(p, goal.preds[0], abs_ids, complete, teams,
                          tracker_link, pr_link)
   else:
     # First print dependencies
@@ -159,7 +170,7 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     for i, act in enumerate(a for a in goal.preds \
                             if not a.is_instant() and not _is_activity_ignored(a)):
       _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i,
-                      complete, all_alloc, tracker_link, pr_link)
+                      complete, teams, tracker_link, pr_link)
 
   p.exit()
   p.writeln('}')
@@ -172,7 +183,7 @@ def _print_goal(p, goal, ids, abs_ids, all_alloc, tracker_link, pr_link):
     p.write('  maxstart %s' % goal.deadline.strftime(time_format))
     p.write('}')
 
-def _print_goal_hierarchical(p, goal, ids, abs_ids, children, all_alloc,
+def _print_goal_hierarchical(p, goal, ids, abs_ids, children, teams,
                              tracker_link, pr_link):
   id = ids[goal.name]
   abs_id = abs_ids[goal.name]
@@ -212,12 +223,12 @@ def _print_goal_hierarchical(p, goal, ids, abs_ids, children, all_alloc,
 
     # Then print goal-specific tasks
     for i, act in enumerate(a for a in goal.preds
-                            if not a.is_instant()):
+                            if not a.is_instant() and not _is_activity_ignored(a)):
       _print_activity(p, act, '%s_%d' % (id, i), abs_ids, 'Task %d' % i,
-                      complete, all_alloc, tracker_link, pr_link)
+                      complete, teams, tracker_link, pr_link)
 
   for g in goal.children:
-    _print_goal_hierarchical(p, g, ids, abs_ids, children, all_alloc, tracker_link, pr_link)
+    _print_goal_hierarchical(p, g, ids, abs_ids, children, teams, tracker_link, pr_link)
 
   p.exit()
   p.writeln('}')
@@ -230,7 +241,7 @@ def _print_goal_hierarchical(p, goal, ids, abs_ids, children, all_alloc,
     p.write('  maxstart %s' % goal.deadline.strftime(time_format))
     p.write('}')
 
-def _print_iterative(net, p, ids, all_alloc):
+def _print_iterative(net, p, ids, teams):
   user_iters = list(filter(lambda i: i is not None, net.iter_to_goals.keys()))
   user_iters.sort()
   last_iter = (user_iters[-1] + 1) if user_iters else 0
@@ -254,13 +265,13 @@ task iter_%d "Iteration %d" {
     for g in net.iter_to_goals[i]:
       if not _is_goal_ignored(g):
         with p:
-          _print_goal(p, g, ids, abs_ids, all_alloc,
+          _print_goal(p, g, ids, abs_ids, teams,
                       net.project_info.tracker_link,
                       net.project_info.pr_link)
 
     p.writeln('}\n')
 
-def _print_hierarchical(net, p, ids, all_alloc):
+def _print_hierarchical(net, p, ids, teams):
   children = {}
   def cache_children(g):
     children[g.name] = set()
@@ -281,7 +292,7 @@ def _print_hierarchical(net, p, ids, all_alloc):
     if not _is_goal_ignored(g):
       with p:
         _print_goal_hierarchical(p, g, ids, abs_ids, children,
-                                 all_alloc, net.project_info.tracker_link,
+                                 teams, net.project_info.tracker_link,
                                  net.project_info.pr_link)
 
 def export(net, hierarchy, dump=False):
@@ -344,12 +355,10 @@ flags internal
     p.writeln('  }')
   p.writeln('}')
 
-  all_alloc = list(map(lambda m: m.name, net.project_info.members))
-
   if hierarchy:
-    _print_hierarchical(net, p, ids, all_alloc)
+    _print_hierarchical(net, p, ids, net.project_info.teams_map)
   else:
-    _print_iterative(net, p, ids, all_alloc)
+    _print_iterative(net, p, ids, net.project_info.teams_map)
 
   # A hack to prevent TJ from scheduling unfinished tasks in the past
   p.write('''\
