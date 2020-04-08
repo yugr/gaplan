@@ -144,7 +144,7 @@ def parse_goal(f, offset, names, parent, allow_empty=False):
 
   parse_subgoals(f, goal, offset, names)
 
-  if not was_defined and (goal.checks or goal_attrs):
+  if not was_defined and (goal.checks or goal_attrs or goal.children):
     goal.defined = True
     if parent is not None:
       parent.add_child(goal)
