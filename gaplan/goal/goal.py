@@ -37,13 +37,6 @@ def add_common_attrs(loc, obj, attrs):
 
   return other_attrs
 
-class Member:
-  """Class which describes a team member."""
-
-  def __init__(self, name, eff):
-    self.name = name
-    self.eff = eff
-
 class Condition:
   """Class which describes single completion condition of a goal."""
 
@@ -616,7 +609,8 @@ class Net:
     visit_goals(self.roots, **args)
 
   def dump(self, p):
-    self.project_info.dump()
+    self.project_info.dump(p)
+    p.writeln('')
     for g in self.roots:
       g.dump(p)
       p.writeln('')
