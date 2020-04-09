@@ -10,8 +10,8 @@ import datetime
 
 from gaplan.common.error import error, error_loc
 from gaplan.common import parse as P
-from . import project
-from . import goal as G
+from gaplan import project
+from gaplan.goal import goal as G
 
 def parse_attrs(s, loc):
   ss = s.split('//')
