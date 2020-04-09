@@ -103,7 +103,7 @@ def parse_subgoals(f, goal, offset, names):
     f.skip()
 
     subgoal = parse_goal(f, edge_offset + len('|<-'), names, goal,
-                         allow_empty=True)
+                         is_pred, allow_empty=True)
     act.set_endpoints(goal, subgoal, is_pred)
     goal.add_activity(act, is_pred)
     if subgoal:
@@ -119,7 +119,7 @@ def _make_dummy_goal(loc, names):
   names[name] = goal
   return goal
 
-def parse_goal(f, offset, names, parent, allow_empty=False):
+def parse_goal(f, offset, names, other_goal, is_pred, allow_empty=False):
   s, loc = f.peek()
 
   goal = None
@@ -147,8 +147,8 @@ def parse_goal(f, offset, names, parent, allow_empty=False):
 
   if not was_defined and (goal.checks or goal_attrs or goal.children):
     goal.defined = True
-    if parent is not None:
-      parent.add_child(goal)
+    if other_goal is not None and is_pred:
+      other_goal.add_child(goal)
 
   return goal
 
@@ -197,8 +197,6 @@ def parse_goals(filename, f):
   f = P.Lexer(filename, f)
   prj = project.Project()
 
-  goals = []
-  roots = set()
   names = {}
   prj_attrs = {}
 
@@ -207,10 +205,7 @@ def parse_goals(filename, f):
     if s is None:
       break
     elif is_root_goal_decl(s):
-      goal = parse_goal(f, 0, names, None)
-      if goal.name not in roots:
-        goals.append(goal)
-        roots.add(goal.name)
+      goal = parse_goal(f, 0, names, None, False)
     elif is_project_attribute(s):
       k, v = parse_project_attribute(s, loc)
       f.skip()
@@ -219,6 +214,7 @@ def parse_goals(filename, f):
       # TODO: anonymous goals
       error_loc(loc, 'unexpected line: "%s"' % s)
 
+  roots = [goal for name, goal in sorted(names.items()) if not goal.parent]
   prj.add_attrs(prj_attrs)
 
-  return prj, goals
+  return prj, roots
