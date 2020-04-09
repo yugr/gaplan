@@ -212,18 +212,18 @@ $ pytest gaplan
 # TODO
 
 High prio:
-* Named iterations.
 * Add realistic example project plan.
+* Implement simple scheduler.
 * Export to MS Project.
 
 Other:
-* Add include directives.
-* Add (many) more unittests.
-* Mark time- or risk-critical paths in PERT diagram.
-* Describe tracking info (actual efforts and durations, Jira tasks, etc.) in README.
-* Test on Windows, Linux and Cygwin.
 * Fix remaining TODO and FIXME.
+* Add (many) more unittests.
 * Add Travis, codecov, LGTM.
+* Mark time- or risk-critical paths in PERT diagram.
+* Add include directives.
+* Describe tracking info (actual efforts and durations, Jira tasks, etc.) in README.
+* Fast tracking in TJ.
 
 # Conceptual questions
 
