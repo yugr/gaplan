@@ -220,6 +220,7 @@ Other:
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
 * Add Travis, codecov, LGTM.
+* Build standalone task tree and print it in TJ exporter.
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include directives.
 * Describe tracking info (actual efforts and durations, Jira tasks, etc.) in README.
