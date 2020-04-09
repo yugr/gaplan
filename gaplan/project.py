@@ -52,7 +52,7 @@ class Team:
       rc.dump(p)
     p.exit()
 
-class ProjectInfo:
+class Project:
   """Describes project resources."""
 
   def __init__(self):

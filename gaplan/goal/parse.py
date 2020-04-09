@@ -195,7 +195,7 @@ def parse_project_attribute(s, loc):
 
 def parse_goals(filename, f):
   f = P.Lexer(filename, f)
-  prj = project.ProjectInfo()
+  prj = project.Project()
 
   goals = []
   names = {}

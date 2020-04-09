@@ -266,8 +266,8 @@ task iter_%d "Iteration %d" {
       if not _is_goal_ignored(g):
         with p:
           _print_goal(p, g, ids, abs_ids, teams,
-                      net.project_info.tracker_link,
-                      net.project_info.pr_link)
+                      net.project.tracker_link,
+                      net.project.pr_link)
 
     p.writeln('}\n')
 
@@ -292,8 +292,8 @@ def _print_hierarchical(net, p, ids, teams):
     if not _is_goal_ignored(g):
       with p:
         _print_goal_hierarchical(p, g, ids, abs_ids, children,
-                                 teams, net.project_info.tracker_link,
-                                 net.project_info.pr_link)
+                                 teams, net.project.tracker_link,
+                                 net.project.pr_link)
 
 def export(net, hierarchy, dump=False):
   today = datetime.date.today()
@@ -326,14 +326,14 @@ project "{project_name}" {start} - {finish} {{
 
 flags internal
 
-'''.format(project_name=net.project_info.name,
-           start=PR.print_date(net.project_info.start),
-           finish=PR.print_date(net.project_info.finish),
+'''.format(project_name=net.project.name,
+           start=PR.print_date(net.project.start),
+           finish=PR.print_date(net.project.finish),
            time_format=time_format,
            now=today.strftime(time_format)))
 
   # TODO: additional holidays in project info?
-  for y in range(net.project_info.start.year, net.project_info.finish.year + 1):
+  for y in range(net.project.start.year, net.project.finish.year + 1):
     for name, dates in [
         ('New year holidays', '01-01 + 8d'),
         ('Army day',          '02-23'),
@@ -346,7 +346,7 @@ flags internal
   p.writeln('')
 
   p.writeln('resource dev "Developers" {')
-  for dev in net.project_info.members:
+  for dev in net.project.members:
     p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
     p.writeln('    efficiency %f' % dev.efficiency)
     for start, finish in dev.vacations:
@@ -356,9 +356,9 @@ flags internal
   p.writeln('}')
 
   if hierarchy:
-    _print_hierarchical(net, p, ids, net.project_info.teams_map)
+    _print_hierarchical(net, p, ids, net.project.teams_map)
   else:
-    _print_iterative(net, p, ids, net.project_info.teams_map)
+    _print_iterative(net, p, ids, net.project.teams_map)
 
   # A hack to prevent TJ from scheduling unfinished tasks in the past
   p.write('''\
@@ -401,7 +401,7 @@ tracereport trace "TraceReport" {{
 export msproject "{project_name}" {{
   formats mspxml
 }}
-'''.format(project_name=net.project_info.name))
+'''.format(project_name=net.project.name))
 
   if dump:
     print(p.out.getvalue())

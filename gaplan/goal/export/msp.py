@@ -172,7 +172,7 @@ def export(net, hierarchy, dump=False):
   <SpreadPercentComplete>0</SpreadPercentComplete>
 
   <Tasks>
-''' % (net.project_info.name, P.print_date(net.project_info.start), P.print_date(net.project_info.finish)), file=out)
+''' % (net.project.name, P.print_date(net.project.start), P.print_date(net.project.finish)), file=out)
 
   # TODO
   net.visit_goals(callback=lambda g: _print_goal(g, uids, out))
