@@ -11,7 +11,6 @@ import datetime
 from gaplan.common.error import error, error_loc
 from gaplan.common import parse as P
 from . import project
-from . import resource
 from . import goal as G
 
 def parse_attrs(s, loc):
@@ -177,7 +176,7 @@ def parse_project_attribute(s, loc):
       m = re.search(r'^([A-Za-z_0-9]+)\s*(?:\((.*)\))?$', member)
       if m is None:
         error_loc(loc, 'failed to parse member declaration: %s' % member)
-      member = resource.Resource(m.group(1))
+      member = project.Resource(m.group(1))
       members.append(member)
       if m.group(2):
         attrs = m.group(2).split(',')
