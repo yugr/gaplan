@@ -124,6 +124,7 @@ def parse_goal(f, offset, names, parent, allow_empty=False):
   s, loc = f.peek()
 
   goal = None
+  goal_attrs = []
   if s is not None:
     goal, goal_attrs = parse_goal_decl(s, offset, loc, names)
     if goal:
