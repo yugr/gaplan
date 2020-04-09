@@ -144,6 +144,8 @@ class Activity:
 
     p.enter()
 
+    p.writeln("Defined in %s" % self.loc)
+
     if self.jira_tasks:
       p.writeln('Tasks in tracker: %s' % ', '.join(self.jira_tasks))
 
@@ -171,8 +173,8 @@ class Activity:
     else:
       par = 'non'
     par
-    p.write('allocated: %s%s' % (', '.join(self.alloc) if self.alloc else 'any',
-                                 par))
+    p.write('allocated: %s (%s-parallel)'
+            % (', '.join(self.alloc) if self.alloc else 'any', par))
 
     p.exit()
 
@@ -425,6 +427,7 @@ class Goal:
     p.enter()
 
     for attr in [
+        'loc',
         'alias',
         'depth',
         'prio',
@@ -569,8 +572,11 @@ class Net:
 
     for g in self.name_to_goal.values():
       if g.parent is None and g not in self.roots:
-        # First successor becomes parent
-        g.succs[0].tail.add_child(g)
+        if g.succs:
+          # First successor becomes parent
+          g.succs[0].tail.add_child(g)
+        else:
+          self.roots.append(g)
 
     # Compute depths
 

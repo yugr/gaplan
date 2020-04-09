@@ -198,6 +198,7 @@ def parse_goals(filename, f):
   prj = project.Project()
 
   goals = []
+  roots = set()
   names = {}
   prj_attrs = {}
 
@@ -207,7 +208,9 @@ def parse_goals(filename, f):
       break
     elif is_root_goal_decl(s):
       goal = parse_goal(f, 0, names, None)
-      goals.append(goal)
+      if goal.name not in roots:
+        goals.append(goal)
+        roots.add(goal.name)
     elif is_project_attribute(s):
       k, v = parse_project_attribute(s, loc)
       f.skip()
