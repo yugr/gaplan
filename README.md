@@ -110,6 +110,7 @@ The core of the syntax is Vlad's text notation for graphs:
 Example above illustrates few core concepts:
 * only goals have names (`Invited friends`), priorities (`!3`) and internal structure (checklists)
 * only activities have duration (`1h-2h`) and assignees (`@me`)
+See more examples in `examples/` subfoler.
 
 Canonical notation has been extended with additional features which turned out to be useful in practice:
 * Tool tries to infer hierarchical connections between tasks (i.e. [WBS](https://en.wikipedia.org/wiki/Work_breakdown_structure)) as they allow to produce more readable plans for TaskJuggler.
@@ -212,7 +213,6 @@ $ pytest gaplan
 # TODO
 
 High prio:
-* Add realistic example project plan.
 * Implement simple scheduler.
 * Export to MS Project.
 

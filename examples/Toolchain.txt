@@ -1,0 +1,95 @@
+# A simple example of alpha phase of some toolchain project
+# which consists of two main features: A and B.
+
+name = Toolchain
+start   = 2016-01-01
+finish  = 2017-03-31
+members = john, mike (1.5, vacations 2016-06-01 - 2016-06-15), george (0.5)
+teams = manager (john), developers (mike, george)
+
+# We ship A in Alpha. B is a high-risk feature so we only investigate
+# it's viability in Alpha. We also ship some standard documents.
+
+|Alpha version delivered  // deadline 2015-03-31, !3
+|[] Email sent to customer
+|[] Artifacts uploaded
+|<-  // 1h, @manager
+   |<-
+      |Alpha docs ready
+      |<-
+         |Feature A docs ready
+      |<-
+         |Release notes ready
+         |<-  // 1d-2d
+            |Alpha features ready
+      |<-
+         |Verification report ready
+         |<-  // @developers, 2d-1w
+            |Alpha distro runs
+   |<-
+      |Alpha features ready
+      |<-
+         |Feature A ready
+      |<-
+         |Performance impact of feature B known
+   |<-
+      |Alpha distro rebuilt
+      |[] Distro built
+      |[] Build regressions fixed
+      |<-
+         |Feature A implemented
+   |<-
+      |Alpha distro runs
+      |[] Distro boots
+      |[] Basic tests pass
+      |[] Browser works
+      |<-
+         |Alpha distro rebuilt
+
+
+|Feature A ready
+|<-
+   |Feature A implemented
+   |[] Design prepared
+   |[] Design approved
+   |[] Testplan prepared
+   |[] Testplan approved
+   |[] Initial version ready
+   |[] Code passes tests
+   |[] Final version merged
+   |[] Distro recompiled
+   |<-  // @developers, 1w-3w
+|<-
+   |Feature A docs ready
+   |[] Initial version written
+   |[] Docs reviewed by team
+   |[] Docs reviewed by customer
+   |[] Final version merged
+   |<-  // @developers, 3d-2w
+      |Feature A implemented
+
+|Feature B ready
+|<-  // @developers, || 2
+   |Feature B approved for implementation
+   |[] Performance report ready
+   |[] Performance report reviewed by customer
+   |[] Feature B approved
+   |<-  // @manager, 2d-1w
+      |Performance impact of feature B known  // !3
+      |[] Modelling approach designed
+      |[] Modelling approach approved
+      |[] Benchmark results collected
+      |[] Benchmark results reviewed
+      |<-  // @developers, 1w-2w
+|<-
+   |Feature B implemented  // ?2
+   |[] Design prepared
+   |[] Design approved
+   |[] Testplan prepared
+   |[] Testplan approved
+   |[] Initial version ready
+   |[] Code passes tests
+   |[] Final version merged
+   |[] Distro recompiled
+   |<-  // 2w-1m, @developers, || 2
+      |Feature B approved for implementation
