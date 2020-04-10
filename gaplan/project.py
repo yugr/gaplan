@@ -15,23 +15,24 @@ from gaplan.common import matcher as M
 class Resource:
   """Describes a single developer."""
 
-  def __init__(self, name):
+  def __init__(self, name, loc):
     self.name = name
     self.efficiency = 1.0
+    self.loc = loc
     self.vacations = []
 
   def add_attrs(self, attrs, loc):
     for a in attrs:
       if M.search(r'^[0-9.]+$', a):
         self.efficiency = float(a)
-      elif M.search(r'vacation\s+(.*)', a):
+      elif M.search(r'vacations?\s+(.*)', a):
         start, finish = P.read_date2(M.group(1), loc)
         self.vacations.append((start, finish))
       else:
-        error_loc("unexpected resource attribute: %s" % a)
+        error_loc(loc, "unexpected resource attribute: %s" % a)
 
   def dump(self, p):
-    p.writeln('Developer %s (%f)' % (self.name, self.efficiency))
+    p.writeln('Developer %s (%s, %f)' % (self.name, self.loc, self.efficiency))
     time_format = '%Y-%m-%d'
     vv = []
     for start, finish in self.vacations:
@@ -41,12 +42,13 @@ class Resource:
 class Team:
   """Describes a team of developers."""
 
-  def __init__(self, name, members):
+  def __init__(self, name, members, loc):
     self.name = name
     self.members = members
+    self.loc = loc
 
   def dump(self, p):
-    p.writeln("Team %s:")
+    p.writeln("Team %s (%s):" % (self.name, self.loc))
     p.enter()
     for rc in self.members:
       rc.dump(p)
@@ -55,8 +57,9 @@ class Team:
 class Project:
   """Describes project resources."""
 
-  def __init__(self):
+  def __init__(self, loc):
     self.name = 'Unknown'
+    self.loc = loc
     year = datetime.datetime.today().year
     self.start = datetime.date(year, 1, 1)
     self.finish = datetime.date(year, 12, 31)
@@ -72,7 +75,7 @@ class Project:
     self.teams_map = {t.name : t for t in self.teams}
     if 'all' in self.teams_map:
       error_loc(self.teams_map['all'].loc, "predefined goal 'all' overriden")
-    self.teams_map['all'] = Team('all', self.members)
+    self.teams_map['all'] = Team('all', self.members, self.loc)
     # Resolve resources
     for team in self.teams:
       if team.name in self.members_map:
@@ -82,7 +85,7 @@ class Project:
           continue
         m = self.members_map.get(name)
         if m is None:
-          error("no member with name '%s'" % name)
+          error_loc(team.loc, "no member with name '%s'" % name)
         team.members[i] = m
 
   def add_attrs(self, attrs):

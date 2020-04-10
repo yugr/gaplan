@@ -10,6 +10,7 @@ import datetime
 
 from gaplan.common.error import error, error_loc
 from gaplan.common import parse as P
+from gaplan.common import matcher as M
 from gaplan import project
 from gaplan.goal import goal as G
 
@@ -172,15 +173,17 @@ def parse_project_attribute(s, loc):
 
   if name == 'members':
     members = []
-    for member in map(lambda m: m.strip(), val.split(',')):
-      m = re.search(r'^([A-Za-z_0-9]+)\s*(?:\((.*)\))?$', member)
-      if m is None:
-        error_loc(loc, 'failed to parse member declaration: %s' % member)
-      member = project.Resource(m.group(1))
+    val = val.strip()
+    # This is ugly, I need proper parser...
+    while M.search(r'([A-Za-z_0-9]+)\s*(?:\(([^\)]*)\))?(.*)', val):
+      member_name, attrs, val = M.groups()
+      member = project.Resource(member_name, loc)
+      if attrs:
+        member.add_attrs(attrs.split(','), loc)
+      val = re.sub(r'^\s*,', '', val)
       members.append(member)
-      if m.group(2):
-        attrs = m.group(2).split(',')
-        member.add_attrs(attrs, loc)
+    if val.strip():
+      error_loc(loc, "failed to parse member declaration: %s" % val)
     return name, members
 
   if name == 'teams':
@@ -188,14 +191,14 @@ def parse_project_attribute(s, loc):
       teams = []
       for team_name, members in m:
         members = re.split(r'\s*,\s*', members.strip())
-        teams.append(project.Team(team_name, members))
+        teams.append(project.Team(team_name, members, loc))
       return name, teams
 
   error_loc(loc, 'unknown project attribute: %s' % name)
 
 def parse_goals(filename, f):
   f = P.Lexer(filename, f)
-  prj = project.Project()
+  prj = project.Project(P.Location(filename, 1))
 
   names = {}
   prj_attrs = {}
