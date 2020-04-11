@@ -223,7 +223,7 @@ High prio:
 Other:
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
-* Add Travis, codecov, LGTM.
+* Add Travis, codecov.
 * Build standalone task tree and print it in TJ exporter.
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include directives.
