@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016-2018 Yury Gribov
+# Copyright (c) 2016-2020 Yury Gribov
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
@@ -9,7 +9,7 @@ import datetime
 import io
 from collections import defaultdict
 
-from gaplan.goal import goal as G
+from gaplan import goal as G
 from gaplan.common import printers as PR
 
 def export(net, goal, start_date, finish_date, dump):

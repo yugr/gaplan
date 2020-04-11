@@ -25,13 +25,13 @@ from gaplan.common.error import error, set_basename
 from gaplan.common import error as E
 from gaplan.common import ETA
 from gaplan.common import printers as PR
-from gaplan.goal import parse as PA
-from gaplan.goal import goal as G
+from gaplan import parse as PA
+from gaplan import goal as G
 
-from gaplan.goal.export import pert
-from gaplan.goal.export import tj
-from gaplan.goal.export import msp
-from gaplan.goal.export import burn
+from gaplan.export import pert
+from gaplan.export import tj
+from gaplan.export import msp
+from gaplan.export import burn
 
 def main():
   set_basename('gaplan')

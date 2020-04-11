@@ -13,7 +13,7 @@ import os
 import os.path
 import subprocess
 
-from gaplan.goal import goal as G
+from gaplan import goal as G
 from gaplan.common import printers as P
 from gaplan.common.error import error, error_loc
 
