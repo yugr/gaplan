@@ -1,4 +1,5 @@
 [![License](http://img.shields.io/:license-MIT-blue.svg)](https://github.com/yugr/gaplan/blob/master/LICENSE.txt)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/yugr/gaplan.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yugr/gaplan/alerts/)
 
 # What is this?
 
