@@ -6,9 +6,8 @@
 # that can be found in the LICENSE.txt file.
 
 import re
-import datetime
 
-from gaplan.common.error import error, error_loc
+from gaplan.common.error import error_loc
 from gaplan.common import parse as PA
 from gaplan.common import matcher as M
 from gaplan import project
@@ -79,7 +78,7 @@ class Lexer:
       nest = 0
       self.line = self.line.lstrip()
       if self.line[0] == ',':
-        type = text = ','
+        type = ','
         i = 1
       else:
         type = Lexeme.LIST_ELT
@@ -361,7 +360,7 @@ class Parser:
         break
       self._dbg("parse: next lexeme: %s" % l)
       if l.type == Lexeme.GOAL and l.data[0] == 0:
-        goal = self.parse_goal(0, None, False)
+        self.parse_goal(0, None, False)
       elif l.type == Lexeme.PRJ_ATTR:
         self.parse_project_attr()
       elif l.type == Lexeme.EOF:

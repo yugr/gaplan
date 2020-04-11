@@ -9,9 +9,6 @@
 
 import datetime
 import io
-import os
-import os.path
-import subprocess
 
 from gaplan import goal as G
 from gaplan.common import printers as P
@@ -78,8 +75,8 @@ def _print_activity(a, name, uids, out):
 def _print_goal(g, uids, ids, out):
   uid = uids[g]
 
-  num_acts = len(goal.preds)
-  complete = goal.complete()
+#  num_acts = len(goal.preds)
+#  complete = goal.complete()
 
   print('''\
     <Task>
@@ -104,7 +101,7 @@ def _print_goal(g, uids, ids, out):
 
   if g.is_leaf():
     # We can merge activity and goal
-    _print_activity_body(g.preds[0], out)
+    _print_activity_body(g.preds[0], uids, out)
     print('''\
     </Task>
 ''', file=out)
@@ -138,7 +135,7 @@ def _print_goal(g, uids, ids, out):
   # Contact
 
 def export(project, net, hierarchy, dump=False):
-  today = datetime.date.today()
+#  today = datetime.date.today()
 
   next_uid = [0]  # Python's craziness
   uids = {}
@@ -175,7 +172,7 @@ def export(project, net, hierarchy, dump=False):
 ''' % (net.project.name, P.print_date(net.project.start), P.print_date(net.project.finish)), file=out)
 
   # TODO
-  net.visit_goals(callback=lambda g: _print_goal(g, uids, out))
+  net.visit_goals(callback=lambda g: _print_goal(g, uids, ids, out))
 
   print('''\
   </Tasks>
