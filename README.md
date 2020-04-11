@@ -216,6 +216,7 @@ $ pytest gaplan
 
 High prio:
 * Implement simple scheduler.
+* Add explicit converter to traditional WBS and use it in TJ.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx)
 
 Other:
