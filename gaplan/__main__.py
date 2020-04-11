@@ -9,14 +9,6 @@
 
 # Poor man's converter for Gaperton's declarative plans.
 # Run with --help for details.
-#
-# TODO (global):
-# * effortless but assigned tasks cause TJ to abort
-# * export to MSP (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx)
-# * emit warnings (loops, etc.)
-# * add internal docs
-# * publish
-# * minor TODOs scattered over codebase
 
 import sys
 import argparse
