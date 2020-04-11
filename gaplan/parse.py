@@ -369,7 +369,12 @@ class Parser:
         # TODO: anonymous goals
         error_loc(l.loc, "unexpected lexeme: '%s'" % l.text)
 
-    roots = [goal for name, goal in sorted(self.names.items()) if not goal.parent]
+    roots = []
+    for g in (g for _, g in sorted(self.names.items()) if not g.parent):
+      if g.succs and g.succs[0].tail:
+        g.succs[0].tail.add_child(g)
+      else:
+        roots.append(g)
     prj = project.Project(self.project_loc)
     prj.add_attrs(self.project_attrs)
 
