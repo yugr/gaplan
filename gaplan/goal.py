@@ -503,9 +503,7 @@ class Net:
 
   """Class which represents a single declarative plan (goals, iterations, etc.)."""
 
-  # TODO: change project to own net
-  def __init__(self, project, roots, warn):
-    self.project = project
+  def __init__(self, roots, warn):
     self.roots = roots
     self.name_to_goal = {}
     self.iter_to_goals = {}
@@ -617,8 +615,6 @@ class Net:
     visit_goals(self.roots, **args)
 
   def dump(self, p):
-    self.project.dump(p)
-    p.writeln('')
     for g in self.roots:
       g.dump(p)
       p.writeln('')

@@ -125,7 +125,7 @@ Examples:
   if args.action not in ['tj', 'msp'] and args.hierarchy:
     error("--hierarchy supported only for tj and msp actions")
 
-  net = G.Net(project, roots, args.W)
+  net = G.Net(roots, args.W)
   net.check(args.W)
 
   if args.only is not None:
@@ -139,17 +139,19 @@ Examples:
     net.filter(goals, args.W)
 
   if args.action == 'tj':
-    tj.export(net, args.hierarchy, args.dump)
+    tj.export(project, net, args.hierarchy, args.dump)
   elif args.action == 'pert':
     pert.export(net, args.dump)
   elif args.action == 'msp':
-    msp.export(net, args.hierarchy, args.dump)
+    msp.export(project, net, args.hierarchy, args.dump)
   elif args.action == 'dump':
-    net.dump(PR.SourcePrinter())
+    p = PR.SourcePrinter()
+    project.dump(p)
+    net.dump(p)
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
-      start_date = net.project.start
-      finish_date = net.project.finish
+      start_date = project.start
+      finish_date = project.finish
       goal = roots[0]
     else:
       if args.iter not in net.iter_to_goals:

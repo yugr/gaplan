@@ -61,7 +61,7 @@ def _print_activity_body(p, act, abs_ids, complete, teams, tracker_link, pr_link
 
   effort = _tj_effort(act)
 
-  # TODO: move this to project info
+  # TODO: move this to project
   resources = set()
   for a in (['all'] if not act.alloc else act.alloc):
     team = teams.get(a)
@@ -241,7 +241,7 @@ def _print_goal_hierarchical(p, goal, ids, abs_ids, children, teams,
     p.write('  maxstart %s' % goal.deadline.strftime(time_format))
     p.write('}')
 
-def _print_iterative(net, p, ids, teams):
+def _print_iterative(project, net, p, ids, teams):
   user_iters = list(filter(lambda i: i is not None, net.iter_to_goals.keys()))
   user_iters.sort()
   last_iter = (user_iters[-1] + 1) if user_iters else 0
@@ -266,12 +266,12 @@ task iter_%d "Iteration %d" {
       if not _is_goal_ignored(g):
         with p:
           _print_goal(p, g, ids, abs_ids, teams,
-                      net.project.tracker_link,
-                      net.project.pr_link)
+                      project.tracker_link,
+                      project.pr_link)
 
     p.writeln('}\n')
 
-def _print_hierarchical(net, p, ids, teams):
+def _print_hierarchical(project, net, p, ids, teams):
   children = {}
   def cache_children(g):
     children[g.name] = set()
@@ -292,10 +292,10 @@ def _print_hierarchical(net, p, ids, teams):
     if not _is_goal_ignored(g):
       with p:
         _print_goal_hierarchical(p, g, ids, abs_ids, children,
-                                 teams, net.project.tracker_link,
-                                 net.project.pr_link)
+                                 teams, project.tracker_link,
+                                 project.pr_link)
 
-def export(net, hierarchy, dump=False):
+def export(project, net, hierarchy, dump=False):
   today = datetime.date.today()
 
   next_id = [0]  # Python's craziness
@@ -326,14 +326,14 @@ project "{project_name}" {start} - {finish} {{
 
 flags internal
 
-'''.format(project_name=net.project.name,
-           start=PR.print_date(net.project.start),
-           finish=PR.print_date(net.project.finish),
+'''.format(project_name=project.name,
+           start=PR.print_date(project.start),
+           finish=PR.print_date(project.finish),
            time_format=time_format,
            now=today.strftime(time_format)))
 
-  # TODO: additional holidays in project info?
-  for y in range(net.project.start.year, net.project.finish.year + 1):
+  # TODO: additional holidays in plan
+  for y in range(project.start.year, project.finish.year + 1):
     for name, dates in [
         ('New year holidays', '01-01 + 8d'),
         ('Army day',          '02-23'),
@@ -346,7 +346,7 @@ flags internal
   p.writeln('')
 
   p.writeln('resource dev "Developers" {')
-  for dev in net.project.members:
+  for dev in project.members:
     p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
     p.writeln('    efficiency %f' % dev.efficiency)
     for start, finish in dev.vacations:
@@ -356,9 +356,9 @@ flags internal
   p.writeln('}')
 
   if hierarchy:
-    _print_hierarchical(net, p, ids, net.project.teams_map)
+    _print_hierarchical(project, net, p, ids, project.teams_map)
   else:
-    _print_iterative(net, p, ids, net.project.teams_map)
+    _print_iterative(project, net, p, ids, project.teams_map)
 
   # A hack to prevent TJ from scheduling unfinished tasks in the past
   p.write('''\
@@ -401,7 +401,7 @@ tracereport trace "TraceReport" {{
 export msproject "{project_name}" {{
   formats mspxml
 }}
-'''.format(project_name=net.project.name))
+'''.format(project_name=project.name))
 
   if dump:
     print(p.out.getvalue())
