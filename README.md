@@ -1,3 +1,5 @@
+[![License](http://img.shields.io/:license-MIT-blue.svg)](https://github.com/yugr/gaplan/blob/master/LICENSE.txt)
+
 # What is this?
 
 Gaplan is a simple but functional toolset for constructing and
