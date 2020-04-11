@@ -116,7 +116,7 @@ class Lexer:
         type = Lexeme.ASSIGN
         self.attr_mode = True
       else:
-        error_loc(loc, "unexpected syntax: %s" % self.line)
+        error_loc(self._loc(), "unexpected syntax: %s" % self.line)
       self.line = self.line[len(M.group(0)):]
       text = M.group(0)
     self.lexemes.append(Lexeme(type, data, text, self._loc()))
