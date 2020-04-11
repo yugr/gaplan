@@ -100,7 +100,7 @@ class Lexer:
       if M.match(r'( *)\|([<>])-', self.line):
         type = Lexeme.LARROW if M.group(2) == '<' else Lexeme.RARROW
         data = len(M.group(1))
-      elif M.match(r'( +)\|\[([^\]]*)\]\s*(.*?)(?=(//|$))', self.line):
+      elif M.match(r'( *)\|\[([^\]]*)\]\s*(.*?)(?=(//|$))', self.line):
         type = Lexeme.CHECK
         data = len(M.group(1)), M.group(2), M.group(3).strip()
       elif M.match(r'( *)\|(.*?)(?=//|$)', self.line):
@@ -354,13 +354,15 @@ class Parser:
     self.project_loc = None
     self.names = {}
 
+    roots = []
     while True:
       l = self.lex.peek()
       if l is None:
         break
       self._dbg("parse: next lexeme: %s" % l)
       if l.type == Lexeme.GOAL and l.data[0] == 0:
-        self.parse_goal(0, None, False)
+        goal = self.parse_goal(0, None, False)
+        roots.append(goal)
       elif l.type == Lexeme.PRJ_ATTR:
         self.parse_project_attr()
       elif l.type == Lexeme.EOF:
@@ -369,12 +371,6 @@ class Parser:
         # TODO: anonymous goals
         error_loc(l.loc, "unexpected lexeme: '%s'" % l.text)
 
-    roots = []
-    for g in (g for _, g in sorted(self.names.items()) if not g.parent):
-      if g.succs and g.succs[0].tail:
-        g.succs[0].tail.add_child(g)
-      else:
-        roots.append(g)
     prj = project.Project(self.project_loc)
     prj.add_attrs(self.project_attrs)
 
