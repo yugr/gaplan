@@ -19,6 +19,7 @@ from gaplan.common import ETA
 from gaplan.common import printers as PR
 from gaplan import parse as PA
 from gaplan import goal as G
+from gaplan import wbs as W
 
 from gaplan.export import pert
 from gaplan.export import tj
@@ -41,11 +42,14 @@ ACTION should be one of
   msp       Convert declarative plan to MS Project project (TBD!).
 
 Examples:
-  Pretty print a project:
+  Pretty print PERT diagram:
   $ {exe} dump plan.txt
 
-  Generate PERT diagram:
+  Generate PERT diagram via GraphViz:
   $ {exe} pert plan.txt | dot -Tpdf > plan.pdf
+
+  Pretty print WBS:
+  $ {exe} dump-wbs plan.txt
 
   Generate TaskJuggler project and report:
   $ {exe} tj plan.txt > plan.tjp
@@ -59,7 +63,7 @@ Examples:
     'action',
     metavar='ACT',
     help="Action performed on PLAN.",
-    choices=['dump', 'tj', 'msp', 'pert', 'burn', 'burndown'])
+    choices=['dump', 'dump-wbs', 'tj', 'msp', 'pert', 'burn', 'burndown'])
   parser.add_argument(
     'plan',
     metavar='PLAN',
@@ -122,9 +126,6 @@ Examples:
   if args.action in ['tj', 'msp'] and not project.members:
     error("--tj and --msp require member info in project file")
 
-  if args.action not in ['tj', 'msp'] and args.hierarchy:
-    error("--hierarchy supported only for tj and msp actions")
-
   net = G.Net(roots, args.W)
   net.check(args.W)
 
@@ -138,6 +139,9 @@ Examples:
     G.visit_goals(roots, callback=lambda g: goals.add(g.name), succs=False)
     net.filter(goals, args.W)
 
+  wbs = W.create_wbs(net, args.hierarchy)
+  p = PR.SourcePrinter()
+
   if args.action == 'tj':
     tj.export(project, net, args.hierarchy, args.dump)
   elif args.action == 'pert':
@@ -145,9 +149,10 @@ Examples:
   elif args.action == 'msp':
     msp.export(project, net, args.hierarchy, args.dump)
   elif args.action == 'dump':
-    p = PR.SourcePrinter()
     project.dump(p)
     net.dump(p)
+  elif args.action == 'dump-wbs':
+    wbs.dump(p)
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
       start_date = project.start
