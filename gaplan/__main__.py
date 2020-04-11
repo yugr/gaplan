@@ -71,7 +71,7 @@ Examples:
   parser.add_argument(
     '-b', '--bias',
     help="Estimation bias.",
-    choices=['pessimist', 'optimist', 'none'],
+    choices=['none', 'pessimist', 'optimist', 'worst-case', 'best-case'],
     default='none')
   parser.add_argument(
     '--iter', '-i',
@@ -105,10 +105,6 @@ Examples:
   if args.iter is not None and args.action != 'burn':
     error("--iter/-i is only implemented for burndown charts right now")
 
-  good_biases = ['none', 'pessimist', 'optimist']
-  if args.bias not in good_biases:
-    error("unknown bias: %s (supported biases are %s)"
-          % (args.bias, ', '.join(good_biases)))
   ETA.set_options(estimate_bias=args.bias)
 
   E.set_options(print_stack=args.print_stack)

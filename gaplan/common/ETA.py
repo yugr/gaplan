@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016-2018 Yury Gribov
+# Copyright (c) 2016-2020 Yury Gribov
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
@@ -67,9 +67,18 @@ class ETA:
     if risk is None:
       bias = _bias
     else:
-      bias = {1 : 'optimist', 2 : 'none', 3 : 'pessimist'}[risk]
+      low = 'optimist' if _bias == 'none' else 'best-case'
+      high = 'pessimist' if _bias == 'none' else 'worst-case'
+      bias = {1 : low,
+              2 : 'none',
+              3 : high}[risk]
 
-    k = {'none' : 0.5, 'pessimist' : 1.0 / 3, 'optimist' : 2.0 / 3}[bias]
+    k = {
+      'none'       : 0.5,
+      'pessimist'  : 1.0 / 3,
+      'optimist'   : 2.0 / 3,
+      'worst-case' : 0,
+      'best-case'  : 1}[bias]
     avg = k * self.min + (1 - k) * self.max
 
     # "2 sigma rule"
