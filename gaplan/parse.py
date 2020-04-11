@@ -9,215 +9,369 @@ import re
 import datetime
 
 from gaplan.common.error import error, error_loc
-from gaplan.common import parse as P
+from gaplan.common import parse as PA
 from gaplan.common import matcher as M
 from gaplan import project
 from gaplan import goal as G
 
-def parse_attrs(s, loc):
-  ss = s.split('//')
-  if len(ss) == 1:
-    return [], s
-  if len(ss) > 2:
-    error_loc(loc, 'unexpected duplicate attributes: %s' % s)
-  s = ss[0].rstrip()
-  a = re.split(r'\s*[,;]\s*', ss[1].strip())
-  return a, s
+class Lexeme:
+  LARROW     = "|<-"
+  RARROW     = "|->"
+  CHECK      = "|[]"
+  GOAL       = "GOAL"
+  ATTR_START = "//"
+  LIST_ELT   = "LIST_ELT"
+  PRJ_ATTR   = "PRJ_ATTR"
+  ASSIGN     = "="
+  COMMA      = ','
+  EOF        = ''
 
-def is_goal_decl(s):
-  return re.match(r'^ *\|[^\[<>]', s)
+  def __init__(self, type, data, text, loc):
+    self.type = type
+    self.data = data
+    self.loc = loc
+    self.text = text
 
-def is_root_goal_decl(s):
-  return is_goal_decl(s) and s[0] == '|'
+  def __str__(self):
+    return '%s: %s: %s' % (self.loc, self.type, self.data)
 
-def parse_goal_decl(s, offset, loc, names):
-  a, s = parse_attrs(s, loc)
-  m = re.search(r'^( *)\|([^\[<>].*)$', s)
-  if not m:
-    return None, []
-  name = m.group(2)
-  goal_offset = len(m.group(1))
-  if goal_offset != offset:
-    return None, []
-  if name in names:
-    goal = names[name]
-  else:
-    goal = G.Goal(name, loc)
-    names[name] = goal
-  return goal, a
+class Lexer:
+  def __init__(self, v=0):
+    self.lexemes = []
+    self.filename = self.line = self.lineno = None
+    self.attr_mode = False
+    self.v = v
 
-def is_edge(s):
-  return re.search(r'^ *\|(<-|->)', s)
+  def reset(self, filename, lines):
+    self.filename = filename
+    self.lineno = 0
+    self.attr_mode = False
+    self.line = ''
+    self.lines = lines
 
-def is_incoming_edge(s):
-  return s.find('<') != -1
+  def _loc(self):
+    return PA.Location(self.filename, self.lineno)
 
-def parse_edge(s, loc):
-  act = G.Activity(loc)
+  def loc(self):
+    if not self.lexemes:
+      self.peek()
+    return PA.Location(self.filename, self.lineno)
 
-  attrs, s = parse_attrs(s, loc)
-  act.add_attrs(attrs, loc)
+  def __skip_empty(self):
+    while self.line == '' and self.lines:
+      next_line = next(self.lines, None)
+      if next_line is None:
+        break
+      self.line = next_line
+      self.lineno += 1
+      self.attr_mode = False
+      # Strip comments
+      self.line = re.sub(r'#.*$', '', self.line)
+      # And trailing whites
+      self.line = self.line.rstrip()
 
-  m = re.search(r'^( *)\|[<>-][<>-]', s)
-  if not m:
-    error_loc(loc, 'failed to parse edge: %s' % s)
-
-  return act, len(m.group(1))
-
-def is_check(s):
-  return re.match(r'^ *\|\[', s)
-
-def parse_check(s, loc):
-  a, s = parse_attrs(s, loc)
-  m = re.search(r'^( *)\|\[([^\]]*)\] *(.+)$', s)
-  if not m:
-    error_loc(loc, 'failed to parse check: %s' % s)
-  status = m.group(2)
-  if status not in ['X', 'F', '']:
-    error_loc(loc, 'unexpected status: "%s"' % status)
-  check = G.Condition(m.group(3), status, loc)
-  check.add_attrs(a, loc)
-  return check, len(m.group(1))
-
-def parse_checks(f, g, offset):
-  while True:
-    s, loc = f.peek()
-    if s is None or not is_check(s):
-      return
-    f.skip()
-    check, check_offset = parse_check(s, loc)
-    if offset != check_offset:
-      error_loc(loc, 'check is not properly nested')
-    g.add_check(check)
-
-def parse_subgoals(f, goal, offset, names):
-  while True:
-    s, loc = f.peek()
-    if s is None or not is_edge(s):
-      return
-
-    is_pred = is_incoming_edge(s)
-    act, edge_offset = parse_edge(s, loc)
-    if edge_offset < offset:
-      return
-
-    f.skip()
-
-    subgoal = parse_goal(f, edge_offset + len('|<-'), names, goal,
-                         is_pred, allow_empty=True)
-    act.set_endpoints(goal, subgoal, is_pred)
-    goal.add_activity(act, is_pred)
-    if subgoal:
-      subgoal.add_activity(act, not is_pred)
-
-dummy_goal_count = 0
-
-def _make_dummy_goal(loc, names):
-  count = getattr(_make_dummy_goal, 'count', 0)
-  setattr(_make_dummy_goal, 'count', count + 1)
-  name = 'dummy_%d' % count
-  goal = G.Goal(name, loc, dummy=True)
-  names[name] = goal
-  return goal
-
-def parse_goal(f, offset, names, other_goal, is_pred, allow_empty=False):
-  s, loc = f.peek()
-
-  goal = None
-  goal_attrs = []
-  if s is not None:
-    goal, goal_attrs = parse_goal_decl(s, offset, loc, names)
-    if goal:
-      f.skip()
-
-  if goal is None:
-    if not allow_empty:
-      return None
-    goal = _make_dummy_goal(loc, names)
-
-  was_defined = goal.defined
-  if goal_attrs:
-    if was_defined:
-      error_loc(loc, 'duplicate definition of goal "%s" (previous definition was in %s)' % (goal.name, goal.loc))
-    goal.add_attrs(goal_attrs, loc)
-
-  # TODO: Gaperton's examples contain interwined checks and deps
-  parse_checks(f, goal, offset)
-
-  parse_subgoals(f, goal, offset, names)
-
-  if not was_defined and (goal.checks or goal_attrs or goal.children):
-    goal.defined = True
-    if other_goal is not None and is_pred:
-      other_goal.add_child(goal)
-
-  return goal
-
-def is_project_attribute(s):
-  return re.match(r'^\s*\w+\s*=', s)
-
-def parse_project_attribute(s, loc):
-  m = re.search(r'^\s*(\w+)\s*=\s*(.*)', s)
-  if m is None:
-    error_loc(loc, 'unexpected line: %s' % s)
-
-  name = m.group(1)
-  val = m.group(2)
-
-  if name in ['name', 'tracker_link', 'pr_link']:
-    return name, val
-
-  if name in ['start', 'finish']:
-      val, _ = P.read_date(val, loc)
-      return name, val
-
-  if name == 'members':
-    members = []
-    val = val.strip()
-    # This is ugly, I need proper parser...
-    while M.search(r'([A-Za-z_0-9]+)\s*(?:\(([^\)]*)\))?(.*)', val):
-      member_name, attrs, val = M.groups()
-      member = project.Resource(member_name, loc)
-      if attrs:
-        member.add_attrs(attrs.split(','), loc)
-      val = re.sub(r'^\s*,', '', val)
-      members.append(member)
-    if val.strip():
-      error_loc(loc, "failed to parse member declaration: %s" % val)
-    return name, members
-
-  if name == 'teams':
-      m = re.findall(r'([a-zA-Z0-9_]+)\s*\(([^)]*)\)', val)
-      teams = []
-      for team_name, members in m:
-        members = re.split(r'\s*,\s*', members.strip())
-        teams.append(project.Team(team_name, members, loc))
-      return name, teams
-
-  error_loc(loc, 'unknown project attribute: %s' % name)
-
-def parse_goals(filename, f):
-  f = P.Lexer(filename, f)
-  prj = project.Project(P.Location(filename, 1))
-
-  names = {}
-  prj_attrs = {}
-
-  while True:
-    s, loc = f.peek()
-    if s is None:
-      break
-    elif is_root_goal_decl(s):
-      goal = parse_goal(f, 0, names, None, False)
-    elif is_project_attribute(s):
-      k, v = parse_project_attribute(s, loc)
-      f.skip()
-      prj_attrs[k] = v
+  def __next(self):
+    if self.line == '':
+      # File exhausted
+      type = Lexeme.EOF
+      data = text = ''
+    elif self.attr_mode:
+      nest = 0
+      self.line = self.line.lstrip()
+      if self.line[0] == ',':
+        type = text = ','
+        i = 1
+      else:
+        type = Lexeme.LIST_ELT
+        for i, c in enumerate(self.line):
+          if c == ',' and not nest:
+            break
+          elif c == '(':
+            nest += 1
+          elif c == ')':
+            nest -= 1
+        else:
+          i += 1
+          self.attr_mode = False
+      text = self.line[:i]
+      data = text.rstrip()
+      self.line = self.line[i:]
     else:
-      # TODO: anonymous goals
-      error_loc(loc, 'unexpected line: "%s"' % s)
+      data = None
+      if M.match(r'( *)\|([<>])-', self.line):
+        type = Lexeme.LARROW if M.group(2) == '<' else Lexeme.RARROW
+        data = len(M.group(1))
+      elif M.match(r'( +)\|\[([^\]]*)\]\s*(.*?)(?=(//|$))', self.line):
+        type = Lexeme.CHECK
+        data = len(M.group(1)), M.group(2), M.group(3).strip()
+      elif M.match(r'( *)\|(.*?)(?=//|$)', self.line):
+        type = Lexeme.GOAL
+        data = len(M.group(1)), M.group(2).strip()
+      elif M.match(r'\s*//', self.line):
+        type = Lexeme.ATTR_START
+        self.attr_mode = True
+      elif M.match(r'([A-Za-z][A-Za-z0-9_]*)(?=\s*=)', self.line):
+        type = Lexeme.PRJ_ATTR
+        data = M.group(1)
+      elif M.match(r'\s*=\s*', self.line):
+        type = Lexeme.ASSIGN
+        self.attr_mode = True
+      else:
+        error_loc(loc, "unexpected syntax: %s" % self.line)
+      self.line = self.line[len(M.group(0)):]
+      text = M.group(0)
+    self.lexemes.append(Lexeme(type, data, text, self._loc()))
 
-  roots = [goal for name, goal in sorted(names.items()) if not goal.parent]
-  prj.add_attrs(prj_attrs)
+  def peek(self):
+    if not self.lexemes:
+      self.__skip_empty()
+      self.__next()
+    if not self.lexemes:
+      return None
+    l = self.lexemes[0]
+    return l
 
-  return prj, roots
+  def skip(self):
+    del self.lexemes[0]
+
+  def next(self):
+    l = self.peek()
+    if l is not None:
+      self.skip()
+    return l
+
+  def next_if(self, type):
+    l = self.peek()
+    if l is None:
+      return None
+    if l.type in type if isinstance(type, list) else l.type == type:
+      self.skip()
+      return l
+
+  def expect(self, type):
+    l = self.next()
+    if isinstance(type, list):
+      if l.type not in type:
+        type_str = ', '.join(map(lambda t: '\'%s\'' % t, type))
+        error_loc(l.loc, "expecting %s, got '%s'" % (type_str, l.type))
+    elif l.type != type:
+      error_loc(l.loc, "expecting '%s', got '%s'" % (type, l.type))
+    return l
+
+class Parser:
+  def __init__(self, v=0):
+    self.v = v
+    self.dummy_goal_count = 0
+    self.lex = Lexer()
+
+  def _dbg(self, msg, v=1):
+    if self.v >= v:
+      print(msg)
+
+  def parse_attrs(self):
+    a = []
+    while True:
+      l = self.lex.next_if(Lexeme.LIST_ELT)
+      if l is None:
+        break
+      self._dbg("parse_attrs: new attribute: %s" % l)
+      a.append(l.data)
+      if not self.lex.next_if(','):
+        break
+    return a
+
+  def maybe_parse_goal_decl(self, offset):
+    l = self.lex.peek()
+    if l.type != Lexeme.GOAL:
+      return None, []
+
+    self._dbg("maybe_parse_goal_decl: goal: %s" % l)
+    goal_offset, goal_name = l.data
+    if offset != goal_offset:
+      self._dbg("maybe_parse_goal_decl: not a subgoal, exiting")
+      return None, []
+    self.lex.skip()
+
+    goal = self.names.get(goal_name)
+    if goal is None:
+      goal = self.names[goal_name] = G.Goal(goal_name, l.loc)
+
+    a = []
+    l = self.lex.next_if(Lexeme.ATTR_START)
+    if l is not None:
+      while True:
+        l = self.lex.next_if(Lexeme.LIST_ELT)
+        if l is None:
+          break
+        a.append(l.data)
+        self._dbg("maybe_parse_goal_decl: new attribute: %s" % l)
+        l = self.lex.next_if(',')
+        if l is None:
+          break
+    return goal, a
+
+  def parse_edge(self):
+    l = self.lex.expect([Lexeme.LARROW, Lexeme.RARROW])
+    act = G.Activity(l.loc)
+    self._dbg("parse_edge: new activity: l")
+
+    if self.lex.next_if(Lexeme.ATTR_START) is not None:
+      a = self.parse_attrs()
+      act.add_attrs(a, act.loc)
+
+    return act
+
+  def parse_checks(self, g, goal_offset):
+    while True:
+      l = self.lex.next_if(Lexeme.CHECK)
+      if l is None:
+        return
+      self._dbg("parse_checks: new check: %s" % l)
+
+      check_offset, status, text = l.data
+      if check_offset != goal_offset:
+        error_loc(loc, "check is not properly nested")
+      if status not in ['X', 'F', '']:
+        error_loc(loc, "unexpected check status: '%s'" % status)
+
+      check = G.Condition(text, status, l.loc)
+      g.add_check(check)
+
+      if self.lex.next_if(Lexeme.ATTR_START) is not None:
+        a = parse_attrs()
+        check.add_attrs(a, loc)
+
+  def parse_subgoals(self, goal, offset):
+    while True:
+      l = self.lex.peek()
+      if l.type not in [Lexeme.LARROW, Lexeme.RARROW]:
+        return
+      self._dbg("parse_subgoals: new edge: %s" % l)
+
+      is_pred = l.type == Lexeme.LARROW
+      edge_offset = l.data
+      if edge_offset < offset:
+        return
+      self._dbg("parse_subgoals: new subgoal: %s" % l)
+
+      act = self.parse_edge()
+      subgoal = self.parse_goal(edge_offset + len('|<-'),
+                                goal, is_pred, allow_empty=True)
+      act.set_endpoints(goal, subgoal, is_pred)
+
+      goal.add_activity(act, is_pred)
+      if subgoal:
+        subgoal.add_activity(act, not is_pred)
+
+  def _make_dummy_goal(self, loc):
+    name = 'dummy_%d' % self.dummy_goal_count
+    self.dummy_goal_count += 1
+    goal = G.Goal(name, loc, dummy=True)
+    self.names[name] = goal
+    return goal
+
+  def parse_goal(self, offset, other_goal, is_pred, allow_empty=False):
+    self._dbg("parse_goal: start lex: %s" % self.lex.peek())
+    loc = self.lex.loc()
+    goal, goal_attrs = self.maybe_parse_goal_decl(offset)
+
+    if goal is None:
+      if not allow_empty:
+        return None
+      goal = self._make_dummy_goal(loc)
+      self._dbg("parse_goal: creating dummy goal")
+    self._dbg("parse_goal: parsed goal: %s" % goal.name)
+
+    was_defined = goal.defined
+    if goal_attrs:
+      if was_defined:
+        error_loc(loc, 'duplicate definition of goal "%s" (previous definition was in %s)' % (goal.name, goal.loc))
+      goal.add_attrs(goal_attrs, loc)
+
+    # TODO: Gaperton's examples contain interwined checks and deps
+    self.parse_checks(goal, offset)
+
+    self.parse_subgoals(goal, offset)
+
+    if not was_defined and (goal.checks or goal_attrs or goal.children):
+      goal.defined = True
+      if other_goal is not None and is_pred:
+        other_goal.add_child(goal)
+
+    return goal
+
+  def parse_project_attr(self):
+    l = self.lex.next()
+    name = l.data
+    attr_loc = l.loc
+    if self.project_loc is None:
+      self.project_loc = attr_loc
+
+    self.lex.expect('=')
+
+    rhs = []
+    while True:
+      l = self.lex.expect('LIST_ELT')
+      rhs.append(l.data)
+      if not self.lex.next_if(','):
+        break
+
+    def expect_one_value(name, vals):
+      if len(vals) != 1:
+        error_loc(loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
+
+    if name in ['name', 'tracker_link', 'pr_link']:
+      expect_one_value(name, rhs)
+      val = rhs[0]
+    elif name in ['start', 'finish']:
+      expect_one_value(name, rhs)
+      val, _ = PA.read_date(rhs[0], attr_loc)
+    elif name == 'members':
+      val = []
+      for rc_info in rhs:
+        if not M.match(r'([A-Za-z][A-Za-z0-9_]*)\s*(?:\(([^\)]*)\))?', rc_info):
+          error_loc(attr_loc, "failed to parse resource declaration: %s" % rc_info)
+        rc_name, attrs = M.groups()
+        rc = project.Resource(rc_name, attr_loc)
+        if attrs:
+          rc.add_attrs(re.split(r'\s*,\s*', attrs), attr_loc)
+        val.append(rc)
+    elif name == 'teams':
+      val = []
+      for team_info in rhs:
+        if not M.match(r'\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)$', team_info):
+          error_loc(attr_loc, "invalid team declaration: %s" % team_info)
+        team_name = M.group(1)
+        rc_names = re.split(r'\s*,\s*', M.group(2).strip())
+        val.append(project.Team(team_name, rc_names, attr_loc))
+    else:
+      error_loc(attr_loc, 'unknown project attribute: %s' % name)
+
+    self.project_attrs[name] = val
+
+  def parse(self, filename, f):
+    self.lex.reset(filename, f)
+    self.project_attrs = {}
+    self.project_loc = None
+    self.names = {}
+
+    while True:
+      l = self.lex.peek()
+      if l is None:
+        break
+      self._dbg("parse: next lexeme: %s" % l)
+      if l.type == Lexeme.GOAL and l.data[0] == 0:
+        goal = self.parse_goal(0, None, False)
+      elif l.type == Lexeme.PRJ_ATTR:
+        self.parse_project_attr()
+      elif l.type == Lexeme.EOF:
+        break
+      else:
+        # TODO: anonymous goals
+        error_loc(l.loc, "unexpected lexeme: '%s'" % l.text)
+
+    roots = [goal for name, goal in sorted(self.names.items()) if not goal.parent]
+    prj = project.Project(self.project_loc)
+    prj.add_attrs(self.project_attrs)
+
+    return prj, roots

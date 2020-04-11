@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016-2018 Yury Gribov
+# Copyright (c) 2016-2020 Yury Gribov
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
@@ -14,7 +14,7 @@ _me = os.path.basename(sys.argv[0])
 def error(msg):
   sys.stderr.write('%s: error: %s\n' % (_me, msg))
   if _print_stack:
-    raise StandardError
+    raise RuntimeError
   else:
     sys.exit(1)
 

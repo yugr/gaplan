@@ -82,6 +82,11 @@ Examples:
     action='count',
     default=0)
   parser.add_argument(
+    '-v',
+    help="Print diagnostic info.",
+    action='count',
+    default=0)
+  parser.add_argument(
     '--hierarchy',
     help="Generate hierarchical plan (WBS).",
     action='store_true',
@@ -106,6 +111,8 @@ Examples:
           % (args.bias, ', '.join(good_biases)))
   ETA.set_options(estimate_bias=args.bias)
 
+  E.set_options(print_stack=args.print_stack)
+
   if args.plan is None:
     filename = '<stdin>'
     f = sys.stdin
@@ -113,7 +120,8 @@ Examples:
     filename = args.plan
     f = open(filename, 'r')
 
-  project, roots = PA.parse_goals(filename, f)
+  parser = PA.Parser(args.v)
+  project, roots = parser.parse(filename, f)
 
   if args.action in ['tj', 'msp'] and not project.members:
     error("--tj and --msp require member info in project file")

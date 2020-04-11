@@ -9,6 +9,7 @@ import sys
 import re
 import datetime
 import operator
+import copy
 
 from gaplan.common.error import error, error_loc, warn_loc
 from gaplan.common.ETA import ETA
@@ -42,7 +43,7 @@ class Condition:
 
   def __init__(self, name, status, loc):
     self.name = name
-    self.loc = PA.Location(loc.file, loc.line)
+    self.loc = copy.copy(loc)
 
     # Other
     self.status = status
@@ -59,7 +60,7 @@ class Activity:
   """Class which describes an activity i.e. edge between two goals."""
 
   def __init__(self, loc):
-    self.loc = PA.Location(loc.file, loc.line)
+    self.loc = copy.copy(loc)
 
     self.head = None
     self.tail = None
@@ -183,7 +184,7 @@ class Goal:
 
   def __init__(self, name, loc, dummy=False):
     self.name = name
-    self.loc = PA.Location(loc.file, loc.line)
+    self.loc = copy.copy(loc)
     self.dummy = dummy
     self.alias = None
 

@@ -12,45 +12,15 @@ from gaplan.common.error import error_loc
 from gaplan.common.ETA import ETA
 
 class Location:
-  def __init__(self, file, line):
-    self.file = file
-    self.line = line
+  def __init__(self, filename, lineno):
+    self.filename = filename
+    self.lineno = lineno
 
   def prior(self):
-    return Location(self.file, self.line - 1)
+    return Location(self.filename, self.lineno - 1)
 
   def __str__(self):
-    return '%s:%d' % (self.file, self.line)
-
-# Not strictly a lexer but who cares
-class Lexer:
-  def __init__(self, file, lines=None):
-    if lines is None:
-      lines = open(file, 'r')
-
-    # Strip comments
-    lines = map(lambda s: re.sub(r'#.*$', '', s), lines)
-
-    # And trailing whites
-    lines = map(lambda s: s.rstrip(), lines)
-
-    self.lines = list(lines)
-    self.file = file
-    self.loc = 1
-
-  def __skip_empty(self):
-    while self.lines and self.lines[0] == '':
-      del self.lines[0]
-      self.loc += 1
-
-  def peek(self):
-    self.__skip_empty()
-    return (self.lines[0] if self.lines else None), Location(self.file, self.loc)
-
-  def skip(self):
-#    print("Lexer: skipping %s" % self.lines[0])
-    del self.lines[0]
-    self.loc += 1
+    return '%s:%d' % (self.filename, self.lineno)
 
 def read_duration(s, loc):
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
