@@ -92,6 +92,23 @@ class Project:
       setattr(self, k, v)
     self._recompute()
 
+  def get_resources(self, names):
+    resources = []
+    for name in names or ['all']:
+      team = self.teams_map.get(name)
+      if team is not None:
+        for rc in team.members:
+          if rc not in resources:
+            resources.append(rc)
+      else:
+        rc = self.members_map.get(name)
+        if rc is None:
+          error("resource '%s' not defined" % name)
+        if rc not in resources:
+          resources.append(rc)
+    resources = sorted(resources, key=lambda rc: rc.name)
+    return resources
+
   def dump(self, p):
     p.writeln('= %s =\n' % self.name)
     for dev in self.members:

@@ -143,11 +143,11 @@ Examples:
   p = PR.SourcePrinter()
 
   if args.action == 'tj':
-    tj.export(project, net, args.hierarchy, args.dump)
+    tj.export(project, wbs, args.dump)
   elif args.action == 'pert':
     pert.export(net, args.dump)
   elif args.action == 'msp':
-    msp.export(project, net, args.hierarchy, args.dump)
+    msp.export(project, wbs, args.dump)
   elif args.action == 'dump':
     project.dump(p)
     net.dump(p)

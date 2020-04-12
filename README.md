@@ -217,14 +217,12 @@ $ pytest gaplan
 
 High prio:
 * Implement simple scheduler.
-* Add explicit converter to traditional WBS and use it in TJ.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx)
 
 Other:
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
 * Add Travis, codecov.
-* Build standalone task tree and print it in TJ exporter.
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include directives.
 * Describe tracking info (actual efforts and durations, Jira tasks, etc.) in README.
