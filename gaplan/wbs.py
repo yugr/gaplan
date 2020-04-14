@@ -201,7 +201,7 @@ def _create_goal_task_hierarchical(goal, parent, ids, ancestors):
       if not is_ancestor(a.head) and a.is_instant():
         # Create single sub-milestone for all instant dependencies
         if not milestone_task:
-          milestone_task = Task(id + '_milestone', "External deps satisfied", None)
+          milestone_task = Task(id + '_milestone', "External deps satisfied", task)
           milestone_task.parent = task
         milestone_task.depends.append(a.head.name)
       elif not a.is_instant():
@@ -214,7 +214,7 @@ def _create_goal_task_hierarchical(goal, parent, ids, ancestors):
       task.subtasks.append(milestone_task)
 
   for goal in children:
-    t = _create_goal_task_hierarchical(goal, parent, ids, ancestors)
+    t = _create_goal_task_hierarchical(goal, task, ids, ancestors)
     task.children.append(t)
 
   return task

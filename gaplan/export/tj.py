@@ -15,6 +15,7 @@ import re
 from gaplan.common.error import error, error_loc
 from gaplan.common import printers as PR
 from gaplan.common import platform
+from gaplan import goal
 
 time_format = '%Y-%m-%d'
 
@@ -39,9 +40,10 @@ def _print_task(p, task, abs_ids, prj):
   p.writeln('scheduling asap')
 
   if task.prio is not None:
-    p.writeln('priority %d' % int(task.prio * 1000))
+    prio = int(float(task.prio) / goal.Goal.MAX_PRIO * 1000)
+    p.writeln('priority %d' % prio)
 
-  if not task.children and not task.subtasks:
+  if not task.children and not task.subtasks and not task.act:
     p.writeln('milestone')
 
   for dep in task.depends:
@@ -102,7 +104,7 @@ def _print_task(p, task, abs_ids, prj):
   p.writeln('}')
 
   if task.deadline is not None:
-    p.writeln('task %s_deadline "%s (deadline)" {' % (id, _escape(task.name)))
+    p.writeln('task %s_deadline "%s (deadline)" {' % (task.id, _escape(task.name)))
     p.write('  scheduling asap')
     p.write('  milestone')
     p.write('  depends %s' % abs_id)
