@@ -82,3 +82,94 @@ def read_date2(s, loc):
     finish, rest = read_date(rest[1:], loc)
 
   return start, finish
+
+class BaseLexer:
+  def __init__(self, v=0):
+    self.lexemes = []
+    self.filename = self.line = self.lineno = None
+    self.v = v
+
+  def _loc(self):
+    return Location(self.filename, self.lineno)
+
+  def loc(self):
+    if not self.lexemes:
+      self.peek()
+    return Location(self.filename, self.lineno)
+
+  # Override in children
+  def reset(self, filename, lines):
+    self.filename = filename
+    self.lineno = 0
+    self.line = ''
+    self.lines = lines
+
+  # Override in children
+  def update_on_newline(self):
+    pass
+
+  # Override in children
+  def next_internal(self):
+    return None
+
+  def __skip_empty(self):
+    while self.line == '' and self.lines:
+      next_line = next(self.lines, None)
+      if next_line is None:
+        break
+      self.line = next_line
+      self.lineno += 1
+      self.update_on_newline()
+
+  def peek(self):
+    if not self.lexemes:
+      self.__skip_empty()
+      self.next_internal()
+    if not self.lexemes:
+      return None
+    l = self.lexemes[0]
+    return l
+
+  def skip(self):
+    del self.lexemes[0]
+
+  def next(self):
+    l = self.peek()
+    if l is not None:
+      self.skip()
+    return l
+
+  def next_if(self, type):
+    l = self.peek()
+    if l is None:
+      return None
+    if l.type in type if isinstance(type, list) else l.type == type:
+      self.skip()
+      return l
+
+  def expect(self, type):
+    l = self.next()
+    if isinstance(type, list):
+      if l.type not in type:
+        type_str = ', '.join(map(lambda t: '\'%s\'' % t, type))
+        error_loc(l.loc, "expecting %s, got '%s'" % (type_str, l.type))
+    elif l.type != type:
+      error_loc(l.loc, "expecting '%s', got '%s'" % (type, l.type))
+    return l
+
+class BaseParser:
+  def __init__(self, lex, v=0):
+    self.v = v
+    self.lex = lex
+
+  def _dbg(self, msg, v=1):
+    if self.v >= v:
+      print(msg)
+
+  # Override in children
+  def reset(self, filename, f):
+    self.lex.reset(filename, f)
+
+  # Override in children
+  def parse(self, filename, f):
+    return None

@@ -34,42 +34,23 @@ class Lexeme:
   def __str__(self):
     return '%s: %s: %s' % (self.loc, self.type, self.data)
 
-class Lexer:
+class Lexer(PA.BaseLexer):
   def __init__(self, v=0):
-    self.lexemes = []
-    self.filename = self.line = self.lineno = None
+    super(Lexer, self).__init__(v)
+    self.attr_mode = None
+
+  def reset(self, filename, f):
+    super(Lexer, self).reset(filename, f)
     self.attr_mode = False
-    self.v = v
 
-  def reset(self, filename, lines):
-    self.filename = filename
-    self.lineno = 0
+  def update_on_newline(self):
     self.attr_mode = False
-    self.line = ''
-    self.lines = lines
+    # Strip comments
+    self.line = re.sub(r'#.*$', '', self.line)
+    # And trailing whites
+    self.line = self.line.rstrip()
 
-  def _loc(self):
-    return PA.Location(self.filename, self.lineno)
-
-  def loc(self):
-    if not self.lexemes:
-      self.peek()
-    return PA.Location(self.filename, self.lineno)
-
-  def __skip_empty(self):
-    while self.line == '' and self.lines:
-      next_line = next(self.lines, None)
-      if next_line is None:
-        break
-      self.line = next_line
-      self.lineno += 1
-      self.attr_mode = False
-      # Strip comments
-      self.line = re.sub(r'#.*$', '', self.line)
-      # And trailing whites
-      self.line = self.line.rstrip()
-
-  def __next(self):
+  def next_internal(self):
     if self.line == '':
       # File exhausted
       type = Lexeme.EOF
@@ -121,51 +102,17 @@ class Lexer:
       text = M.group(0)
     self.lexemes.append(Lexeme(type, data, text, self._loc()))
 
-  def peek(self):
-    if not self.lexemes:
-      self.__skip_empty()
-      self.__next()
-    if not self.lexemes:
-      return None
-    l = self.lexemes[0]
-    return l
-
-  def skip(self):
-    del self.lexemes[0]
-
-  def next(self):
-    l = self.peek()
-    if l is not None:
-      self.skip()
-    return l
-
-  def next_if(self, type):
-    l = self.peek()
-    if l is None:
-      return None
-    if l.type in type if isinstance(type, list) else l.type == type:
-      self.skip()
-      return l
-
-  def expect(self, type):
-    l = self.next()
-    if isinstance(type, list):
-      if l.type not in type:
-        type_str = ', '.join(map(lambda t: '\'%s\'' % t, type))
-        error_loc(l.loc, "expecting %s, got '%s'" % (type_str, l.type))
-    elif l.type != type:
-      error_loc(l.loc, "expecting '%s', got '%s'" % (type, l.type))
-    return l
-
-class Parser:
+class Parser(PA.BaseParser):
   def __init__(self, v=0):
-    self.v = v
-    self.dummy_goal_count = 0
-    self.lex = Lexer()
+    super(Parser, self).__init__(Lexer(v), v)
+    self.dummy_goal_count = self.project_attrs = self.names = self.project_loc = None
 
-  def _dbg(self, msg, v=1):
-    if self.v >= v:
-      print(msg)
+  def reset(self, filename, f):
+    super(Parser, self).reset(filename, f)
+    self.dummy_goal_count = 0
+    self.project_attrs = {}
+    self.project_loc = None
+    self.names = {}
 
   def parse_attrs(self):
     a = []
@@ -348,12 +295,7 @@ class Parser:
 
     self.project_attrs[name] = val
 
-  def parse(self, filename, f):
-    self.lex.reset(filename, f)
-    self.project_attrs = {}
-    self.project_loc = None
-    self.names = {}
-
+  def parse(self):
     roots = []
     while True:
       l = self.lex.peek()

@@ -121,7 +121,8 @@ Examples:
     f = open(filename, 'r')
 
   parser = PA.Parser(args.v)
-  project, roots = parser.parse(filename, f)
+  parser.reset(filename, f)
+  project, roots = parser.parse()
 
   if args.action in ['tj', 'msp'] and not project.members:
     error("--tj and --msp require member info in project file")
