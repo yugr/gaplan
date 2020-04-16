@@ -40,6 +40,7 @@ def _print_task(p, task, abs_ids, prj):
   p.writeln('scheduling asap')
 
   if task.prio is not None:
+    # TODO: also task risk into account
     prio = int(float(task.prio) / goal.Goal.MAX_PRIO * 1000)
     p.writeln('priority %d' % prio)
 
