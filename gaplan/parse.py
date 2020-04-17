@@ -11,6 +11,7 @@ from gaplan.common.error import error_loc
 from gaplan.common import parse as PA
 from gaplan.common import matcher as M
 from gaplan import project
+from gaplan import schedule
 from gaplan import goal as G
 
 class Lexeme:
@@ -316,4 +317,6 @@ class Parser(PA.BaseParser):
     prj = project.Project(self.project_loc)
     prj.add_attrs(self.project_attrs)
 
-    return prj, roots
+    sched = schedule.Schedule()
+
+    return prj, roots, sched

@@ -20,6 +20,7 @@ from gaplan.common import printers as PR
 from gaplan import parse as PA
 from gaplan import goal as G
 from gaplan import wbs as W
+from gaplan import schedule as S
 
 from gaplan.export import pert
 from gaplan.export import tj
@@ -40,6 +41,7 @@ ACTION should be one of
   pert      Plot a netchart ("PERT diagram").
   burn      Print a burndown chart.
   msp       Convert declarative plan to MS Project project (TBD!).
+  schedule  Generate simple schedule.
 
 Examples:
   Pretty print PERT diagram:
@@ -63,7 +65,7 @@ Examples:
     'action',
     metavar='ACT',
     help="Action performed on PLAN.",
-    choices=['dump', 'dump-wbs', 'tj', 'msp', 'pert', 'burn', 'burndown'])
+    choices=['dump', 'dump-wbs', 'tj', 'msp', 'pert', 'burn', 'burndown', 'schedule'])
   parser.add_argument(
     'plan',
     metavar='PLAN',
@@ -107,7 +109,7 @@ Examples:
   args = parser.parse_args()
 
   if args.iter is not None and args.action != 'burn':
-    error("--iter/-i is only implemented for burndown charts right now")
+    error("--iter/-i is only implemented for burndown charts")
 
   ETA.set_options(estimate_bias=args.bias)
 
@@ -122,7 +124,7 @@ Examples:
 
   parser = PA.Parser(args.v)
   parser.reset(filename, f)
-  project, roots = parser.parse()
+  project, roots, sched = parser.parse()
 
   if args.action in ['tj', 'msp'] and not project.members:
     error("--tj and --msp require member info in project file")
@@ -154,6 +156,10 @@ Examples:
     net.dump(p)
   elif args.action == 'dump-wbs':
     wbs.dump(p)
+  elif args.action == 'schedule':
+    scheduler = S.Scheduler()
+    timetable = scheduler.allocate(net, sched)
+    timetable.dump(p)
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
       start_date = project.start
