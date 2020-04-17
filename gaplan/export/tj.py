@@ -44,7 +44,7 @@ def _print_task(p, task, abs_ids, prj):
     prio = int(float(task.prio) / goal.Goal.MAX_PRIO * 1000)
     p.writeln('priority %d' % prio)
 
-  if not task.children and not task.subtasks and not task.act:
+  if not task.subtasks and not task.activities and not task.act:
     p.writeln('milestone')
 
   for dep in task.depends:
@@ -95,10 +95,10 @@ def _print_task(p, task, abs_ids, prj):
     p.writeln('end %s' % PR.print_date(act.finish_date))
     p.writeln('scheduled')
 
-  for subtask in task.subtasks:
+  for subtask in (task.activities + task.milestones):
     _print_task(p, subtask, abs_ids, prj)
 
-  for child in task.children:
+  for child in task.subtasks:
     _print_task(p, child, abs_ids, prj)
 
   p.exit()

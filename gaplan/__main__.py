@@ -142,7 +142,7 @@ Examples:
     G.visit_goals(roots, callback=lambda g: goals.add(g.name), succs=False)
     net.filter(goals, args.W)
 
-  wbs = W.create_wbs(net, args.hierarchy)
+  wbs = W.create_wbs(net, args.hierarchy, args.v)
   p = PR.SourcePrinter()
 
   if args.action == 'tj':
