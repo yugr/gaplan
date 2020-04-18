@@ -39,6 +39,8 @@ class Task:
       self.act = self.start_date = self.finish_date = None
 
   def check(self):
+    assert self.id is not None
+    assert self.name is not None
     for t in self.activities:
       # Activities are effortful non-goal-based leaf tasks
       assert t.is_leaf()
@@ -83,6 +85,11 @@ class Task:
   def is_milestone(self):
     return self.id.endswith('_milestone')
 
+  def pretty_name(self):
+    if self.goal is None and self.parent is not None:
+      return "%s: %s" % (self.parent.pretty_name(), self.name)
+    return self.name
+
   def update_activities(self):
     # TODO: what about milestones?
     for task in self.activities:
@@ -93,7 +100,7 @@ class Task:
         setattr(task, attr, getattr(self, attr))
 
   def dump(self, p):
-    p.writeln("Task %s \"%s\"" % (self.id, self.name))
+    p.writeln("Task %s \"%s\"" % (self.id, self.pretty_name()))
     with p:
       if self.goal:
         p.writeln("Goal \"%s\"" % self.goal.name)
