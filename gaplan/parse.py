@@ -14,7 +14,7 @@ from gaplan import project
 from gaplan import schedule
 from gaplan import goal as G
 
-class Lexeme:
+class LexemeType:
   LARROW     = "|<-"
   RARROW     = "|->"
   CHECK      = "|[]"
@@ -23,29 +23,25 @@ class Lexeme:
   LIST_ELT   = "LIST_ELT"
   PRJ_ATTR   = "PRJ_ATTR"
   ASSIGN     = "="
+  SCHED      = 'SCHED'
   COMMA      = ','
   EOF        = ''
 
-  def __init__(self, type, data, text, loc):
-    self.type = type
-    self.data = data
-    self.loc = loc
-    self.text = text
-
-  def __str__(self):
-    return '%s: %s: %s' % (self.loc, self.type, self.data)
+class LexerMode:
+  NORMAL = "NORMAL"
+  ATTR   = "ATTR"
 
 class Lexer(PA.BaseLexer):
   def __init__(self, v=0):
     super(Lexer, self).__init__(v)
-    self.attr_mode = None
+    self.mode = LexerMode.NORMAL
 
   def reset(self, filename, f):
     super(Lexer, self).reset(filename, f)
-    self.attr_mode = False
+    self.mode = LexerMode.NORMAL
 
   def update_on_newline(self):
-    self.attr_mode = False
+    self.mode = LexerMode.NORMAL
     # Strip comments
     self.line = re.sub(r'#.*$', '', self.line)
     # And trailing whites
@@ -54,16 +50,16 @@ class Lexer(PA.BaseLexer):
   def next_internal(self):
     if self.line == '':
       # File exhausted
-      type = Lexeme.EOF
+      type = LexemeType.EOF
       data = text = ''
-    elif self.attr_mode:
+    elif self.mode == LexerMode.ATTR:
       nest = 0
       self.line = self.line.lstrip()
       if self.line[0] == ',':
         type = ','
         i = 1
       else:
-        type = Lexeme.LIST_ELT
+        type = LexemeType.LIST_ELT
         for i, c in enumerate(self.line):
           if c == ',' and not nest:
             break
@@ -73,52 +69,56 @@ class Lexer(PA.BaseLexer):
             nest -= 1
         else:
           i += 1
-          self.attr_mode = False
+          self.mode = LexerMode.NORMAL
       text = self.line[:i]
       data = text.rstrip()
       self.line = self.line[i:]
     else:
       data = None
       if M.match(r'( *)\|([<>])-', self.line):
-        type = Lexeme.LARROW if M.group(2) == '<' else Lexeme.RARROW
+        type = LexemeType.LARROW if M.group(2) == '<' else LexemeType.RARROW
         data = len(M.group(1))
       elif M.match(r'( *)\|\[([^\]]*)\]\s*(.*?)(?=(//|$))', self.line):
-        type = Lexeme.CHECK
+        type = LexemeType.CHECK
         data = len(M.group(1)), M.group(2), M.group(3).strip()
+      elif M.match(r'^(\s*)(--|\|\|)\s*', self.line):
+        type = LexemeType.SCHED
+        data = len(M.group(1)), M.group(2)
+        self.mode = LexerMode.ATTR
       elif M.match(r'( *)\|(.*?)(?=//|$)', self.line):
-        type = Lexeme.GOAL
+        type = LexemeType.GOAL
         data = len(M.group(1)), M.group(2).strip()
       elif M.match(r'\s*//', self.line):
-        type = Lexeme.ATTR_START
-        self.attr_mode = True
+        type = LexemeType.ATTR_START
+        self.mode = LexerMode.ATTR
       elif M.match(r'([A-Za-z][A-Za-z0-9_]*)(?=\s*=)', self.line):
-        type = Lexeme.PRJ_ATTR
+        type = LexemeType.PRJ_ATTR
         data = M.group(1)
       elif M.match(r'\s*=\s*', self.line):
-        type = Lexeme.ASSIGN
-        self.attr_mode = True
+        type = LexemeType.ASSIGN
+        self.mode = LexerMode.ATTR
       else:
         error_loc(self._loc(), "unexpected syntax: %s" % self.line)
       self.line = self.line[len(M.group(0)):]
       text = M.group(0)
-    self.lexemes.append(Lexeme(type, data, text, self._loc()))
+    self.lexemes.append(PA.Lexeme(type, data, text, self._loc()))
 
 class Parser(PA.BaseParser):
   def __init__(self, v=0):
     super(Parser, self).__init__(Lexer(v), v)
-    self.dummy_goal_count = self.project_attrs = self.names = self.project_loc = None
+    self.dummy_goal_count = self.project_attrs = self.names = self.project_loc = self.sched_loc = None
 
   def reset(self, filename, f):
     super(Parser, self).reset(filename, f)
     self.dummy_goal_count = 0
     self.project_attrs = {}
-    self.project_loc = None
+    self.project_loc = self.sched_loc = PA.Location()
     self.names = {}
 
   def parse_attrs(self):
     a = []
     while True:
-      l = self.lex.next_if(Lexeme.LIST_ELT)
+      l = self.lex.next_if(LexemeType.LIST_ELT)
       if l is None:
         break
       self._dbg("parse_attrs: new attribute: %s" % l)
@@ -129,7 +129,7 @@ class Parser(PA.BaseParser):
 
   def maybe_parse_goal_decl(self, offset):
     l = self.lex.peek()
-    if l.type != Lexeme.GOAL:
+    if l.type != LexemeType.GOAL:
       return None, []
 
     self._dbg("maybe_parse_goal_decl: goal: %s" % l)
@@ -144,10 +144,10 @@ class Parser(PA.BaseParser):
       goal = self.names[goal_name] = G.Goal(goal_name, l.loc)
 
     a = []
-    l = self.lex.next_if(Lexeme.ATTR_START)
+    l = self.lex.next_if(LexemeType.ATTR_START)
     if l is not None:
       while True:
-        l = self.lex.next_if(Lexeme.LIST_ELT)
+        l = self.lex.next_if(LexemeType.LIST_ELT)
         if l is None:
           break
         a.append(l.data)
@@ -158,11 +158,11 @@ class Parser(PA.BaseParser):
     return goal, a
 
   def parse_edge(self):
-    l = self.lex.expect([Lexeme.LARROW, Lexeme.RARROW])
+    l = self.lex.expect([LexemeType.LARROW, LexemeType.RARROW])
     act = G.Activity(l.loc)
     self._dbg("parse_edge: new activity: l")
 
-    if self.lex.next_if(Lexeme.ATTR_START) is not None:
+    if self.lex.next_if(LexemeType.ATTR_START) is not None:
       a = self.parse_attrs()
       act.add_attrs(a, act.loc)
 
@@ -170,7 +170,7 @@ class Parser(PA.BaseParser):
 
   def parse_checks(self, g, goal_offset):
     while True:
-      l = self.lex.next_if(Lexeme.CHECK)
+      l = self.lex.next_if(LexemeType.CHECK)
       if l is None:
         return
       self._dbg("parse_checks: new check: %s" % l)
@@ -184,20 +184,20 @@ class Parser(PA.BaseParser):
       check = G.Condition(text, status, l.loc)
       g.add_check(check)
 
-      if self.lex.next_if(Lexeme.ATTR_START) is not None:
+      if self.lex.next_if(LexemeType.ATTR_START) is not None:
         a = parse_attrs()
         check.add_attrs(a, loc)
 
   def parse_subgoals(self, goal, offset):
     while True:
       l = self.lex.peek()
-      if l.type not in [Lexeme.LARROW, Lexeme.RARROW]:
+      if l.type not in [LexemeType.LARROW, LexemeType.RARROW]:
         return
       self._dbg("parse_subgoals: new edge: %s" % l)
 
-      is_pred = l.type == Lexeme.LARROW
+      is_pred = l.type == LexemeType.LARROW
       edge_offset = l.data
-      if edge_offset < offset:
+      if edge_offset != offset:
         return
       self._dbg("parse_subgoals: new subgoal: %s" % l)
 
@@ -232,7 +232,7 @@ class Parser(PA.BaseParser):
     was_defined = goal.defined
     if goal_attrs:
       if was_defined:
-        error_loc(loc, 'duplicate definition of goal "%s" (previous definition was in %s)' % (goal.name, goal.loc))
+        error_loc(loc, "duplicate definition of goal '%s' (previous definition was in %s)" % (goal.name, goal.loc))
       goal.add_attrs(goal_attrs, loc)
 
     # TODO: Gaperton's examples contain interwined checks and deps
@@ -251,7 +251,7 @@ class Parser(PA.BaseParser):
     l = self.lex.next()
     name = l.data
     attr_loc = l.loc
-    if self.project_loc is None:
+    if not self.project_loc:
       self.project_loc = attr_loc
 
     self.lex.expect('=')
@@ -292,23 +292,83 @@ class Parser(PA.BaseParser):
         rc_names = re.split(r'\s*,\s*', M.group(2).strip())
         val.append(project.Team(team_name, rc_names, attr_loc))
     else:
-      error_loc(attr_loc, 'unknown project attribute: %s' % name)
+      error_loc(attr_loc, "unknown project attribute: %s" % name)
 
     self.project_attrs[name] = val
 
+  def parse_subblocks(self, block, offset):
+    while True:
+      l = self.lex.peek()
+      if l.type != LexemeType.SCHED:
+        return
+      self._dbg("parse_subblocks: new block: %s" % l)
+
+      subblock = self.parse_sched_block(offset)
+      self._dbg("parse_subblocks: new subblock: %s" % l)
+
+      block.blocks.append(subblock)
+
+  def parse_sched_block(self, offset):
+    l = self.lex.next()
+    top_loc = l.loc
+
+    if l.data[0] != offset:
+      return None
+
+    if not self.sched_loc:
+      self.sched_loc = top_loc
+
+    block = schedule.SchedBlock(l.data[1] == '=', l.data[0], top_loc)
+
+    # Parse attributes
+
+    if self.lex.next_if(LexemeType.ATTR_START):
+      attrs = []
+      while True:
+        l = self.lex.expect(LexemeType.LIST_ELT)
+        attrs.append(l.data)
+        if not self.lex.next_if(','):
+          break
+      block.add_attrs(attrs, top_loc)
+
+    # Parse goals in this block
+
+    while True:
+      l = self.lex.peek()
+      if l.type != LexemeType.GOAL:
+        break
+      goal, goal_attrs = self.maybe_parse_goal_decl(offset + 2)
+      if goal is None:
+        break
+      block.add_goal(goal, goal_attrs)
+
+    # Parse subblocks
+
+    self.parse_subblocks(block, offset + 2)
+
+    return block
+
   def parse(self):
-    roots = []
+    root_goals = []
+    root_blocks = []
     while True:
       l = self.lex.peek()
       if l is None:
         break
       self._dbg("parse: next lexeme: %s" % l)
-      if l.type == Lexeme.GOAL and l.data[0] == 0:
-        goal = self.parse_goal(0, None, False)
-        roots.append(goal)
-      elif l.type == Lexeme.PRJ_ATTR:
+      if l.type == LexemeType.GOAL:
+        if l.data[0] != 0:
+          error_loc(l.loc, "root goal '%s' must be left-adjusted" % l.data[1])
+        goal = self.parse_goal(l.data[0], None, False)
+        root_goals.append(goal)
+      elif l.type == LexemeType.PRJ_ATTR:
         self.parse_project_attr()
-      elif l.type == Lexeme.EOF:
+      elif l.type == LexemeType.SCHED:
+        if l.data[0] != 0:
+          error_loc(l.loc, "root block must be left-adjusted")
+        block = self.parse_sched_block(l.data[0])
+        root_blocks.append(block)
+      elif l.type == LexemeType.EOF:
         break
       else:
         # TODO: anonymous goals
@@ -317,6 +377,6 @@ class Parser(PA.BaseParser):
     prj = project.Project(self.project_loc)
     prj.add_attrs(self.project_attrs)
 
-    sched = schedule.Schedule()
+    sched = schedule.Schedule(root_blocks, self.sched_loc)
 
-    return prj, roots, sched
+    return prj, root_goals, sched

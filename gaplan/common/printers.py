@@ -32,6 +32,7 @@ class SourcePrinter:
     return self.exit()
 
   def write(self, s):
+    s = str(s)
     ss = s.split('\n')
     if not ss[-1]:
       ss = ss[:-1]
@@ -40,6 +41,7 @@ class SourcePrinter:
     self.out.write(tab + tab_nl.join(ss) + '\n')
 
   def writeln(self, s):
+    s = str(s)
     self.write(s + '\n')
 
 def print_date(d):

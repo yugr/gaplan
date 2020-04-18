@@ -12,15 +12,20 @@ from gaplan.common.error import error_loc
 from gaplan.common.ETA import ETA
 
 class Location:
-  def __init__(self, filename, lineno):
+  def __init__(self, filename=None, lineno=None):
     self.filename = filename
     self.lineno = lineno
 
   def prior(self):
-    return Location(self.filename, self.lineno - 1)
+    return Location(self.filename, self.lineno - 1) if self else self
 
   def __str__(self):
+    if not self:
+      return '?:?'
     return '%s:%d' % (self.filename, self.lineno)
+
+  def __bool__(self):
+    return self.filename is not None
 
 def read_duration(s, loc):
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
@@ -82,6 +87,16 @@ def read_date2(s, loc):
     finish, rest = read_date(rest[1:], loc)
 
   return start, finish
+
+class Lexeme:
+  def __init__(self, type, data, text, loc):
+    self.type = type
+    self.data = data
+    self.loc = loc
+    self.text = text
+
+  def __str__(self):
+    return '%s: %s: %s' % (self.loc, self.type, self.data)
 
 class BaseLexer:
   def __init__(self, v=0):

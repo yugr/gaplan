@@ -154,11 +154,12 @@ Examples:
   elif args.action == 'dump':
     project.dump(p)
     net.dump(p)
+    sched.dump(p)
   elif args.action == 'dump-wbs':
     wbs.dump(p)
   elif args.action == 'schedule':
     scheduler = S.Scheduler()
-    timetable = scheduler.allocate(net, sched)
+    timetable = scheduler.schedule(net, sched)
     timetable.dump(p)
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
