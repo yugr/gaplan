@@ -26,8 +26,8 @@ class SchedBlock:
   def dump(self, p):
     p.writeln("%s sched block (%s)" % ("Parallel" if self.par else "Sequential", self.loc))
     with p:
-      for goal, goal_attrs in self.goals:
-        p.writeln(goal.name)
+      for goal_name, goal_attrs in self.goals:
+        p.writeln(goal_name)
       for block in self.subblocks:
         block.dump(p)
 

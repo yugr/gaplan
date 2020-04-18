@@ -355,7 +355,6 @@ def create_wbs(net, hierarchy, v):
   wbs.visit_tasks(index_ids)
 
   def update_depends(task):
-    print("Analyzing %s: %s" % (task.name, task.depends))
     task.depends = [name2id[name] for name in list(task.depends)]
   wbs.visit_tasks(update_depends)
 

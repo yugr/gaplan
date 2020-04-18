@@ -139,10 +139,6 @@ class Parser(PA.BaseParser):
       return None, []
     self.lex.skip()
 
-    goal = self.names.get(goal_name)
-    if goal is None:
-      goal = self.names[goal_name] = G.Goal(goal_name, l.loc)
-
     a = []
     l = self.lex.next_if(LexemeType.ATTR_START)
     if l is not None:
@@ -155,7 +151,7 @@ class Parser(PA.BaseParser):
         l = self.lex.next_if(',')
         if l is None:
           break
-    return goal, a
+    return goal_name, a
 
   def parse_edge(self):
     l = self.lex.expect([LexemeType.LARROW, LexemeType.RARROW])
@@ -220,16 +216,24 @@ class Parser(PA.BaseParser):
   def parse_goal(self, offset, other_goal, is_pred, allow_empty=False):
     self._dbg("parse_goal: start lex: %s" % self.lex.peek())
     loc = self.lex.loc()
-    goal, goal_attrs = self.maybe_parse_goal_decl(offset)
+    goal_name, goal_attrs = self.maybe_parse_goal_decl(offset)
 
-    if goal is None:
+    if goal_name is None:
       if not allow_empty:
         return None
       goal = self._make_dummy_goal(loc)
+      was_defined = False
       self._dbg("parse_goal: creating dummy goal")
-    self._dbg("parse_goal: parsed goal: %s" % goal.name)
+    else:
+      goal = self.names.get(goal_name)
+      if goal is None:
+        was_defined = False
+        goal = self.names[goal_name] = G.Goal(goal_name, loc)
+        self._dbg("parse_goal: parsed new goal: %s" % goal.name)
+      else:
+        was_defined = goal.defined
+        self._dbg("parse_goal: parsed existing goal: %s" % goal.name)
 
-    was_defined = goal.defined
     if goal_attrs:
       if was_defined:
         error_loc(loc, "duplicate definition of goal '%s' (previous definition was in %s)" % (goal.name, goal.loc))
@@ -337,10 +341,10 @@ class Parser(PA.BaseParser):
       l = self.lex.peek()
       if l.type != LexemeType.GOAL:
         break
-      goal, goal_attrs = self.maybe_parse_goal_decl(offset + 2)
-      if goal is None:
+      goal_name, goal_attrs = self.maybe_parse_goal_decl(offset + 2)
+      if goal_name is None:
         break
-      block.add_goal(goal, goal_attrs)
+      block.add_goal(goal_name, goal_attrs)
 
     # Parse subblocks
 
