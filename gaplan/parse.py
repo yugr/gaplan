@@ -84,7 +84,6 @@ class Lexer(PA.BaseLexer):
       elif M.match(r'^(\s*)(--|\|\|)\s*', self.line):
         type = LexemeType.SCHED
         data = len(M.group(1)), M.group(2)
-        self.mode = LexerMode.ATTR
       elif M.match(r'( *)\|(.*?)(?=//|$)', self.line):
         type = LexemeType.GOAL
         data = len(M.group(1)), M.group(2).strip()
@@ -326,6 +325,7 @@ class Parser(PA.BaseParser):
 
     # Parse attributes
 
+    print("XXX %s" % self.lex.peek())
     if self.lex.next_if(LexemeType.ATTR_START):
       attrs = []
       while True:
