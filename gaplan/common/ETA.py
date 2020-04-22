@@ -89,6 +89,13 @@ class ETA:
   def defined(self):
     return self.min is not None or self.real is not None
 
+  def __add__(self, x):
+    real = None if self.real is None or x.real is None else self.real + x.real 
+    return ETA(self.min + x.min, self.max + x.max, real)
+
+  def __mul__(self, k):
+    return ETA(self.min * k, self.max * k, None if self.real is None else self.real * k)
+
   def __str__(self):
     if self.min is None and self.max is None and self.real is None:
       return ''

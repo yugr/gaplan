@@ -56,7 +56,7 @@ def _print_task(p, task, abs_ids, prj):
 
     effort = act.effort.real
     if effort is None:
-      effort, _ = act.effort.estimate(act.tail.risk if act.tail else None)
+      effort, _ = act.estimate()
     if effort is None:
       effort = 0
 

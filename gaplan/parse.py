@@ -299,18 +299,6 @@ class Parser(PA.BaseParser):
 
     self.project_attrs[name] = val
 
-  def parse_subblocks(self, block, offset):
-    while True:
-      l = self.lex.peek()
-      if l.type != LexemeType.SCHED:
-        return
-      self._dbg("parse_subblocks: new block: %s" % l)
-
-      subblock = self.parse_sched_block(offset)
-      self._dbg("parse_subblocks: new subblock: %s" % l)
-
-      block.blocks.append(subblock)
-
   def parse_sched_block(self, offset):
     l = self.lex.next()
     top_loc = l.loc
@@ -325,7 +313,6 @@ class Parser(PA.BaseParser):
 
     # Parse attributes
 
-    print("XXX %s" % self.lex.peek())
     if self.lex.next_if(LexemeType.ATTR_START):
       attrs = []
       while True:
@@ -335,20 +322,22 @@ class Parser(PA.BaseParser):
           break
       block.add_attrs(attrs, top_loc)
 
-    # Parse goals in this block
+    # Parse goals and subblocks in this block
 
     while True:
       l = self.lex.peek()
-      if l.type != LexemeType.GOAL:
+      if l.type == LexemeType.GOAL:
+        goal_name, goal_attrs = self.maybe_parse_goal_decl(offset + 2)
+        if goal_name is None:
+          break
+        block.add_goal(goal_name, l.loc)
+      elif l.type == LexemeType.SCHED:
+        self._dbg("parse_sched_block: new block: %s" % l)
+        subblock = self.parse_sched_block(offset + 2)
+        self._dbg("parse_sched_block: new subblock: %s" % l)
+        block.blocks.append(subblock)
+      else:
         break
-      goal_name, goal_attrs = self.maybe_parse_goal_decl(offset + 2)
-      if goal_name is None:
-        break
-      block.add_goal(goal_name, goal_attrs)
-
-    # Parse subblocks
-
-    self.parse_subblocks(block, offset + 2)
 
     return block
 

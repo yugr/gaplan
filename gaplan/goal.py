@@ -66,6 +66,7 @@ class Activity:
     self.tail = None
     self.globl = False  # Marks "global" activities which are enabled for all children of the target
 
+    # TODO: use Interval
     self.start_date = self.finish_date = None
     self.effort = ETA()
     self.alloc = []
@@ -139,6 +140,9 @@ class Activity:
     if self.alloc and not self.effort.defined():
       warn_loc(self.loc, 'activity is assigned but no effort is specified')
 
+  def estimate(self):
+    return self.effort.estimate(self.tail.risk if self.tail else None)
+
   def dump(self, p):
     p.writeln('%s -> %s' % (self.head.name if self.head else '',
                             self.tail.name if self.tail else ''))
@@ -153,7 +157,7 @@ class Activity:
     if self.pull_requests:
       p.writeln('Pull requests: %s' % ', '.join(self.pull_requests))
 
-    avg, dev = self.effort.estimate(self.tail.risk if self.tail else None)
+    avg, dev = self.estimate()
     if avg is not None:
       dev_str = (' +/- %dh' % (2 * dev)) if dev != 0 else ''
       p.writeln('estimated effort: %dh%s' % (avg, dev_str))

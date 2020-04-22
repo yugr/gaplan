@@ -93,10 +93,11 @@ Examples:
     action='count',
     default=0)
   parser.add_argument(
-    '--hierarchy',
+    '--no-hierarchy',
     help="Generate hierarchical plan (WBS).",
-    action='store_true',
-    default=False)
+    dest='hierarchy',
+    action='store_false',
+    default=True)
   parser.add_argument(
     '--print-stack',
     help="Print call stack on error (INTERNAL).",
@@ -159,7 +160,7 @@ Examples:
     wbs.dump(p)
   elif args.action == 'schedule':
     scheduler = S.Scheduler()
-    timetable = scheduler.schedule(net, sched)
+    timetable = scheduler.schedule(project, net, sched)
     timetable.dump(p)
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
