@@ -186,5 +186,5 @@ class BaseParser:
     self.lex.reset(filename, f)
 
   # Override in children
-  def parse(self, filename, f):
+  def parse(self):
     return None

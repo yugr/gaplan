@@ -12,7 +12,7 @@ import os.path
 import subprocess
 import re
 
-from gaplan.common.error import error, error_loc
+from gaplan.common.error import error
 from gaplan.common import printers as PR
 from gaplan.common import platform
 from gaplan import goal
@@ -90,7 +90,6 @@ def _print_task(p, task, abs_ids, prj):
         p.writeln('allocate %s { %s select minloaded persistent}' % (first, alts))
 
   if task.start_date is not None:
-    d = PR.print_date(goal.completion_date)
     p.writeln('start %s' % PR.print_date(act.start_date))
     p.writeln('end %s' % PR.print_date(act.finish_date))
     p.writeln('scheduled')

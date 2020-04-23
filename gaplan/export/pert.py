@@ -8,7 +8,7 @@
 import subprocess
 import io
 
-from gaplan.common.error import error, warn
+from gaplan.common.error import error
 from gaplan.common import printers as PR
 from gaplan.common import platform
 

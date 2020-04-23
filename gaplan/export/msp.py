@@ -10,7 +10,6 @@
 import datetime
 import io
 
-from gaplan import goal as G
 from gaplan.common import printers as P
 from gaplan.common.error import error, error_loc
 

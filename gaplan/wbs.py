@@ -5,17 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
-import sys
-import re
-import datetime
-import operator
-import copy
-
 from gaplan.common.error import error, error_loc, warn_loc
-from gaplan.common.ETA import ETA
-from gaplan.common import parse as PA
-from gaplan.common import printers as PR
-from gaplan.common import matcher as M
 
 class Task:
   """Task is basically a named activity."""

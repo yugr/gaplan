@@ -5,8 +5,6 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
-import re
-
 from gaplan.common import matcher as M
 from gaplan.common import printers as PR
 from gaplan.common import parse as PA
