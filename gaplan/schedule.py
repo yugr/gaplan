@@ -5,7 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
-from gaplan.common.error import error_loc, error
+from gaplan.common.error import error
 from gaplan.common import matcher as M
 from gaplan.common import printers as PR
 from gaplan.common import parse as PA
@@ -39,7 +39,7 @@ class SchedBlock:
         self.duration = PA.read_date2(a, loc)
         continue
 
-      error_loc(loc, "unknown block attribute: '%s'" % a)
+      error(loc, "unknown block attribute: '%s'" % a)
 
   def dump(self, p):
     p.writeln("%s sched block (%s)" % ("Parallel" if self.par else "Sequential", self.loc))
@@ -218,7 +218,7 @@ class Scheduler:
       assert not block.blocks, "block with goals should have no subblocks"
       goal = self.net.name_to_goal.get(block.goal_name)
       if goal is None:
-        error_loc(block.loc, "goal '%s' not found in plan" % block.goal_name)
+        error(block.loc, "goal '%s' not found in plan" % block.goal_name)
       goal_finish = self._schedule_goal(goal, start, alloc)
       latest = max(latest, goal_finish)
 

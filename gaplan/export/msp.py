@@ -11,7 +11,7 @@ import datetime
 import io
 
 from gaplan.common import printers as P
-from gaplan.common.error import error, error_loc
+from gaplan.common.error import error
 
 time_format = '%Y-%m-%d'
 

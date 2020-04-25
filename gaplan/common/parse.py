@@ -8,30 +8,15 @@
 import datetime
 import re
 
-from gaplan.common.error import error_loc
+from gaplan.common.error import error
 from gaplan.common.ETA import ETA
 from gaplan.common.interval import Interval
-
-class Location:
-  def __init__(self, filename=None, lineno=None):
-    self.filename = filename
-    self.lineno = lineno
-
-  def prior(self):
-    return Location(self.filename, self.lineno - 1) if self else self
-
-  def __str__(self):
-    if not self:
-      return '?:?'
-    return '%s:%d' % (self.filename, self.lineno)
-
-  def __bool__(self):
-    return self.filename is not None
+from gaplan.common.location import Location
 
 def read_duration(s, loc):
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
   if not m:
-    error_loc(loc, 'failed to parse duration: %s' % s)
+    error(loc, 'failed to parse duration: %s' % s)
   d = float(m.group(1))
   spec = m.group(2)
   rest = m.group(3)
@@ -61,7 +46,7 @@ def read_duration3(s, loc):
     r, rest = read_duration(mm.group(1), loc)
 
   if rest:
-    error_loc(loc, 'trailing chars: %s' % rest)
+    error(loc, 'trailing chars: %s' % rest)
 
   return ETA(m, M, r)
 
@@ -71,7 +56,7 @@ def read_date(s, loc):
   # TODO: allow UTC dates?
   m = re.search(r'^\s*([^-\s]*-[^-\s]*)(-[^-\s]*)?\s*(.*)', s)
   if not m:
-    error_loc(loc, 'failed to parse date: %s' % s)
+    error(loc, 'failed to parse date: %s' % s)
   date_str = m.group(1)
   # If day is omitted, consider first day
   date_str += m.group(2) or '-01'
@@ -168,9 +153,9 @@ class BaseLexer:
     if isinstance(type, list):
       if l.type not in type:
         type_str = ', '.join(map(lambda t: '\'%s\'' % t, type))
-        error_loc(l.loc, "expecting %s, got '%s'" % (type_str, l.type))
+        error(l.loc, "expecting %s, got '%s'" % (type_str, l.type))
     elif l.type != type:
-      error_loc(l.loc, "expecting '%s', got '%s'" % (type, l.type))
+      error(l.loc, "expecting '%s', got '%s'" % (type, l.type))
     return l
 
 class BaseParser:

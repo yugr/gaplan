@@ -7,7 +7,7 @@
 
 import datetime
 
-from gaplan.common.error import error, error_loc
+from gaplan.common.error import error
 from gaplan.common import parse as P
 from gaplan.common import matcher as M
 from gaplan.common import interval as I
@@ -29,7 +29,7 @@ class Resource:
         duration = P.read_date2(M.group(1), loc)
         self.vacations.append(duration)
       else:
-        error_loc(loc, "unexpected resource attribute: %s" % a)
+        error(loc, "unexpected resource attribute: %s" % a)
 
   def dump(self, p):
     p.writeln('Developer %s (%s, %f)' % (self.name, self.loc, self.efficiency))
@@ -73,18 +73,18 @@ class Project:
     self.members_map = {m.name : m for m in self.members}
     self.teams_map = {t.name : t for t in self.teams}
     if 'all' in self.teams_map:
-      error_loc(self.teams_map['all'].loc, "predefined goal 'all' overriden")
+      error(self.teams_map['all'].loc, "predefined goal 'all' overriden")
     self.teams_map['all'] = Team('all', self.members, self.loc)
     # Resolve resources
     for team in self.teams:
       if team.name in self.members_map:
-        error_loc(team.loc, "team '%s' clashes with developer '%s'" % (team.name, team.name))
+        error(team.loc, "team '%s' clashes with developer '%s'" % (team.name, team.name))
       for i, name in enumerate(team.members):
         if not isinstance(name, str):
           continue
         m = self.members_map.get(name)
         if m is None:
-          error_loc(team.loc, "no member with name '%s'" % name)
+          error(team.loc, "no member with name '%s'" % name)
         team.members[i] = m
 
   def add_attrs(self, attrs):

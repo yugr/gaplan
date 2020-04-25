@@ -7,9 +7,10 @@
 
 import re
 
-from gaplan.common.error import error_loc
+from gaplan.common.error import error
 from gaplan.common import parse as PA
 from gaplan.common import matcher as M
+from gaplan.common.location import Location
 from gaplan import project
 from gaplan import schedule
 from gaplan import goal as G
@@ -97,7 +98,7 @@ class Lexer(PA.BaseLexer):
         type = LexemeType.ASSIGN
         self.mode = LexerMode.ATTR
       else:
-        error_loc(self._loc(), "unexpected syntax: %s" % self.line)
+        error(self._loc(), "unexpected syntax: %s" % self.line)
       self.line = self.line[len(M.group(0)):]
       text = M.group(0)
     self.lexemes.append(PA.Lexeme(type, data, text, self._loc()))
@@ -172,9 +173,9 @@ class Parser(PA.BaseParser):
 
       check_offset, status, text = l.data
       if check_offset != goal_offset:
-        error_loc(loc, "check is not properly nested")
+        error(loc, "check is not properly nested")
       if status not in ['X', 'F', '']:
-        error_loc(loc, "unexpected check status: '%s'" % status)
+        error(loc, "unexpected check status: '%s'" % status)
 
       check = G.Condition(text, status, l.loc)
       g.add_check(check)
@@ -235,7 +236,7 @@ class Parser(PA.BaseParser):
 
     if goal_attrs:
       if was_defined:
-        error_loc(loc, "duplicate definition of goal '%s' (previous definition was in %s)" % (goal.name, goal.loc))
+        error(loc, "duplicate definition of goal '%s' (previous definition was in %s)" % (goal.name, goal.loc))
       goal.add_attrs(goal_attrs, loc)
 
     # TODO: Gaperton's examples contain interwined checks and deps
@@ -268,7 +269,7 @@ class Parser(PA.BaseParser):
 
     def expect_one_value(name, vals):
       if len(vals) != 1:
-        error_loc(loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
+        error(loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
 
     if name in ['name', 'tracker_link', 'pr_link']:
       expect_one_value(name, rhs)
@@ -280,7 +281,7 @@ class Parser(PA.BaseParser):
       val = []
       for rc_info in rhs:
         if not M.match(r'([A-Za-z][A-Za-z0-9_]*)\s*(?:\(([^\)]*)\))?', rc_info):
-          error_loc(attr_loc, "failed to parse resource declaration: %s" % rc_info)
+          error(attr_loc, "failed to parse resource declaration: %s" % rc_info)
         rc_name, attrs = M.groups()
         rc = project.Resource(rc_name, attr_loc)
         if attrs:
@@ -290,12 +291,12 @@ class Parser(PA.BaseParser):
       val = []
       for team_info in rhs:
         if not M.match(r'\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)$', team_info):
-          error_loc(attr_loc, "invalid team declaration: %s" % team_info)
+          error(attr_loc, "invalid team declaration: %s" % team_info)
         team_name = M.group(1)
         rc_names = re.split(r'\s*,\s*', M.group(2).strip())
         val.append(project.Team(team_name, rc_names, attr_loc))
     else:
-      error_loc(attr_loc, "unknown project attribute: %s" % name)
+      error(attr_loc, "unknown project attribute: %s" % name)
 
     self.project_attrs[name] = val
 
@@ -351,21 +352,21 @@ class Parser(PA.BaseParser):
       self._dbg("parse: next lexeme: %s" % l)
       if l.type == LexemeType.GOAL:
         if l.data[0] != 0:
-          error_loc(l.loc, "root goal '%s' must be left-adjusted" % l.data[1])
+          error(l.loc, "root goal '%s' must be left-adjusted" % l.data[1])
         goal = self.parse_goal(l.data[0], None, False)
         root_goals.append(goal)
       elif l.type == LexemeType.PRJ_ATTR:
         self.parse_project_attr()
       elif l.type == LexemeType.SCHED:
         if l.data[0] != 0:
-          error_loc(l.loc, "root block must be left-adjusted")
+          error(l.loc, "root block must be left-adjusted")
         block = self.parse_sched_block(l.data[0])
         root_blocks.append(block)
       elif l.type == LexemeType.EOF:
         break
       else:
         # TODO: anonymous goals
-        error_loc(l.loc, "unexpected lexeme: '%s'" % l.text)
+        error(l.loc, "unexpected lexeme: '%s'" % l.text)
 
     prj = project.Project(self.project_loc)
     prj.add_attrs(self.project_attrs)

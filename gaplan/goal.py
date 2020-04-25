@@ -11,7 +11,7 @@ import datetime
 import operator
 import copy
 
-from gaplan.common.error import error, error_loc, warn_loc
+from gaplan.common.error import error, warn
 from gaplan.common.ETA import ETA
 from gaplan.common import parse as PA
 from gaplan.common import printers as PR
@@ -51,7 +51,7 @@ class Condition:
   def add_attrs(self, attrs, loc):
     attrs = add_common_attrs(loc, self, attrs)
     if attrs:
-      error_loc(loc, "unknown condition attribute(s): %s" % ', '.join(attrs))
+      error(loc, "unknown condition attribute(s): %s" % ', '.join(attrs))
 
   def done(self):
     return self.status != ''
@@ -124,20 +124,20 @@ class Activity:
         continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
-        error_loc(loc, "failed to parse attribute: %s" % a)
+        error(loc, "failed to parse attribute: %s" % a)
       k = M.group(1)
 #      v = M.group(2)
       if k == 'global':
         self.globl = True
       else:
-        error_loc(loc, "unknown activity attribute: '%s'" % k)
+        error(loc, "unknown activity attribute: '%s'" % k)
 
   def check(self, warn):
     if warn == 0:
       return
 
     if self.alloc and not self.effort.defined():
-      warn_loc(self.loc, 'activity is assigned but no effort is specified')
+      warn(self.loc, 'activity is assigned but no effort is specified')
 
   def estimate(self):
     return self.effort.estimate(self.tail.risk if self.tail else None)
@@ -246,13 +246,13 @@ class Goal:
       if a.find('!') == 0:
         self.prio = int(a[1:])
         if not Goal.MIN_PRIO <= self.prio <= Goal.MAX_PRIO:
-          error_loc(loc, "invalid priority value %d" % self.prio)
+          error(loc, "invalid priority value %d" % self.prio)
         continue
 
       if a.find('?') == 0:
         self.risk = int(a[1:])
         if not Goal.MIN_RISK <= self.risk <= Goal.MAX_RISK:
-          error_loc(loc, "invalid risk value %d" % self.risk)
+          error(loc, "invalid risk value %d" % self.risk)
         continue
 
       if M.search(r'^I[0-9]+$', a):
@@ -269,7 +269,7 @@ class Goal:
 #        continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
-        error_loc(loc, "failed to parse attribute: %s" % a)
+        error(loc, "failed to parse attribute: %s" % a)
       k = M.group(1)
       v = M.group(2)
       if k == 'deadline':
@@ -277,7 +277,7 @@ class Goal:
       elif k == 'alias':
         self.alias, _ = PA.read_date(v, loc)
       else:
-        error_loc(loc, "unknown goal attribute '%s'" % k)
+        error(loc, "unknown goal attribute '%s'" % k)
 
   def parents(self):
     ps = []
@@ -370,27 +370,27 @@ class Goal:
 
   def check(self, warn):
     if warn and not self.defined and not self.dummy:
-      warn_loc(self.loc, 'goal "%s" is undefined' % self.name)
+      warn(self.loc, 'goal "%s" is undefined' % self.name)
 
     pending_conds = [c.name for c in self.checks if not c.done()]
     if warn and self.completion_date and pending_conds:
-      warn_loc(self.loc, 'goal "%s" marked as completed but some checks are still pending:\n  %s' % (self.name, '\n  '.join(pending_conds)))
+      warn(self.loc, 'goal "%s" marked as completed but some checks are still pending:\n  %s' % (self.name, '\n  '.join(pending_conds)))
 
     for act in self.global_preds:
       if not act.is_instant():
-        error_loc(act.loc, "global dependencies must be instant")
+        error(act.loc, "global dependencies must be instant")
 
       if warn and not act.head:
-        warn_loc(act.loc, "goal '%s' has empty global dependency" % self.name)
+        warn(act.loc, "goal '%s' has empty global dependency" % self.name)
 
     for act in self.preds:
       act.check(warn)
 
       if act.head and self.iter is not None and act.head.iter is None:
-        warn_loc(self.loc, "goal has been scheduled but one of it's dependents is not: '%s'" % act.head.name)
+        warn(self.loc, "goal has been scheduled but one of it's dependents is not: '%s'" % act.head.name)
 
       if self.is_completed() and (not act.duration or not act.effort.real):
-        warn_loc(self.loc, "goal '%s' is achieved but one of it's actions is missing tracking data" % self.name)
+        warn(self.loc, "goal '%s' is achieved but one of it's actions is missing tracking data" % self.name)
 
   def filter(self, only_goals):
     new_preds = []
@@ -547,7 +547,7 @@ class Net:
         if old_attr is None:
           setattr(g, attr_name, new_attr)
         elif less(old_attr, new_attr):
-          warn_loc(g.loc, "inferred (%s) and assigned (%s) %s for goal '%s' do not match" % (new_attr, old_attr, attr_name, g.name))
+          warn(g.loc, "inferred (%s) and assigned (%s) %s for goal '%s' do not match" % (new_attr, old_attr, attr_name, g.name))
           setattr(g, attr_name, new_attr)
     self.visit_goals(callback=assign_inferred_attrs)
 

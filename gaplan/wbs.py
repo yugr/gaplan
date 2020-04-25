@@ -5,7 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
-from gaplan.common.error import error, error_loc, warn_loc
+from gaplan.common.error import error, warn
 from gaplan.common import interval as I
 
 class Task:
