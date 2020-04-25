@@ -71,7 +71,7 @@ class Activity:
     self.duration = None
     self.effort = ETA()
     self.alloc = ['all']
-    self.parallel = 0
+    self.parallel = 1
 
     # TODO: also attach tasks to goals?
     self.jira_tasks = set()
@@ -167,12 +167,11 @@ class Activity:
       p.writeln('actual effort: %dh' % self.effort.real)
 
     if self.duration is not None:
-      p.writeln('fixed start date: %s' % PR.print_date(self.duration.start))
-      p.writeln('fixed end date: %s' % PR.print_date(self.duration.finish))
+      p.writeln('duration: %s' % self.duration)
 
     if self.is_max_parallel():
       par = 'max'
-    elif self.parallel:
+    elif self.parallel > 1:
       par = self.parallel
     else:
       par = 'non'

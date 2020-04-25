@@ -49,8 +49,7 @@ class SchedBlock:
     p.writeln("%s sched block (%s)" % ("Parallel" if self.par else "Sequential", self.loc))
     with p:
       if self.duration is not None:
-        p.writeln("Start: %s" % PR.print_date(self.duration.start))
-        p.writeln("Finish: %s" % PR.print_date(self.duration.finish))
+        p.writeln("Duration: %s" % self.duration)
       if self.goal_name:
         p.writeln("Goal: " + self.goal_name)
       for block in self.blocks:
@@ -123,24 +122,37 @@ class Timetable:
     return self.goal_infos[goal.name].iv.finish
 
   def assign_best_rcs(self, rcs, start, effort, parallel):
-    # TODO: # select best resource from list
-    # (or N resources if parallel) and compute optimal time
-    best_rc = best_frag = best_iv = None
-    for rc in rcs:
-      rc_info = self.rc_infos[rc.name]
-      rc_effort = effort * rc.efficiency
-      iv = I.Interval(start, start + datetime.timedelta(hours=rc_effort))
-      _, iv, frag = rc_info.allocate(iv)
-      if best_frag is None \
-          or iv.finish < best_iv.finish \
-          or iv.finish == best_iv.finish and frag < best_frag:
-        best_rc = rc
-        best_frag = frag
-        best_iv = iv
-    rc_info = self.rc_infos[best_rc.name]
-    i, best_iv, _ = rc_info.allocate(best_iv)
-    rc_info.sheet.insert(i, best_iv)
-    return best_iv, [best_rc]
+    # How many chunks we can split work to?
+    n = min(parallel, len(rcs))
+
+    # Find optimal resource count
+    best_allocs = best_finish = None
+    for i in range(1, n + 1):
+      sched_data = []
+      e = effort / i
+      for rc in rcs:
+        rc_info = self.rc_infos[rc.name]
+        rc_effort = e * rc.efficiency
+        iv = I.Interval(start, start + datetime.timedelta(hours=rc_effort))
+        j, iv, frag = rc_info.allocate(iv)
+        sched_data.append((rc.name, j, iv, frag))
+      sched_data.sort(key=lambda data: (data[2].finish, data[3]))  # I hate Python...
+      finish = max(iv.finish for _1, _2, iv, _4 in sched_data[:i])
+      if best_finish is None or finish < best_finish:
+        best_allocs = sched_data[:i]
+        best_finish = finish
+
+    # We found optimal number of resources so perform allocation
+    e = effort / len(best_allocs)
+    total_iv = None
+    total_rcs = []
+    for name, j, iv, _ in best_allocs:
+      rc_info = self.rc_infos[name]
+      rc_info.sheet.insert(j, iv)
+      total_iv = iv if total_iv is None else total_iv.union(iv)
+      total_rcs.append(rc_info.rc)
+
+    return total_iv, total_rcs
 
   def dump(self, p):
     p.writeln("Timetable:")
