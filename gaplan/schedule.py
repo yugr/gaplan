@@ -64,14 +64,15 @@ class Schedule:
         block.dump(p)
 
 class GoalInfo:
-  def __init__(self, name, iv):
+  def __init__(self, name, iv, alloc):
     self.name = name
     self.iv = iv
+    self.alloc = alloc
 
   def dump(self, p):
-    p.writeln("Goal '%s': %s - %s" % (self.name,
-                                      PR.print_date(self.iv.start),
-                                      PR.print_date(self.iv.finish)))
+    s = '/'.join([rc.name for rc in self.alloc])
+    p.writeln("Goal '%s': %s%s" % (self.name, self.iv,
+                                           (" @%s" % s) if s else ""))
 
 class AllocationInfo:
   def __init__(self, rc):
@@ -79,7 +80,7 @@ class AllocationInfo:
     self.name = rc.name
     self.sheet = []
 
-  def get_time_slot(self, iv):
+  def allocate(self, iv):
     if not self.sheet:
       return 0, iv, datetime.timedelta(0)
     last_iv = I.Interval(datetime.datetime(datetime.MAXYEAR, 12, 31))
@@ -108,8 +109,8 @@ class Timetable:
     for rc in prj.members:
       self.rc_infos[rc.name] = AllocationInfo(rc)
 
-  def set_goal_scheduled(self, goal, iv):
-    self.goal_infos[goal.name] = GoalInfo(goal.name, iv)
+  def set_goal_scheduled(self, goal, iv, alloc):
+    self.goal_infos[goal.name] = GoalInfo(goal.name, iv, alloc)
 
   def is_goal_scheduled(self, goal):
     return goal.name in self.goal_infos
@@ -118,23 +119,24 @@ class Timetable:
     return self.goal_infos[goal.name].iv.finish
 
   def assign_best_rcs(self, rcs, start, effort, parallel):
-    # TODO:
-    # * select best resource from list or N resources if parallel and
-    #   compute optimal time
+    # TODO: # select best resource from list
+    # (or N resources if parallel) and compute optimal time
     best_rc = best_frag = best_iv = None
     for rc in rcs:
       rc_info = self.rc_infos[rc.name]
       rc_effort = effort * rc.efficiency
       iv = I.Interval(start, start + datetime.timedelta(hours=rc_effort))
-      _, _, frag = rc_info.get_time_slot(iv)
-      if best_frag is None or frag < best_frag:
+      _, iv, frag = rc_info.allocate(iv)
+      if best_frag is None \
+          or iv.start < best_iv.start \
+          or iv.start == best_iv.start and frag < best_frag:
         best_rc = rc
         best_frag = frag
         best_iv = iv
     rc_info = self.rc_infos[best_rc.name]
-    i, best_iv, _ = rc_info.get_time_slot(best_iv)
+    i, best_iv, _ = rc_info.allocate(best_iv)
     rc_info.sheet.insert(i, best_iv)
-    return best_iv
+    return best_iv, [best_rc]
 
   def dump(self, p):
     p.writeln("Timetable:")
@@ -174,10 +176,11 @@ class Scheduler:
     if goal.completion_date is not None:
       # TODO: register spent time for devs
       # TODO: warn if completion_date < start
-      self.table.set_goal_scheduled(goal.name, I.Interval(goal.completion_date))
+      self.table.set_goal_scheduled(goal.name, I.Interval(goal.completion_date), [])
       return goal.completion_date
 
     goal_iv = I.Interval(start, start)
+    goal_alloc = set()
     for act in goal.preds:
       if act.duration is not None:
         # TODO: register spent time for devs
@@ -196,10 +199,11 @@ class Scheduler:
         continue
 
       effort, _ = act.estimate()
-      iv = self.table.assign_best_rcs(rcs, act_start, effort, act.parallel)
+      iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, effort, act.parallel)
+      goal_alloc.update(assigned_rcs)
       goal_iv = goal_iv.union(iv)
 
-    self.table.set_goal_scheduled(goal, goal_iv)
+    self.table.set_goal_scheduled(goal, goal_iv, goal_alloc)
 
     return goal_iv.finish
 
