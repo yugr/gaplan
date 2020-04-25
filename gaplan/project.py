@@ -93,7 +93,7 @@ class Project:
 
   def get_resources(self, names):
     resources = []
-    for name in names or ['all']:
+    for name in names:
       team = self.teams_map.get(name)
       if team is not None:
         for rc in team.members:

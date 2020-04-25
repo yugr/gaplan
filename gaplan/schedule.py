@@ -171,8 +171,6 @@ class Scheduler:
     return [(ts, t)] * len(alloc)
 
   def _schedule_goal(self, goal, start, alloc):
-    rcs = self.prj.get_resources(alloc)
-
     if goal.completion_date is not None:
       # TODO: register spent time for devs
       # TODO: warn if completion_date < start
@@ -197,6 +195,16 @@ class Scheduler:
       if act.is_instant():
         goal_iv = goal_iv.union(I.Interval(act_start, act_start))
         continue
+
+      plan_rcs = self.prj.get_resources(act.alloc)
+      if alloc:
+        block_rcs = self.prj.get_resources(alloc)
+        if block_rcs.difference(plan_rcs):
+          error("allocations defined in schedule (%s) do not match "
+                "allocations defined in action (%s)"
+                % ('/'.join(alloc), '/'.join(rc.name for rc in plan_rcs)))
+      else:
+        rcs = plan_rcs
 
       effort, _ = act.estimate()
       iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, effort, act.parallel)

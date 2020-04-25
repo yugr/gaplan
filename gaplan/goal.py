@@ -67,7 +67,7 @@ class Activity:
 
     self.duration = None
     self.effort = ETA()
-    self.alloc = []
+    self.alloc = ['all']
     self.parallel = 0
 
     # TODO: also attach tasks to goals?
