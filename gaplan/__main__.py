@@ -6,8 +6,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
-
-# Poor man's converter for Gaperton's declarative plans.
+#
+# Main driver for Gaplan project
 # Run with --help for details.
 
 import sys

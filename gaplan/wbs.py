@@ -4,6 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
+#
+# This module provides APIs for converting declarative plan to WBS.
 
 from gaplan.common.error import error, warn, error_if, warn_if
 from gaplan.common import interval as I

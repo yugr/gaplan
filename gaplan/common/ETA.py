@@ -4,6 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
+#
+# This file contains classes which describe effort estimates.
 
 from gaplan.common.error import error
 
@@ -11,6 +13,9 @@ _bias = 'none'
 
 # This class holds interval of durations + an optional real durations.
 class ETA:
+  """This class holds optimistic and perssimistic effort estimates
+     and tracking data."""
+
   def __init__(self, min=None, max=None, real=None):
     self.min = min
     self.max = max

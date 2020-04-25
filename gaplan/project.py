@@ -4,6 +4,9 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
+#
+# This module provides APIs for dealing with organizational aspects
+# of plan: teams, resources, etc.
 
 import datetime
 

@@ -4,6 +4,9 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
+#
+# This file provides APIs for representing core project maps concepts:
+# goals and arrows.
 
 import sys
 import re

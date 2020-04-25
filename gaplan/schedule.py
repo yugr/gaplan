@@ -4,6 +4,10 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
+#
+# This module contains APIs for simple user-controlled scheduling.
+
+# This is WIP !!!
 
 from gaplan.common.error import error, error_if
 from gaplan.common import matcher as M

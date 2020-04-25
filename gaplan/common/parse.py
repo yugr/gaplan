@@ -4,6 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
+#
+# This files provides APIs to simplify parsing.
 
 import datetime
 import re
