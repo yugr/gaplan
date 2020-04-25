@@ -6,6 +6,7 @@
 # that can be found in the LICENSE.txt file.
 
 from gaplan.common.error import error, error_loc, warn_loc
+from gaplan.common import interval as I
 
 class Task:
   """Task is basically a named activity."""
@@ -22,11 +23,11 @@ class Task:
       self._set_goal(goal)
     else:
       self.goal = self.prio = self.complete = None
-      self.start_date = self.finish_date = self.deadline = None
+      self.duration = self.deadline = None
     if act is not None:
       self._set_action(act)
     else:
-      self.act = self.start_date = self.finish_date = None
+      self.act = self.duration = None
 
   def check(self):
     assert self.id is not None
@@ -54,13 +55,13 @@ class Task:
     self.goal = goal
     self.prio = goal.prio
     self.complete = goal.complete()
-    self.start_date = self.finish_date = goal.completion_date
+    if goal.completion_date is not None:
+      self.duration = I.Interval(goal.completion_date)
     self.deadline = self.goal.deadline
 
   def _set_action(self, act):
     self.act = act
-    self.start_date = act.start_date
-    self.finish_date = act.finish_date
+    self.duration = act.duration
 
   def merge(self, task):
     for t in (task.subtasks + task.milestones + task.activities):
@@ -85,8 +86,7 @@ class Task:
     for task in self.activities:
       for attr in ('prio',
                    'complete',
-                   'start_date',
-                   'finish_date'):
+                   'duration'):
         setattr(task, attr, getattr(self, attr))
 
   def dump(self, p):

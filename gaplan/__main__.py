@@ -15,6 +15,7 @@ import argparse
 
 from gaplan.common.error import error, set_basename
 from gaplan.common import error as E
+from gaplan.common import interval as I
 from gaplan.common import ETA
 from gaplan.common import printers as PR
 from gaplan import parse as PA
@@ -164,8 +165,7 @@ Examples:
     timetable.dump(p)
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
-      start_date = project.start
-      finish_date = project.finish
+      duration = project.duration
       goal = roots[0]
     else:
       if args.iter not in net.iter_to_goals:
@@ -177,18 +177,19 @@ Examples:
       start_date = finish_date = None
       for g in goals:
         if g.start_date is not None:
-          start_date = g.start_date if start_date is None else min(start_date, g.start_date)
+          start_date = min(start_date or g.start_date, g.start_date)
         for pred in g.preds:
           if pred not in goals and g.finish_date is not None:
-            start_date = pred.finish_date if start_date is None else min(start_date, pred.finish_date)
+            start_date = min(start_date or pred.finish_date, pred.finish_date)
         if g.deadline is not None:
-          finish_date = g.deadline if finish_date is None else min(finish_date, g.deadline)
+          finish_date = min(finish_date or g.deadline, g.deadline)
       if start_date is None:
         error("unable to determine start date for iteration '%s'" % args.iter)
       if finish_date is None:
         error("unable to determine finish date for deadline '%s'" % args.iter)
+      duration = I.Interval(start_date, finish_date)
 
-    burn.export(net, goal, start_date, finish_date, args.dump)
+    burn.export(net, goal, duration, args.dump)
 
 if __name__ == '__main__':
     main()

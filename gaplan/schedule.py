@@ -20,7 +20,7 @@ class SchedBlock:
     self.offset = offset
     self.loc = loc
     self.alloc = []
-    self.start_date = self.finish_date = None
+    self.duration = None
     self.goal_name = None
     self.blocks = []
 
@@ -35,25 +35,20 @@ class SchedBlock:
         self.alloc = M.group(1).split('/')
         continue
 
-      if M.search(r'^start\s+([0-9]{4}-.*)', a):
-        self.start_date, _ = PA.read_date(M.group(1), loc)
+      if M.search(r'^[0-9]{4}-', a):
+        self.duration = PA.read_date2(a, loc)
         continue
 
-      if M.search(r'^finish\s+([0-9]{4}-.*)', a):
-        self.finisih_date, _ = PA.read_date(M.group(1), loc)
-        continue
-
-      error_loc(loc, "unknown activity attribute: '%s'" % k)
+      error_loc(loc, "unknown block attribute: '%s'" % a)
 
   def dump(self, p):
     p.writeln("%s sched block (%s)" % ("Parallel" if self.par else "Sequential", self.loc))
     with p:
-      if self.start_date is not None:
-        p.writeln("Start: %s" % PR.print_date(self.start_date))
-      if self.finish_date is not None:
-        p.writeln("Finish: %s" % PR.print_date(self.finish_date))
-      for goal_name, goal_attrs in self.goals:
-        p.writeln(goal_name)
+      if self.duration is not None:
+        p.writeln("Start: %s" % PR.print_date(self.duration.start))
+        p.writeln("Finish: %s" % PR.print_date(self.duration.finish))
+      if self.goal_name:
+        p.writeln("Goal: " + self.goal_name)
       for block in self.blocks:
         block.dump(p)
 
@@ -184,10 +179,10 @@ class Scheduler:
 
     goal_iv = I.Interval(start, start)
     for act in goal.preds:
-      if act.finish_date is not None:
+      if act.duration is not None:
         # TODO: register spent time for devs
         # TODO: warn if goal_start < start
-        goal_iv = goal_iv.union(I.Interval(act.start_date, act.finish_date))
+        goal_iv = goal_iv.union(act.duration)
         continue
 
       act_start = start

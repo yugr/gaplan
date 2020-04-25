@@ -12,22 +12,22 @@ from collections import defaultdict
 from gaplan import goal as G
 from gaplan.common import printers as PR
 
-def export(net, goal, start_date, finish_date, dump):
+def export(net, goal, duration, dump):
   counts = defaultdict(int)
-  counts[start_date] = 0
+  counts[duration.start] = 0
   partial = [0]
   total_children = [0]
   def scan_completed(g):
     total_children[0] += 1   # TODO: skip milestones?
     if g.is_completed() and g.is_scheduled():
-      counts[g.finish_date] += 1
+      counts[g.completion_date] += 1
     else:
       partial[0] += g.complete() / 100.0
   G.visit_goals([goal], callback=scan_completed, hierarchical=True)
 
   # Also count partially completed tasks
   today = datetime.datetime.now()
-  if today < finish_date:
+  if today < duration.finish:
     counts[today] = int(partial[0])
 
   sorted_dates = sorted(counts.keys())
@@ -58,15 +58,15 @@ set yrange [0:%d]
 set ytics mirror
 
 plot "-" using 1:2 title 'Real' with lines, "-" using 1:2 title "Planned" with lines
-''' % (goal.name, start_date, finish_date, total_children[0]))
+''' % (goal.name, duration.start, duration.finish, total_children[0]))
 
   for date in sorted_dates:
     n = counts[date]
     p.writeln('  %s %d' % (PR.print_date(date), total_children[0] - n))
   p.writeln('e')
 
-  p.writeln('  %s %d' % (PR.print_date(start_date), total_children[0]))
-  p.writeln('  %s %d' % (PR.print_date(finish_date), 0))
+  p.writeln('  %s %d' % (PR.print_date(duration.start), total_children[0]))
+  p.writeln('  %s %d' % (PR.print_date(duration.finish), 0))
   p.writeln('e')
 
   if dump:

@@ -66,8 +66,7 @@ class Activity:
     self.tail = None
     self.globl = False  # Marks "global" activities which are enabled for all children of the target
 
-    # TODO: use Interval
-    self.start_date = self.finish_date = None
+    self.duration = None
     self.effort = ETA()
     self.alloc = []
     self.parallel = 0
@@ -88,7 +87,7 @@ class Activity:
       self.tail = g2
 
   def is_scheduled(self):
-    return self.start_date is not None and self.finish_date is not None
+    return self.duration is not None
 
   def is_max_parallel(self):
     return self.parallel == sys.maxsize
@@ -109,7 +108,7 @@ class Activity:
         continue
 
       if M.search(r'^[0-9]{4}-', a):
-        self.start_date, self.finish_date = PA.read_date2(a, loc)
+        self.duration = PA.read_date2(a, loc)
         continue
 
       if M.match(r'^task\s+(.*)', a):
@@ -165,11 +164,9 @@ class Activity:
     if self.effort.real is not None:
       p.writeln('actual effort: %dh' % self.effort.real)
 
-    if self.start_date is not None:
-      p.writeln('fixed start date: %s' % PR.print_date(self.start_date))
-
-    if self.finish_date is not None:
-      p.writeln('fixed end date: %s' % PR.print_date(self.finish_date))
+    if self.duration is not None:
+      p.writeln('fixed start date: %s' % PR.print_date(self.duration.start))
+      p.writeln('fixed end date: %s' % PR.print_date(self.duration.finish))
 
     if self.is_max_parallel():
       par = 'max'
@@ -392,7 +389,7 @@ class Goal:
       if act.head and self.iter is not None and act.head.iter is None:
         warn_loc(self.loc, "goal has been scheduled but one of it's dependents is not: '%s'" % act.head.name)
 
-      if self.is_completed() and (not act.start_date or not act.effort.real):
+      if self.is_completed() and (not act.duration or not act.effort.real):
         warn_loc(self.loc, "goal '%s' is achieved but one of it's actions is missing tracking data" % self.name)
 
   def filter(self, only_goals):

@@ -89,9 +89,9 @@ def _print_task(p, task, abs_ids, prj):
         alts = ('alternative ' + ', '.join(rest)) if rest else ''
         p.writeln('allocate %s { %s select minloaded persistent}' % (first, alts))
 
-  if task.start_date is not None:
-    p.writeln('start %s' % PR.print_date(act.start_date))
-    p.writeln('end %s' % PR.print_date(act.finish_date))
+  if task.duration is not None:
+    p.writeln('start %s' % PR.print_date(act.duration.start))
+    p.writeln('end %s' % PR.print_date(act.duration.finish))
     p.writeln('scheduled')
 
   for subtask in (task.activities + task.milestones):
@@ -160,9 +160,8 @@ flags internal
   for dev in prj.members:
     p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
     p.writeln('    efficiency %f' % dev.efficiency)
-    for start, finish in dev.vacations:
-      p.writeln('    vacation %s - %s'
-                % (start.strftime(time_format), finish.strftime(time_format)))
+    for iv in dev.vacations:
+      p.writeln('    vacation %s' % iv)
     p.writeln('  }')
   p.writeln('}')
 

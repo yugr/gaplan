@@ -10,6 +10,7 @@ import datetime
 from gaplan.common.error import error, error_loc
 from gaplan.common import parse as P
 from gaplan.common import matcher as M
+from gaplan.common import interval as I
 
 class Resource:
   """Describes a single developer."""
@@ -25,8 +26,8 @@ class Resource:
       if M.search(r'^[0-9.]+$', a):
         self.efficiency = float(a)
       elif M.search(r'vacations?\s+(.*)', a):
-        start, finish = P.read_date2(M.group(1), loc)
-        self.vacations.append((start, finish))
+        duration = P.read_date2(M.group(1), loc)
+        self.vacations.append(duration)
       else:
         error_loc(loc, "unexpected resource attribute: %s" % a)
 
@@ -34,8 +35,8 @@ class Resource:
     p.writeln('Developer %s (%s, %f)' % (self.name, self.loc, self.efficiency))
     time_format = '%Y-%m-%d'
     vv = []
-    for start, finish in self.vacations:
-      vv.append('%s - %s' % (start.strftime(time_format), finish.strftime(time_format)))
+    for iv in self.vacations:
+      vv.append('%s' % iv)
     p.writeln('  vacations: %s' % ', '.join(vv))
 
 class Team:
@@ -60,8 +61,7 @@ class Project:
     self.name = 'Unknown'
     self.loc = loc
     year = datetime.datetime.today().year
-    self.start = datetime.date(year, 1, 1)
-    self.finish = datetime.date(year, 12, 31)
+    self.duration = I.Interval(datetime.datetime(year, 1, 1), datetime.datetime(year, 12, 31))
     self.members = []
     self.members_map = {}
     self.teams = {}

@@ -27,10 +27,10 @@ def _print_activity_body(a, uids, out):
       <IsNull>0</IsNull>
 ''', file=out)
 
-  if a.start_date is not None:
-    assert a.finish_date is not None
-    s = _print_date(a.start_date)
-    f = _print_date(a.finish_date)
+  if a.duration.start is not None:
+    assert a.duration.finish is not None
+    s = _print_date(a.duration.start)
+    f = _print_date(a.duration.finish)
     # "Must start on"
     print('''\
       <ConstraintType>2</ConstraintType>

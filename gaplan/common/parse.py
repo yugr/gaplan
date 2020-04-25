@@ -10,6 +10,7 @@ import re
 
 from gaplan.common.error import error_loc
 from gaplan.common.ETA import ETA
+from gaplan.common.interval import Interval
 
 class Location:
   def __init__(self, filename=None, lineno=None):
@@ -86,7 +87,7 @@ def read_date2(s, loc):
   if rest and rest[0] == '-':
     finish, rest = read_date(rest[1:], loc)
 
-  return start, finish
+  return Interval(start, finish)
 
 class Lexeme:
   def __init__(self, type, data, text, loc):
