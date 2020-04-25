@@ -5,7 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
-from gaplan.common.error import error
+from gaplan.common.error import error, error_if
 from gaplan.common import matcher as M
 from gaplan.common import printers as PR
 from gaplan.common import parse as PA
@@ -217,8 +217,7 @@ class Scheduler:
     else:
       assert not block.blocks, "block with goals should have no subblocks"
       goal = self.net.name_to_goal.get(block.goal_name)
-      if goal is None:
-        error(block.loc, "goal '%s' not found in plan" % block.goal_name)
+      error_if(goal is None, block.loc, "goal '%s' not found in plan" % block.goal_name)
       goal_finish = self._schedule_goal(goal, start, alloc)
       latest = max(latest, goal_finish)
 

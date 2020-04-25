@@ -8,15 +8,14 @@
 import datetime
 import re
 
-from gaplan.common.error import error
+from gaplan.common.error import error, error_if
 from gaplan.common.ETA import ETA
 from gaplan.common.interval import Interval
 from gaplan.common.location import Location
 
 def read_duration(s, loc):
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
-  if not m:
-    error(loc, 'failed to parse duration: %s' % s)
+  error_if(m is None, 'failed to parse duration: %s' % s)
   d = float(m.group(1))
   spec = m.group(2)
   rest = m.group(3)
@@ -45,8 +44,7 @@ def read_duration3(s, loc):
     mm = re.search(r'\((.*)\)\s*$', rest)
     r, rest = read_duration(mm.group(1), loc)
 
-  if rest:
-    error(loc, 'trailing chars: %s' % rest)
+  error_if(rest, loc, 'trailing chars: %s' % rest)
 
   return ETA(m, M, r)
 
@@ -55,8 +53,7 @@ def read_date(s, loc):
   # but what if someone uses this in 2020?
   # TODO: allow UTC dates?
   m = re.search(r'^\s*([^-\s]*-[^-\s]*)(-[^-\s]*)?\s*(.*)', s)
-  if not m:
-    error(loc, 'failed to parse date: %s' % s)
+  error_if(m is None, loc, 'failed to parse date: %s' % s)
   date_str = m.group(1)
   # If day is omitted, consider first day
   date_str += m.group(2) or '-01'

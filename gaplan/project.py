@@ -7,7 +7,7 @@
 
 import datetime
 
-from gaplan.common.error import error
+from gaplan.common.error import error, error_if
 from gaplan.common import parse as P
 from gaplan.common import matcher as M
 from gaplan.common import interval as I
@@ -77,14 +77,13 @@ class Project:
     self.teams_map['all'] = Team('all', self.members, self.loc)
     # Resolve resources
     for team in self.teams:
-      if team.name in self.members_map:
-        error(team.loc, "team '%s' clashes with developer '%s'" % (team.name, team.name))
+      error_if(team.name in self.members_map, team.loc,
+               "team '%s' clashes with developer '%s'" % (team.name, team.name))
       for i, name in enumerate(team.members):
         if not isinstance(name, str):
           continue
         m = self.members_map.get(name)
-        if m is None:
-          error(team.loc, "no member with name '%s'" % name)
+        error_if(m is None, team.loc, "no member with name '%s'" % name)
         team.members[i] = m
 
   def add_attrs(self, attrs):
@@ -102,8 +101,7 @@ class Project:
             resources.append(rc)
       else:
         rc = self.members_map.get(name)
-        if rc is None:
-          error("resource '%s' not defined" % name)
+        error_if(rc is None, "resource '%s' not defined" % name)
         if rc not in resources:
           resources.append(rc)
     resources = sorted(resources, key=lambda rc: rc.name)

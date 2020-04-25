@@ -25,6 +25,10 @@ def error(*args):
   else:
     sys.exit(1)
 
+def error_if(cond, *args):
+  if cond:
+    error(*args)
+
 def warn(*args):
   if isinstance(args[0], Location):
     loc, msg = args
@@ -32,6 +36,10 @@ def warn(*args):
   else:
     msg, = args
     sys.stderr.write('%s: warning: %s\n' % (_me, msg))
+
+def warn_if(cond, *args):
+  if cond:
+    warn(*args)
 
 def set_basename(name):
   global _me

@@ -5,7 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
-from gaplan.common.error import error, warn
+from gaplan.common.error import error, warn, error_if, warn_if
 from gaplan.common import interval as I
 
 class Task:
@@ -169,8 +169,7 @@ def _create_goal_task(goal, parent, ids):
 
 def _create_wbs_iterative(net, ids, v):
   user_iters = list(filter(lambda i: i is not None, net.iter_to_goals.keys()))
-  if not user_iters:
-    error("no iterations defined in plan")
+  error_if(not user_iters, "no iterations defined in plan")
 
   user_iters.sort()
   last_iter = (user_iters[-1] + 1) if user_iters else 0

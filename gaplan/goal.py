@@ -11,7 +11,7 @@ import datetime
 import operator
 import copy
 
-from gaplan.common.error import error, warn
+from gaplan.common.error import error, warn, error_if, warn_if
 from gaplan.common.ETA import ETA
 from gaplan.common import parse as PA
 from gaplan.common import printers as PR
@@ -50,8 +50,7 @@ class Condition:
 
   def add_attrs(self, attrs, loc):
     attrs = add_common_attrs(loc, self, attrs)
-    if attrs:
-      error(loc, "unknown condition attribute(s): %s" % ', '.join(attrs))
+    error_if(attrs, loc, "unknown condition attribute(s): %s" % ', '.join(attrs))
 
   def done(self):
     return self.status != ''
@@ -245,14 +244,14 @@ class Goal:
     for a in attrs:
       if a.find('!') == 0:
         self.prio = int(a[1:])
-        if not Goal.MIN_PRIO <= self.prio <= Goal.MAX_PRIO:
-          error(loc, "invalid priority value %d" % self.prio)
+        error_if(not Goal.MIN_PRIO <= self.prio <= Goal.MAX_PRIO,
+                 loc, "invalid priority value %d" % self.prio)
         continue
 
       if a.find('?') == 0:
         self.risk = int(a[1:])
-        if not Goal.MIN_RISK <= self.risk <= Goal.MAX_RISK:
-          error(loc, "invalid risk value %d" % self.risk)
+        error_if(not Goal.MIN_RISK <= self.risk <= Goal.MAX_RISK,
+                 loc, "invalid risk value %d" % self.risk)
         continue
 
       if M.search(r'^I[0-9]+$', a):
@@ -562,9 +561,9 @@ class Net:
       self.name_to_goal[g.name] = g
       if g.alias is not None:
         other_goal = self.name_to_goal.get(g.alias, None)
-        if other_goal is not None and other_goal.name != g.name:
-          error("goals '%s' and '%s' use the same alias name '%s'"
-                % (other_goal.name, g.name, g.alias))
+        error_if(other_goal is not None and other_goal.name != g.name,
+                 "goals '%s' and '%s' use the same alias name '%s'"
+                 % (other_goal.name, g.name, g.alias))
         self.name_to_goal[g.alias] = g
     self.visit_goals(callback=update_name_to_goal)
 
@@ -606,8 +605,7 @@ class Net:
     self.visit_goals(before=lambda g: g.filter(filtered_goals))
 
     new_roots = [g for g in self.roots if g.name in filtered_goals]
-    if not new_roots:
-      error("set of top goals is empty after filtering")
+    error_if(not new_roots, "set of top goals is empty after filtering")
 
     self.roots = new_roots
     self._recompute(warn)
@@ -637,8 +635,7 @@ class Net:
     self.visit_goals(callback=collect_iters)
     iters = sorted(list(iters))
     if warn and iters:
-      if iters[0] != 1:
-        warn("iterations do not start with 1")
+      warn_if(iters[0] != 1, "iterations do not start with 1")
       for itr, nxt in zip(iters, iters[1:]):
         if itr + 1 != nxt:
           warn("iterations are not consecutive: %d and %d" % (itr, nxt))
@@ -649,8 +646,7 @@ class Net:
     for root in self.roots:
       path = []
       def enter(g, path):
-        if g.name in path:
-          error("found a cycle:%s" % '\n  '.join(path))
+        error_if(g.name in path, "found a cycle:%s" % '\n  '.join(path))
         path.append(g.name)
       def exit(g, path):
         path[:] = path[:-1]

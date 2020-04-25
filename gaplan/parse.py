@@ -7,7 +7,7 @@
 
 import re
 
-from gaplan.common.error import error
+from gaplan.common.error import error, error_if
 from gaplan.common import parse as PA
 from gaplan.common import matcher as M
 from gaplan.common.location import Location
@@ -172,10 +172,8 @@ class Parser(PA.BaseParser):
       self._dbg("parse_checks: new check: %s" % l)
 
       check_offset, status, text = l.data
-      if check_offset != goal_offset:
-        error(loc, "check is not properly nested")
-      if status not in ['X', 'F', '']:
-        error(loc, "unexpected check status: '%s'" % status)
+      error_if(check_offset != goal_offset, l.loc, "check is not properly nested")
+      error_if(status not in ['X', 'F', ''], l.loc, "unexpected check status: '%s'" % status)
 
       check = G.Condition(text, status, l.loc)
       g.add_check(check)
@@ -235,8 +233,7 @@ class Parser(PA.BaseParser):
         self._dbg("parse_goal: parsed existing goal: %s" % goal.name)
 
     if goal_attrs:
-      if was_defined:
-        error(loc, "duplicate definition of goal '%s' (previous definition was in %s)" % (goal.name, goal.loc))
+      error_if(was_defined, loc, "duplicate definition of goal '%s' (previous definition was in %s)" % (goal.name, goal.loc))
       goal.add_attrs(goal_attrs, loc)
 
     # TODO: Gaperton's examples contain interwined checks and deps
@@ -267,15 +264,14 @@ class Parser(PA.BaseParser):
       if not self.lex.next_if(','):
         break
 
-    def expect_one_value(name, vals):
-      if len(vals) != 1:
-        error(loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
+    def expect_one_value(loc, name, vals):
+      error_if(len(vals) != 1, loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
 
     if name in ['name', 'tracker_link', 'pr_link']:
-      expect_one_value(name, rhs)
+      expect_one_value(l.loc, name, rhs)
       val = rhs[0]
     elif name in ['start', 'finish']:
-      expect_one_value(name, rhs)
+      expect_one_value(l.loc, name, rhs)
       val, _ = PA.read_date(rhs[0], attr_loc)
     elif name == 'members':
       val = []
@@ -351,15 +347,13 @@ class Parser(PA.BaseParser):
         break
       self._dbg("parse: next lexeme: %s" % l)
       if l.type == LexemeType.GOAL:
-        if l.data[0] != 0:
-          error(l.loc, "root goal '%s' must be left-adjusted" % l.data[1])
+        error_if(l.data[0] != 0, l.loc, "root goal '%s' must be left-adjusted" % l.data[1])
         goal = self.parse_goal(l.data[0], None, False)
         root_goals.append(goal)
       elif l.type == LexemeType.PRJ_ATTR:
         self.parse_project_attr()
       elif l.type == LexemeType.SCHED:
-        if l.data[0] != 0:
-          error(l.loc, "root block must be left-adjusted")
+        error_if(l.data[0] != 0, l.loc, "root block must be left-adjusted")
         block = self.parse_sched_block(l.data[0])
         root_blocks.append(block)
       elif l.type == LexemeType.EOF:

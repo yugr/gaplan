@@ -13,7 +13,7 @@
 import sys
 import argparse
 
-from gaplan.common.error import error, set_basename
+from gaplan.common.error import error, error_if, set_basename
 from gaplan.common import error as E
 from gaplan.common import interval as I
 from gaplan.common import ETA
@@ -137,9 +137,9 @@ Examples:
   if args.only is not None:
     roots = []
     for name in args.only.split(';'):
-      if name not in net.name_to_goal:
-        error("goal '%s' not present in plan" % name)
-      roots.append(net.name_to_goal[name])
+      goal = net.name_to_goal.get(name)
+      error_if(goal is None, "goal '%s' not present in plan" % name)
+      roots.append(goal)
     goals = set()
     G.visit_goals(roots, callback=lambda g: goals.add(g.name), succs=False)
     net.filter(goals, args.W)
@@ -168,9 +168,9 @@ Examples:
       duration = project.duration
       goal = roots[0]
     else:
-      if args.iter not in net.iter_to_goals:
-        error("iteration '%s' is not present in plan" % args.phase)
-      goals = net.iter_to_goals[args.iter]
+      goals = net.iter_to_goals.get(args.iter)
+      if goals is None:
+        error_if(goals is None, "iteration '%s' is not present in plan" % args.phase)
 
       # Start date is the minimum of start times for all goals in current iteration
       # or finish times of all goals in previous iterations.
@@ -183,10 +183,8 @@ Examples:
             start_date = min(start_date or pred.finish_date, pred.finish_date)
         if g.deadline is not None:
           finish_date = min(finish_date or g.deadline, g.deadline)
-      if start_date is None:
-        error("unable to determine start date for iteration '%s'" % args.iter)
-      if finish_date is None:
-        error("unable to determine finish date for deadline '%s'" % args.iter)
+      error_if(start_date is None, "unable to determine start date for iteration '%s'" % args.iter)
+      error_if(finish_date is None, "unable to determine finish date for deadline '%s'" % args.iter)
       duration = I.Interval(start_date, finish_date)
 
     burn.export(net, goal, duration, args.dump)

@@ -217,8 +217,7 @@ $ pytest gaplan
 
 High prio:
 * Implement simple scheduler.
-* Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx)
-* error_if, warn_if.
+* Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 * docstrings.
 
 Other:
