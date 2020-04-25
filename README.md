@@ -20,14 +20,15 @@ Declarative planning is a goal-based approach to building plans,
 backed up with an easy-to-use notation for writing them down.
 
 Declarative plannig can be roughly described as modelling projects
-via activity-on-edges [PERT diagrams](https://en.wikipedia.org/wiki/Program_evaluation_and_review_technique)
+via [PERT](https://en.wikipedia.org/wiki/Program_evaluation_and_review_technique)-like
+[activity-on-edges](https://en.wikipedia.org/wiki/Arrow_diagramming_method) diagrams
 with focus on well-defined *events* (called *goals*) rather than activities.
 Goals are defined through their accomplishment criteria.
 Declarative plans are often called *goal maps* (probably to pun on
-Alistair Cockburn's *project maps*).
+Alistair Cockburn's *project maps*) or [project networks](https://en.wikipedia.org/wiki/Project_network).
 
 Declarative plans are
-* easy to construct and verify (compared to standard activity-based plans)
+* easy to construct and verify (compared to traditional activity-based plans)
 * scalable (can be written or collapsed to desired level of detail)
 * stable against (inevitable) business and technical risks (e.g. changes in requirements or architecture)
 
@@ -48,8 +49,8 @@ $ python3 -mpip install .
 ```
 in `gaplan`'s folder.
 
-For tooltips, download [wz_tooltip.js](http://www.walterzorn.de/en/tooltip/tooltip_e.htm) to `scripts/` subfolder
-(note that it's distributed under LGPL).
+For tooltips in TaskJuggler download [wz_tooltip.js](http://www.walterzorn.de/en/tooltip/tooltip_e.htm)
+to `scripts/` subfolder (note that it's distributed under LGPL).
 
 # How to use
 
@@ -103,7 +104,7 @@ The core of the syntax is Vlad's text notation for graphs:
    |<-
       |Bought alcohol  // !3
       |[] Wine
-      |[] Vodka
+      |[] Alcohol
 |<-  // @me, 1h-2h
    |Invited friends  // !3
    |[] Alex
@@ -112,7 +113,7 @@ The core of the syntax is Vlad's text notation for graphs:
 
 Example above illustrates few core concepts:
 * only goals have names (`Invited friends`), priorities (`!3`) and internal structure (checklists)
-* only activities have duration (`1h-2h`) and assignees (`@me`)
+* only activities (arrows) have duration (`1h-2h`) and assignees (`@me`)
 See more examples in `examples/` subfoler.
 
 Canonical notation has been extended with additional features which turned out to be useful in practice:
@@ -132,10 +133,10 @@ Canonical notation has been extended with additional features which turned out t
 ```
 * Goals can be annotated with various attributes (priority, risk, assignees, etc.) e.g.
 ```
-# Goal has to be reached by the end of November, has max risk and priority and has to be scheduled in first iteration
+# This goal has to be reached by the end of November, has max risk and priority and has to be scheduled in first iteration
 |Symbol visibility in TZ 3.0 reduced  // deadline 2016-11-30, !3, ?3, I0
 ```
-* In addition to normal dependencies (`|<-`, `|->`) tools supports _global dependencies_ (`|<=`, `|=>`). Globality causes all hierarchical children of a goal to depend on RHS. It's useful for splitting plan into disjoint phases, where task in depending phase can not start until their global dependency completes. This is an experimental feature.
+* In addition to normal dependencies (`|<-`, `|->`) tools supports _global dependencies_ (marked with `global`). Globality causes all hierarchical children of a goal to depend on RHS. It's useful for splitting plan into disjoint phases, where task in depending phase can not start until their global dependency completes. This is an experimental feature.
 
 # Attributes
 
@@ -228,9 +229,3 @@ Other:
 * Add include directives.
 * Describe tracking info (actual efforts and durations, Jira tasks, etc.) in README.
 * Fast tracking in TJ.
-
-# Conceptual questions
-
-* is risk a goal or activity attribute?
-* allow attaching Jira tasks to goals (rather than activities)?
-* how to autogenerate names for activities?
