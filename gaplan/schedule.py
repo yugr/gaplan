@@ -132,8 +132,8 @@ class Timetable:
       iv = I.Interval(start, start + datetime.timedelta(hours=rc_effort))
       _, iv, frag = rc_info.allocate(iv)
       if best_frag is None \
-          or iv.start < best_iv.start \
-          or iv.start == best_iv.start and frag < best_frag:
+          or iv.finish < best_iv.finish \
+          or iv.finish == best_iv.finish and frag < best_frag:
         best_rc = rc
         best_frag = frag
         best_iv = iv
