@@ -114,7 +114,7 @@ class Parser(PA.BaseParser):
     super(Parser, self).reset(filename, f)
     self.dummy_goal_count = 0
     self.project_attrs = {}
-    self.project_loc = self.sched_loc = PA.Location()
+    self.project_loc = self.sched_loc = Location()
     self.names = {}
 
   def parse_attrs(self):

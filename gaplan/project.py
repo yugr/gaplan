@@ -36,7 +36,6 @@ class Resource:
 
   def dump(self, p):
     p.writeln('Developer %s (%s, %f)' % (self.name, self.loc, self.efficiency))
-    time_format = '%Y-%m-%d'
     vv = []
     for iv in self.vacations:
       vv.append('%s' % iv)
