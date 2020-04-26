@@ -64,6 +64,7 @@ class Activity:
   def __init__(self, loc):
     self.loc = copy.copy(loc)
 
+    self.id = None
     self.head = None
     self.tail = None
     self.globl = False  # Marks "global" activities which are enabled for all children of the target
@@ -72,6 +73,7 @@ class Activity:
     self.effort = ETA()
     self.alloc = ['all']
     self.parallel = 1
+    self.overlaps = {}
 
     # TODO: also attach tasks to goals?
     self.jira_tasks = set()
@@ -121,6 +123,16 @@ class Activity:
         self.pull_requests.add(M.group(1))
         continue
 
+      if M.match(r'^id\s+(.*)', a):
+        self.id = M.group(1)
+
+      if M.match(r'over\s+(\S+)\s+(.*)', a):
+        other_id = M.group(1)
+        overlap, a = PA.read_float(M.group(2))
+        if a == '%':
+          overlap /= 100
+        self.overlaps[other_id] = overlap
+
       if M.match(r'^\|\|(\s*([0-9]+))?$', a):
         self.parallel = int(M.group(2)) if M.group(2) else sys.maxsize
         continue
@@ -144,9 +156,14 @@ class Activity:
   def estimate(self):
     return self.effort.estimate(self.tail.risk if self.tail else None)
 
+  @property
+  def name(self):
+    return "%s -> %s%s" % (self.head.name if self.head else '',
+                           self.tail.name if self.tail else '',
+                           (" (%s)" if self.id else ""))
+
   def dump(self, p):
-    p.writeln('%s -> %s' % (self.head.name if self.head else '',
-                            self.tail.name if self.tail else ''))
+    p.writeln(self.name)
 
     p.enter()
 
@@ -176,8 +193,11 @@ class Activity:
     else:
       par = 'non'
     par
-    p.write('allocated: %s (%s-parallel)'
+    p.writeln('allocated: %s (%s-parallel)'
             % (', '.join(self.alloc) if self.alloc else 'any', par))
+    if self.overlaps:
+      p.write('overlaps: ')
+      p.writeln(', '.join('%s (%g)' % (id, over) for id, over in sorted(self.overlaps.items())))
 
     p.exit()
 

@@ -180,11 +180,13 @@ There is a distinct set of attributes for activities:
 
 | Attribute          | Syntax                    | Example                    | Comment                                            |
 |--------------------|:-------------------------:|:--------------------------:|----------------------------------------------------|
-| Effort estimate    | *min*-*max*               | `1h-3d`, `1w-1m`           | Activity effort estimate (in ["ideal hours"](http://www.martinfowler.com/bliki/IdealTime.html)) |
-| Real effort        | *min*-*max* (*real*)      | `1h-3d (1d)`, `1w-1m (2w)` | Real observed effort (used for tracking)           |
-| Real duration      | *YYYY-MM-DD*-*YYYY-MM-DD* | `2016-05-31-2016-06-02`    | Real observed duration (used for tracking)         |
-| Assignees          | @*dev1*/*dev2*/...        | `@yura/slava`              | Developers assigned to the task                    |
-| Parallel impl.     | \|\|                      | \|\|                       | Notes that developers can work on task in parallel |
+| Effort estimate    | *min*-*max*               | `1h-3d`, `1w-1m`                   | Activity effort estimate (in ["ideal hours"](http://www.martinfowler.com/bliki/IdealTime.html)) |
+| Real effort        | *min*-*max* (*real*)      | `1h-3d (1d)`, `1w-1m (2w)`         | Real observed effort (used for tracking) |
+| Real duration      | *YYYY-MM-DD*-*YYYY-MM-DD* | `2016-05-31-2016-06-02`            | Real observed duration (used for tracking) |
+| Assignees          | @*dev1*/*dev2*/...        | `@yura/slava`                      | Developers assigned to the task |
+| Parallel impl.     | \|\|                      | \|\|                               | Notes that developers can work on task in parallel |
+| Identifier         | id *symbolic\_name*       | id enable-jenkins-job              | Gives symbolic name to activity |
+| Fast tracking      | over *id* *X*%                   | over enable-jenkins-job 15% | How much activity can be overlapped with it's predecessors |
 
 The exact meaning of resource assignment attribute (@) depends on presense of "parallel" attribute (denoted with `||`):
 * with `||` (or `|| NUMBER`) - developers can work on task in parallel (e.g. it consists of many similar unrelated chunks)
@@ -219,9 +221,11 @@ $ pytest gaplan
 High prio:
 * Implement simple scheduler.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
-* docstrings.
 
 Other:
+* Docstrings.
+* Use "" and '' consistently.
+* Use f-strings.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
 * Add Travis, codecov.

@@ -67,15 +67,23 @@ class Schedule:
         block.dump(p)
 
 class GoalInfo:
-  def __init__(self, name, iv, alloc):
+  def __init__(self, name, completion_date):
     self.name = name
+    self.completion_date = completion_date
+
+  def dump(self, p):
+    p.writeln("Goal '%s': %s" % (self.name, PR.print_date(self.completion_date)))
+
+class ActivityInfo:
+  def __init__(self, act, iv, alloc):
+    self.act = act
     self.iv = iv
     self.alloc = alloc
 
   def dump(self, p):
     s = '/'.join([rc.name for rc in self.alloc])
-    p.writeln("Goal '%s': %s%s" % (self.name, self.iv,
-                                           (" @%s" % s) if s else ""))
+    p.writeln("Activity %s: %s%s" % (self.act.name, self.iv,
+                                     (" @%s" % s) if s else ""))
 
 class AllocationInfo:
   def __init__(self, rc):
@@ -107,19 +115,33 @@ class AllocationInfo:
 
 class Timetable:
   def __init__(self, prj):
-    self.goal_infos = {}
-    self.rc_infos = {}
+    self.goals = {}
+    self.acts = {}
+    self.rcs = {}
     for rc in prj.members:
-      self.rc_infos[rc.name] = AllocationInfo(rc)
+      self.rcs[rc.name] = AllocationInfo(rc)
 
-  def set_goal_scheduled(self, goal, iv, alloc):
-    self.goal_infos[goal.name] = GoalInfo(goal.name, iv, alloc)
+  def is_completed(self, goal):
+    return goal.name in self.goals
 
-  def is_goal_scheduled(self, goal):
-    return goal.name in self.goal_infos
+  def get_completion_date(self, goal):
+    return self.goals[goal.name].completion_date
 
-  def get_goal_finish(self, goal):
-    return self.goal_infos[goal.name].iv.finish
+  def set_completion_date(self, goal, d):
+    error_if(self.is_completed(goal), 
+             "goal '%s' scheduled more than once" % goal.name)
+    self.goals[goal.name] = GoalInfo(goal.name, d)
+
+  def is_done(self, act):
+    return act.name in self.acts
+
+  def get_duration(self, act):
+    return self.acts[act.name].iv
+
+  def set_duration(self, act, iv, alloc):
+    error_if(self.is_done(act), 
+             "activity '%s' scheduled more than once" % act.name)
+    self.acts[act.name] = ActivityInfo(act, iv, alloc)
 
   def assign_best_rcs(self, rcs, start, effort, parallel):
     # How many chunks we can split work to?
@@ -131,7 +153,7 @@ class Timetable:
       sched_data = []
       e = effort / i
       for rc in rcs:
-        rc_info = self.rc_infos[rc.name]
+        rc_info = self.rcs[rc.name]
         rc_effort = e * rc.efficiency
         iv = I.Interval(start, start + datetime.timedelta(hours=rc_effort))
         j, iv, frag = rc_info.allocate(iv)
@@ -147,7 +169,7 @@ class Timetable:
     total_iv = None
     total_rcs = []
     for name, j, iv, _ in best_allocs:
-      rc_info = self.rc_infos[name]
+      rc_info = self.rcs[name]
       rc_info.sheet.insert(j, iv)
       total_iv = iv if total_iv is None else total_iv.union(iv)
       total_rcs.append(rc_info.rc)
@@ -157,13 +179,12 @@ class Timetable:
   def dump(self, p):
     p.writeln("Timetable:")
     with p:
-      for name, info in sorted(self.goal_infos.items()):
+      for name, info in sorted(self.goals.items()):
         info.dump(p)
-      for name, info in sorted(self.rc_infos.items()):
+      for name, info in sorted(self.acts.items()):
         info.dump(p)
-
-def nonones(*args):
-  return filter(lambda x: x is not None, args)
+      for name, info in sorted(self.rcs.items()):
+        info.dump(p)
 
 class Scheduler:
   def __init__(self):
@@ -190,26 +211,34 @@ class Scheduler:
     if goal.completion_date is not None:
       # TODO: register spent time for devs
       # TODO: warn if completion_date < start
-      self.table.set_goal_scheduled(goal.name, I.Interval(goal.completion_date), [])
+      self.table.set_completion_date(goal.name, goal.completion_date)
       return goal.completion_date
 
-    goal_iv = I.Interval(start, start)
+    completion_date = start
     goal_alloc = set()
     for act in goal.preds:
       if act.duration is not None:
         # TODO: register spent time for devs
         # TODO: warn if goal_start < start
-        goal_iv = goal_iv.union(act.duration)
+        completion_date = max(completion_date, act.duration.finish)
         continue
 
       act_start = start
       if act.head is not None:
-        if not self.table.is_goal_scheduled(act.head):
+        if not self.table.is_completed(act.head):
           self._schedule_goal(act.head, datetime.datetime.now(), [])
-        act_start = max(act_start, self.table.get_goal_finish(act.head))
+          if not act.overlaps:
+            act_start = max(act_start, self.table.get_completion_date(act.head))
+          else:
+            for pred in self.head.preds:
+              overlap = act.overlaps.get(pred.id)
+              if overlap is not None:
+                pred_iv = selt.table.get_duration(pred)
+                span = (pred_iv.finish - pred_iv.start) * (1 - overlap)
+                act_start = max(act_start, pred_iv.start + span)
 
       if act.is_instant():
-        goal_iv = goal_iv.union(I.Interval(act_start, act_start))
+        completion_date = max(completion_date, act_start)
         continue
 
       plan_rcs = self.prj.get_resources(act.alloc)
@@ -224,12 +253,12 @@ class Scheduler:
 
       effort, _ = act.estimate()
       iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, effort, act.parallel)
-      goal_alloc.update(assigned_rcs)
-      goal_iv = goal_iv.union(iv)
+      self.table.set_duration(act, iv, assigned_rcs)
+      completion_date = max(completion_date, iv.finish)
 
-    self.table.set_goal_scheduled(goal, goal_iv, goal_alloc)
+    self.table.set_completion_date(goal, completion_date)
 
-    return goal_iv.finish
+    return completion_date
 
   def _schedule_block(self, block, start, alloc):
     alloc = block.alloc or alloc

@@ -61,6 +61,11 @@ def read_date(s, loc):
   date_str += m.group(2) or '-01'
   return datetime.datetime.strptime(date_str, '%Y-%m-%d'), m.group(3)
 
+def read_float(s, loc):
+  m = re.search(r'^\s*([0-9]+(\.[0-9]+)?)(.*)', s)
+  error_if(m is None, loc, "failed to parse float: %s", s)
+  return float(M.group(1)), M.group(3)
+
 # TODO: parse UTC times i.e. 2015-02-01T12:00 ?
 def read_date2(s, loc):
   # '2015-02-01' or '2015-02-01 - 2015-02-03'
