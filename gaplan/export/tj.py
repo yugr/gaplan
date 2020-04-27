@@ -164,7 +164,8 @@ flags internal
     p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
     p.writeln('    efficiency %f' % dev.efficiency)
     for iv in dev.vacations:
-      p.writeln('    vacation %s' % iv)
+      p.writeln('    vacation %s - %s' % (PR.print_date(iv.start),
+                                          PR.print_date(iv.finish)))
     p.writeln('  }')
   p.writeln('}')
 

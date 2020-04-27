@@ -244,7 +244,7 @@ class Scheduler:
       plan_rcs = self.prj.get_resources(act.alloc)
       if alloc:
         block_rcs = self.prj.get_resources(alloc)
-        if block_rcs.difference(plan_rcs):
+        if any(rc for rc in block_rcs if rc not in plan_rcs):
           error("allocations defined in schedule (%s) do not match "
                 "allocations defined in action (%s)"
                 % ('/'.join(alloc), '/'.join(rc.name for rc in plan_rcs)))

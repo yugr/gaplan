@@ -181,8 +181,8 @@ class Parser(PA.BaseParser):
       g.add_check(check)
 
       if self.lex.next_if(LexemeType.ATTR_START) is not None:
-        a = parse_attrs()
-        check.add_attrs(a, loc)
+        a = self.parse_attrs()
+        check.add_attrs(a, l.loc)
 
   def parse_subgoals(self, goal, offset):
     while True:
@@ -299,16 +299,17 @@ class Parser(PA.BaseParser):
     self.project_attrs[name] = val
 
   def parse_sched_block(self, offset):
-    l = self.lex.next()
+    l = self.lex.peek()
     top_loc = l.loc
 
     if l.data[0] != offset:
       return None
+    self.lex.skip()
 
     if not self.sched_loc:
       self.sched_loc = top_loc
 
-    block = schedule.SchedBlock(l.data[1] == '=', l.data[0], top_loc)
+    block = schedule.SchedBlock(l.data[1] == '--', l.data[0], top_loc)
 
     # Parse attributes
 
@@ -333,6 +334,8 @@ class Parser(PA.BaseParser):
       elif l.type == LexemeType.SCHED:
         self._dbg("parse_sched_block: new block: %s" % l)
         subblock = self.parse_sched_block(offset + 2)
+        if subblock is None:
+          break
         self._dbg("parse_sched_block: new subblock: %s" % l)
         block.blocks.append(subblock)
       else:
