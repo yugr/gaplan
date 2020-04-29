@@ -221,6 +221,7 @@ class Parser(PA.BaseParser):
     if goal_name is None:
       if not allow_empty:
         return None
+      # The infamous PERT dummy goals
       goal = self._make_dummy_goal(loc)
       was_defined = False
       self._dbg("parse_goal: creating dummy goal")
@@ -269,6 +270,7 @@ class Parser(PA.BaseParser):
     def expect_one_value(loc, name, vals):
       error_if(len(vals) != 1, loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
 
+    # TODO: holidays
     if name in ['name', 'tracker_link', 'pr_link']:
       expect_one_value(l.loc, name, rhs)
       val = rhs[0]

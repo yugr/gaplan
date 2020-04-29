@@ -72,6 +72,7 @@ class Activity:
     self.duration = None
     self.effort = ETA()
     self.alloc = ['all']
+    self.real_alloc = []
     self.parallel = 1
     self.overlaps = {}
 
@@ -107,8 +108,15 @@ class Activity:
         self.effort = PA.read_duration3(a, loc)
         continue
 
-      if M.search(r'^@\s*(.*)', a):
+      if a.startswith('@'):
+        aa = a.split('(')
+        if len(aa) > 2 or not M.search(r'^@\s*(.*)', aa[0]):
+          error(loc, "unexpected allocation syntax: %s" % a)
         self.alloc = M.group(1).split('/')
+        if len(aa) > 1:
+          if not M.search(r'^([^)]*)\)', a):
+            error(loc, "unexpected allocation syntax: %s" % a)
+          self.real_alloc = M.group(1)
         continue
 
       if M.search(r'^[0-9]{4}-', a):
@@ -192,9 +200,9 @@ class Activity:
       par = self.parallel
     else:
       par = 'non'
-    par
-    p.writeln('allocated: %s (%s-parallel)'
-            % (', '.join(self.alloc) if self.alloc else 'any', par))
+    p.writeln('allocated: %s (%s-parallel)%s'
+            % (', '.join(self.alloc) if self.alloc else 'any', par,
+               ("(actual %s)" % ', '.join(self.real_alloc)) if self.real_alloc else ""))
     if self.overlaps:
       p.write('overlaps: ')
       p.writeln(', '.join('%s (%g)' % (id, over) for id, over in sorted(self.overlaps.items())))
