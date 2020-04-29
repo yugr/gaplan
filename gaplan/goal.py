@@ -159,7 +159,7 @@ class Activity:
       return
 
     if self.alloc and not self.effort.defined():
-      warn(self.loc, 'activity is assigned but no effort is specified')
+      warn(self.loc, "activity is assigned but no effort is specified")
 
   def estimate(self):
     return self.effort.estimate(self.tail.risk if self.tail else None)
@@ -399,11 +399,11 @@ class Goal:
 
   def check(self, warn):
     if warn and not self.defined and not self.dummy:
-      warn(self.loc, 'goal "%s" is undefined' % self.name)
+      warn(self.loc, "goal '%s' is undefined" % self.name)
 
     pending_conds = [c.name for c in self.checks if not c.done()]
     if warn and self.completion_date and pending_conds:
-      warn(self.loc, 'goal "%s" marked as completed but some checks are still pending:\n  %s' % (self.name, '\n  '.join(pending_conds)))
+      warn(self.loc, "goal '%s' marked as completed but some checks are still pending:\n  %s" % (self.name, '\n  '.join(pending_conds)))
 
     for act in self.global_preds:
       if not act.is_instant():
@@ -474,47 +474,47 @@ class Goal:
       if isinstance(v, datetime.datetime):
         v = PR.print_date(v)
       if v is not None:
-        p.writeln('%s: %s' % (name, v))
+        p.writeln("%s: %s" % (name, v))
 
     if self.checks:
-      p.writeln('%d check(s):' % len(self.checks))
+      p.writeln("%d check(s):" % len(self.checks))
       with p:
         for check in self.checks:
-          p.writeln('[%s] %s' % (check.status, check.name))
+          p.writeln("[%s] %s" % (check.status, check.name))
 
     if self.preds:
-      p.writeln('%d preceeding activity(s):' % len(self.preds))
+      p.writeln("%d preceeding activity(s):" % len(self.preds))
       with p:
         for act in self.preds:
           act.dump(p)
 
     if self.global_preds:
-      p.writeln('%d global preceeding activity(s):' % len(self.global_preds))
+      p.writeln("%d global preceeding activity(s):" % len(self.global_preds))
       with p:
         for act in self.global_preds:
           act.dump(p)
 
     if self.succs:
-      p.writeln('%d succeeding activity(s):' % len(self.succs))
+      p.writeln("%d succeeding activity(s):" % len(self.succs))
       with p:
         for act in self.succs:
           act.dump(p)
 
     if self.global_succs:
-      p.writeln('%d global succeeding activity(s):' % len(self.global_succs))
+      p.writeln("%d global succeeding activity(s):" % len(self.global_succs))
       with p:
         for act in self.global_succs:
           act.dump(p)
 
     parents = self.parents()
     if parents:
-      p.writeln('%d parent(s):' % len(self.parents()))
+      p.writeln("%d parent(s):" % len(self.parents()))
       with p:
         for g in parents:
           p.writeln('* %s' % g.name)
 
     if self.children:
-      p.writeln('%d child(ren):' % len(self.children))
+      p.writeln("%d child(ren):" % len(self.children))
       with p:
         for i, g in enumerate(self.children):
           p.write('#%d:' % i)

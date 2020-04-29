@@ -235,7 +235,6 @@ High prio:
 
 Other:
 * Docstrings.
-* Use "" and '' consistently.
 * Use f-strings.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.

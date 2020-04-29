@@ -19,10 +19,10 @@ def error(*args):
   """Prints pretty error message and terminates."""
   if isinstance(args[0], Location):
     loc, msg = args
-    sys.stderr.write('%s: error: %s: %s\n' % (_me, loc, msg))
+    sys.stderr.write("%s: error: %s: %s\n" % (_me, loc, msg))
   else:
     msg, = args
-    sys.stderr.write('%s: error: %s\n' % (_me, msg))
+    sys.stderr.write("%s: error: %s\n" % (_me, msg))
   if _print_stack:
     raise RuntimeError
   else:
@@ -37,10 +37,10 @@ def warn(*args):
   """Prints pretty warning message."""
   if isinstance(args[0], Location):
     loc, msg = args
-    sys.stderr.write('%s: warning: %s: %s\n' % (_me, loc, msg))
+    sys.stderr.write("%s: warning: %s: %s\n" % (_me, loc, msg))
   else:
     msg, = args
-    sys.stderr.write('%s: warning: %s\n' % (_me, msg))
+    sys.stderr.write("%s: warning: %s\n" % (_me, msg))
 
 def warn_if(cond, *args):
   """Report warning if condition is true."""

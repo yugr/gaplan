@@ -35,11 +35,11 @@ class Resource:
         error(loc, "unexpected resource attribute: %s" % a)
 
   def dump(self, p):
-    p.writeln('Developer %s (%s, %f)' % (self.name, self.loc, self.efficiency))
+    p.writeln("Developer %s (%s, %f)" % (self.name, self.loc, self.efficiency))
     vv = []
     for iv in self.vacations:
       vv.append('%s' % iv)
-    p.writeln('  vacations: %s' % ', '.join(vv))
+    p.writeln("  vacations: %s" % ', '.join(vv))
 
 class Team:
   """Describes a team of developers."""
