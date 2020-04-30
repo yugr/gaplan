@@ -25,21 +25,33 @@ def add_common_attrs(loc, obj, attrs):
 
   other_attrs = []
   for a in attrs:
-    if re.match(r'JUST_AN_EXAMPLE', a):
-      obj.tasks = set(a.split('/'))
-      continue
-
-    m = re.search(r'^([a-z]+)\s*(.*)', a)
-    if m:
-      k = m.group(1)
-      v = m.group(2)
-      if k == 'JUST_AN_EXAMPLE':
-        obj.lag = PA.read_duration3(v, loc)
+    if M.search(r'^([A-Za-z][A-Za-z0-9_]*)\s*(.*)', a):
+      k = M.group(1)
+      v = M.group(2)
+      if k == 'task':
+        obj.tracker.tasks = set(M.group(1).split('/'))
+        continue
+      elif k == 'PR':
+        obj.tracker.prs = set(M.group(1).split('/'))
         continue
 
     other_attrs.append(a)
 
   return other_attrs
+
+class TrackerLink:
+  """Contains info about tasks and PRs in external tracker."""
+
+  def __init__(self):
+    self.tasks = set()
+    self.prs = set()
+
+  def dump(self, p):
+    if self.tasks:
+      p.writeln('Tasks: %s' % ', '.join(self.tasks))
+
+    if self.prs:
+      p.writeln('PRs: %s' % ', '.join(self.prs))
 
 class Condition:
   """Class which describes single completion condition of a goal."""
@@ -50,6 +62,7 @@ class Condition:
 
     # Other
     self.status = status
+    self.tracker = TrackerLink()
 
   def add_attrs(self, attrs, loc):
     attrs = add_common_attrs(loc, self, attrs)
@@ -64,11 +77,13 @@ class Activity:
   def __init__(self, loc):
     self.loc = copy.copy(loc)
 
+    # Deps
     self.id = None
     self.head = None
     self.tail = None
     self.globl = False  # Marks "global" activities which are enabled for all children of the target
 
+    # Timing
     self.duration = None
     self.effort = ETA()
     self.alloc = ['all']
@@ -76,11 +91,8 @@ class Activity:
     self.parallel = 1
     self.overlaps = {}
 
-    # TODO: also attach tasks to goals?
-    self.jira_tasks = set()
-    self.pull_requests = set()
-
-    # TODO: add lags?
+    # Other
+    self.tracker = TrackerLink()
 
   def set_endpoints(self, g1, g2, is_pred):
     # Discriminate between "|<-" and "|->" edges
@@ -121,14 +133,6 @@ class Activity:
 
       if M.search(r'^[0-9]{4}-', a):
         self.duration = PA.read_date2(a, loc)
-        continue
-
-      if M.match(r'^task\s+(.*)', a):
-        self.jira_tasks.add(M.group(1))
-        continue
-
-      if M.match(r'^PR\s+(.*)', a):
-        self.pull_requests.add(M.group(1))
         continue
 
       if M.match(r'^id\s+(.*)', a):
@@ -177,11 +181,7 @@ class Activity:
 
     p.writeln("Defined in %s" % self.loc)
 
-    if self.jira_tasks:
-      p.writeln('Tasks in tracker: %s' % ', '.join(self.jira_tasks))
-
-    if self.pull_requests:
-      p.writeln('Pull requests: %s' % ', '.join(self.pull_requests))
+    self.tracker.dump(p)
 
     avg, dev = self.estimate()
     if avg is not None:
@@ -241,6 +241,7 @@ class Goal:
     self.defined = False
     self.risk = None
     self.prio = None
+    self.tracker = TrackerLink()
 
   def add_activity(self, act, is_pred):
     # TODO: check if activity is already present to avoid dups
@@ -292,13 +293,8 @@ class Goal:
         self.completion_date, _ = PA.read_date(a, loc)
         continue
 
-#      # Jira task format
-#      if M.search(r'^[A-Z][A-Z_]*-[0-9]+$', a):
-#        self.jira_tasks.append(a)
-#        continue
-
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
-        error(loc, "failed to parse attribute: %s" % a)
+        error(loc, "failed to parse goal attribute: %s" % a)
       k = M.group(1)
       v = M.group(2)
       if k == 'deadline':
@@ -475,6 +471,8 @@ class Goal:
         v = PR.print_date(v)
       if v is not None:
         p.writeln("%s: %s" % (name, v))
+
+    self.tracker.dump(p)
 
     if self.checks:
       p.writeln("%d check(s):" % len(self.checks))

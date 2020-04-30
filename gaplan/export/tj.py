@@ -25,12 +25,12 @@ time_format = '%Y-%m-%d'
 def _escape(name):
   return re.sub(r'"', '\\"', name)
 
-def _print_jira_links(p, tasks, pull_requests, prj):
-  for t in tasks:
+def _print_jira_links(p, tracker, prj):
+  for t in tracker.tasks:
     p.writeln(('JiraLink "' + prj.tracker_link + '" {label "#%s"}') % (t, t))
     break
   else:
-    for pr in pull_requests:
+    for pr in tracker.prs:
       p.writeln(('JiraLink "' + prj.pr_link + '" {label "PR #%s"}') % (pr, pr))
       break
 
@@ -55,7 +55,7 @@ def _print_task(p, task, abs_ids, prj):
 
   act = task.act
   if act is not None:
-    _print_jira_links(p, act.jira_tasks, act.pull_requests, prj)
+    _print_jira_links(p, act.tracker, prj)
 
     effort = act.effort.real
     if effort is None:
