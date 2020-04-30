@@ -26,6 +26,7 @@ class SchedBlock:
     self.alloc = []
     self.duration = None
     self.goal_name = None
+    self.deadline = None
     self.blocks = []
 
   def add_goal(self, goal_name, loc):
@@ -43,15 +44,25 @@ class SchedBlock:
         self.duration = PA.read_date2(a, loc)
         continue
 
-      error(loc, "unknown block attribute: '%s'" % a)
+      if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
+        error(loc, "failed to parse block attribute: '%s'" % a)
+
+      k = M.group(1)
+      v = M.group(2)
+      if k == 'deadline':
+        self.deadline, _ = PA.read_date(v, loc)
+      else:
+        error(loc, "unknown block attribute '%s'" % k)
 
   def dump(self, p):
     p.writeln("%s sched block (%s)" % ("Parallel" if self.par else "Sequential", self.loc))
     with p:
       if self.duration is not None:
         p.writeln("Duration: %s" % self.duration)
-      if self.goal_name:
+      if self.goal_name is not None:
         p.writeln("Goal: " + self.goal_name)
+      if self.deadline is not None:
+        p.writeln("Deadline: " + PR.print_date(self.deadline))
       for block in self.blocks:
         block.dump(p)
 
@@ -211,7 +222,7 @@ class Scheduler:
     if goal.completion_date is not None:
       # TODO: register spent time for devs
       # TODO: warn if completion_date < start
-      self.table.set_completion_date(goal.name, goal.completion_date)
+      self.table.set_completion_date(goal, goal.completion_date)
       return goal.completion_date
 
     completion_date = start
@@ -243,8 +254,8 @@ class Scheduler:
 
       plan_rcs = self.prj.get_resources(act.alloc)
       if alloc:
-        block_rcs = self.prj.get_resources(alloc)
-        if any(rc for rc in block_rcs if rc not in plan_rcs):
+        rcs = self.prj.get_resources(alloc)
+        if any(rc for rc in rcs if rc not in plan_rcs):
           error("allocations defined in schedule (%s) do not match "
                 "allocations defined in action (%s)"
                 % ('/'.join(alloc), '/'.join(rc.name for rc in plan_rcs)))
@@ -277,6 +288,10 @@ class Scheduler:
       error_if(goal is None, block.loc, "goal '%s' not found in plan" % block.goal_name)
       goal_finish = self._schedule_goal(goal, start, alloc)
       latest = max(latest, goal_finish)
+
+    if block.deadline is not None and latest > block.deadline:
+      print("Failed to schedule block at %s before deadline %s"
+            % (block.loc, PR.print_date(block.deadline)))
 
     return latest
 
