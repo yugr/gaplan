@@ -7,8 +7,6 @@
 #
 # This file contains APIs for describing and operating on time ranges.
 
-from gaplan.common import printers as PR
-
 import sys
 import datetime
 
@@ -52,7 +50,7 @@ class Interval:
     return self.l == i.l and self.r == i.r
 
   def __repr__(self):
-    return '[%s, %s)' % (PR.print_date(self.l), PR.print_date(self.r))
+    return '[%s, %s)' % (self.l, self.r)
 
 class Seq:
   """A sorted sequence of non-intersecting intervals for efficient queries."""

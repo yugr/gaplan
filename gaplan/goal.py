@@ -17,7 +17,6 @@ import copy
 from gaplan.common.error import error, warn, error_if, warn_if
 from gaplan.common.ETA import ETA
 from gaplan.common import parse as PA
-from gaplan.common import printers as PR
 from gaplan.common import matcher as M
 
 def add_common_attrs(loc, obj, attrs):
@@ -484,8 +483,6 @@ class Goal:
       else:
         name = attr
       v = getattr(self, attr)
-      if isinstance(v, datetime.date):
-        v = PR.print_date(v)
       if v is not None:
         p.writeln("%s: %s" % (name, v))
 

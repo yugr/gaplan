@@ -11,7 +11,6 @@
 
 from gaplan.common.error import error, error_if
 from gaplan.common import matcher as M
-from gaplan.common import printers as PR
 from gaplan.common import parse as PA
 from gaplan.common import interval as I
 
@@ -62,7 +61,7 @@ class SchedBlock:
       if self.goal_name is not None:
         p.writeln("Goal: " + self.goal_name)
       if self.deadline is not None:
-        p.writeln("Deadline: " + PR.print_date(self.deadline))
+        p.writeln("Deadline: " + self.deadline)
       for block in self.blocks:
         block.dump(p)
 
@@ -104,7 +103,7 @@ class GoalInfo:
     self.completion_date = completion_date
 
   def dump(self, p):
-    p.writeln("Goal '%s': %s" % (self.name, PR.print_date(self.completion_date)))
+    p.writeln("Goal '%s': %s" % (self.name, self.completion_date))
 
 class ActivityInfo:
   def __init__(self, act, iv, alloc):
@@ -147,7 +146,7 @@ class AllocationInfo:
   def dump(self, p):
     ss = []
     for iv in self.sheet:
-      ss.append("%s - %s" % (PR.print_date(iv.start), PR.print_date(iv.finish)))
+      ss.append("%s - %s" % (iv.start, iv.finish))
     p.writeln("%s: %s" % (self.name, ', '.join(ss)))
 
 class Timetable:
@@ -247,7 +246,7 @@ class Scheduler:
     if goal.completion_date is not None:
       if goal.completion_date < start:
         warn(self.loc, "goal '%s' is completed on %s, before %s"
-                       % (goal.name, PR.print_date(goal.completion_date), PR.print_date(start)))
+                       % (goal.name, goal.completion_date, start))
       # TODO: warn if completion_date < start
       self.table.set_completion_date(goal, goal.completion_date)
       return goal.completion_date
@@ -259,7 +258,7 @@ class Scheduler:
         # TODO: register spent time for devs
         if act.duration.start < start:
           warn(self.loc, "activity '%s' started on %s, before %s"
-                         % (act.pretty_name, PR.print_date(goal.completion_date), PR.print_date(start)))
+                         % (act.pretty_name, goal.completion_date, start))
         completion_date = max(completion_date, act.duration.finish)
         continue
 
@@ -321,7 +320,7 @@ class Scheduler:
 
     if block.deadline is not None and latest > block.deadline:
       print("Failed to schedule block at %s before deadline %s"
-            % (block.loc, PR.print_date(block.deadline)))
+            % (block.loc, block.deadline))
 
     return latest
 

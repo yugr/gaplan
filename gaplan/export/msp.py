@@ -13,7 +13,6 @@
 import datetime
 import io
 
-from gaplan.common import printers as P
 from gaplan.common.error import error
 
 time_format = '%Y-%m-%d'
@@ -171,7 +170,7 @@ def export(project, net, hierarchy, dump=False):
   <SpreadPercentComplete>0</SpreadPercentComplete>
 
   <Tasks>
-''' % (net.project.name, P.print_date(net.project.start), P.print_date(net.project.finish)), file=out)
+''' % (net.project.name, net.project.start, net.project.finish), file=out)
 
   # TODO
   net.visit_goals(callback=lambda g: _print_goal(g, uids, ids, out))

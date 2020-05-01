@@ -45,6 +45,3 @@ class SourcePrinter:
   def writeln(self, s):
     s = str(s)
     self.write(s + '\n')
-
-def print_date(d):
-  return d.strftime('%Y-%m-%d')

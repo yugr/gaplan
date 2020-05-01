@@ -235,6 +235,7 @@ High prio:
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 
 Other:
+* Read arbitrary dates.
 * Docstrings.
 * Use f-strings.
 * Fix remaining TODO and FIXME.
