@@ -170,8 +170,8 @@ class Activity:
 
   @property
   def name(self):
-    return "%s -> %s%s" % (self.head.name if self.head else '',
-                           self.tail.name if self.tail else '',
+    return "%s -> %s%s" % (self.head.pretty_name if self.head else '',
+                           self.tail.pretty_name if self.tail else '',
                            (" (%s)" if self.id else ""))
 
   def dump(self, p):
@@ -303,6 +303,16 @@ class Goal:
         self.alias, _ = PA.read_date(v, loc)
       else:
         error(loc, "unknown goal attribute '%s'" % k)
+
+  @property
+  def pretty_name(self):
+    if not self.dummy:
+      return self.name
+    names = []
+    for pred in self.preds:
+      if pred.head:
+        names.append(pred.head.pretty_name)
+    return ', '.join(names)
 
   def parents(self):
     ps = []

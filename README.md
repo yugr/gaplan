@@ -222,15 +222,15 @@ Install in editable mode via
 python3 -mpip install -e .
 ```
 
-To test, install `pytest` and run
+To test, install `pytest-3` and run
 ```
-$ pytest gaplan
+$ pytest-3 gaplan
 ```
 
 # TODO
 
 High prio:
-* Implement simple scheduler.
+* Implement simple scheduler (work-in-progress)
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 
 Other:
