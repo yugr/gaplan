@@ -64,7 +64,7 @@ def read_date(s, loc):
 def read_float(s, loc):
   m = re.search(r'^\s*([0-9]+(\.[0-9]+)?)(.*)', s)
   error_if(m is None, loc, "failed to parse float: %s", s)
-  return float(M.group(1)), M.group(3)
+  return float(m.group(1)), m.group(3)
 
 # TODO: parse UTC times i.e. 2015-02-01T12:00 ?
 def read_date2(s, loc):

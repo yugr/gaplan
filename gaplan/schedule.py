@@ -5,7 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 #
-# This module contains APIs for simple user-controlled scheduling.
+# This module contains APIs for simple user-controlled time-boxed scheduling.
 
 # This is WIP !!!
 
@@ -45,7 +45,7 @@ class SchedBlock:
         continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
-        error(loc, "failed to parse block attribute: '%s'" % a)
+        error(loc, "failed to parse block attribute: %s" % a)
 
       k = M.group(1)
       v = M.group(2)

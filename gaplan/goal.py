@@ -124,11 +124,11 @@ class Activity:
         aa = a.split('(')
         if len(aa) > 2 or not M.search(r'^@\s*(.*)', aa[0]):
           error(loc, "unexpected allocation syntax: %s" % a)
-        self.alloc = M.group(1).split('/')
+        self.alloc = M.group(1).strip().split('/')
         if len(aa) > 1:
           if not M.search(r'^([^)]*)\)', a):
             error(loc, "unexpected allocation syntax: %s" % a)
-          self.real_alloc = M.group(1)
+          self.real_alloc = M.group(1).strip().split('/')
         continue
 
       if M.search(r'^[0-9]{4}-', a):
