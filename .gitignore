@@ -22,5 +22,8 @@ wheels/
 *.egg
 MANIFEST
 
+# Pytest
+.cache
+
 py-lint.log
 scripts/wz_tooltip.js
