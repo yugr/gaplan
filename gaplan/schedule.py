@@ -265,6 +265,7 @@ class Scheduler:
         rcs = plan_rcs
 
       effort, _ = act.estimate()
+      effort *= 1 - act.completion
       iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, effort, act.parallel)
       self.table.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)

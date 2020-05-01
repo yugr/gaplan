@@ -90,6 +90,7 @@ class Activity:
     self.real_alloc = []
     self.parallel = 1
     self.overlaps = {}
+    self.completion = 0
 
     # Other
     self.tracker = TrackerLink()
@@ -133,6 +134,10 @@ class Activity:
 
       if M.search(r'^[0-9]{4}-', a):
         self.duration = PA.read_date2(a, loc)
+        continue
+
+      if M.search(r'^([0-9]+)%', a):
+        self.completion = float(M.group(1)) / 100
         continue
 
       if M.match(r'^id\s+(.*)', a):
@@ -193,6 +198,8 @@ class Activity:
 
     if self.duration is not None:
       p.writeln('duration: %s' % self.duration)
+
+    p.writelen("completion: %d%%" % int(100 * self.completion))
 
     if self.is_max_parallel():
       par = 'max'

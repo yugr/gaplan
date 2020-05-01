@@ -58,6 +58,7 @@ def _print_task(p, task, abs_ids, prj):
     _print_jira_links(p, act.tracker, prj)
 
     effort = act.effort.real
+    # TODO: act.completion
     if effort is None:
       effort, _ = act.estimate()
     if effort is None:
