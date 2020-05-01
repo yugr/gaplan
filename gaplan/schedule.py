@@ -77,6 +77,27 @@ class Schedule:
       for block in self.blocks:
         block.dump(p)
 
+class HolidayCalendar:
+  def __init__(self, holidays):
+    self.holidays = I.Seq(holidays)
+
+  def allows_effort(self, iv, effort):
+    """Checks whether we have enough working hours in interval of time."""
+    ndays = (iv.finish - iv.start).days
+    # Fast check
+    if ndays * 8 < effort:
+      return False, None
+    # Slow check
+    # TODO: do this faster
+    # TODO: hour-based precision
+    for day in range(ndays):
+      d = iv.start + datetime.timedelta(days=day)
+      if d.weekday() < 5 and not self.holidays.contains(d):
+        effort -= 8
+      if effort <= 0:
+        return True, d
+    return False, None
+
 class GoalInfo:
   def __init__(self, name, completion_date):
     self.name = name
@@ -101,23 +122,26 @@ class AllocationInfo:
     self.rc = rc
     self.name = rc.name
     self.sheet = []
-    self.vacations = I.Seq(holidays + rc.vacations)
+    self.cal = HolidayCalendar(holidays + rc.vacations)
 
-  def allocate(self, iv):
+  def allocate(self, start, effort):
     if not self.sheet:
-      return 0, iv, datetime.timedelta(0)
-    # TODO: take holidays and weekends into account
+      self.sheet = [I.Interval(start)]
+      ret = self.allocate(start, effort)
+      self.sheet = []
+      return ret
+
     last_iv = I.Interval(datetime.datetime(datetime.MAXYEAR, 12, 31))
     for i, (left, right) in enumerate(zip(self.sheet, self.sheet[1:] + [last_iv])):
-      gap = I.Interval(left.finish, right.start)
-      if (gap.start >= iv.start and gap.length >= iv.length) \
-          or (gap.start < iv.start and gap.length >= iv.length + (iv.start - gap.start)):
-        new_start = max(iv.start, gap.start)
-        iv = I.Interval(new_start, new_start + iv.length)
-        fragmentation = new_start - gap.start
-        if gap.finish != sys.maxsize:
-          fragmentation += gap.finish - iv.finish
-        return i + 1, iv, fragmentation
+      gap = I.Interval(max(left.finish, start), right.start)
+      ok, finish = self.cal.allows_effort(gap, effort)
+      if not ok:
+        continue
+      iv = I.Interval(gap.start, finish)
+      fragmentation = gap.start - left.finish
+      if gap.finish != sys.maxsize:
+        fragmentation += gap.finish - iv.finish
+      return i + 1, iv, fragmentation
     assert ""
 
   def dump(self, p):
@@ -168,8 +192,7 @@ class Timetable:
       for rc in rcs:
         rc_info = self.rcs[rc.name]
         rc_effort = e * rc.efficiency
-        iv = I.Interval(start, start + datetime.timedelta(hours=rc_effort))
-        j, iv, frag = rc_info.allocate(iv)
+        j, iv, frag = rc_info.allocate(start, effort)
         sched_data.append((rc.name, j, iv, frag))
       sched_data.sort(key=lambda data: (data[2].finish, data[3]))  # I hate Python...
       finish = max(iv.finish for _1, _2, iv, _4 in sched_data[:i])
@@ -222,7 +245,9 @@ class Scheduler:
 
   def _schedule_goal(self, goal, start, alloc):
     if goal.completion_date is not None:
-      # TODO: register spent time for devs
+      if goal.completion_date < start:
+        warn(self.loc, "goal '%s' is completed on %s, before %s"
+                       % (goal.name, PR.print_date(goal.completion_date), PR.print_date(start)))
       # TODO: warn if completion_date < start
       self.table.set_completion_date(goal, goal.completion_date)
       return goal.completion_date
@@ -232,7 +257,9 @@ class Scheduler:
     for act in goal.preds:
       if act.duration is not None:
         # TODO: register spent time for devs
-        # TODO: warn if goal_start < start
+        if act.duration.start < start:
+          warn(self.loc, "activity '%s' started on %s, before %s"
+                         % (act.pretty_name, PR.print_date(goal.completion_date), PR.print_date(start)))
         completion_date = max(completion_date, act.duration.finish)
         continue
 

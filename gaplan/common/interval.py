@@ -72,28 +72,44 @@ class Seq:
         last = iv
       self.ivs.append(last)
 
-  def add(self, iv):
-    # Search position by starting point of interval
-    #
+  def _find_date(self, d):
     # Invariant
-    #   i < l, ivs[i].finish <= iv.start
-    #   i > r, ivs[i].start > iv.start
+    #   i < l, ivs[i].finish <= d
+    #   i > r, d < ivs[i].start
 
-    start = iv.l
     l, r = 0, len(self.ivs) - 1
+    hit = False
     while l <= r:
       m = int((l + r) / 2)
       IV = self.ivs[m]
-      if IV.finish <= start:
+      if IV.finish <= d:
         l = m + 1
-      elif start < IV.start:
+      elif d < IV.start:
         r = m - 1
       else:
-        raise Exception("Inserting overlapping interval %s into %s" % (iv, self))
+        l = r = m
+        hit = True
+        break
 
-    # Insert new interval
+    return l, hit
 
-    self.ivs.insert(l, iv)
+  def add(self, iv):
+    # Search position by starting point of interval
+    i, hit = _find_date(iv.start)
+
+    if not hit and i < len(self.ivs):
+      iv_next = self.ivs[i]
+      if iv.finish > iv_next.start:
+        hit = True
+
+    if hit:
+      raise Exception("Inserting overlapping interval %s into %s" % (iv, self))
+
+    self.ivs.insert(i, iv)
+
+  def contains(self, d):
+    _, hit = self._find_date(d)
+    return hit
 
   def update(self, ivs):
     for iv in ivs:
