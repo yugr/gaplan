@@ -68,6 +68,7 @@ class Project:
     self.members_map = {}
     self.teams = {}
     self.teams_map = {}
+    self.holidays = []
     self.tracker_link = 'http://jira.localhost/browse/%s'
     self.pr_link = None
 
@@ -115,3 +116,7 @@ class Project:
       dev.dump(p)
     for team in self.teams:
       team.dump(p)
+    p.writeln("Vacations:")
+    with p:
+      for duration in self.holidays:
+        p.writeln(duration)

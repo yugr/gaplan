@@ -97,14 +97,16 @@ class ActivityInfo:
                                      (" @%s" % s) if s else ""))
 
 class AllocationInfo:
-  def __init__(self, rc):
+  def __init__(self, rc, holidays):
     self.rc = rc
     self.name = rc.name
     self.sheet = []
+    self.vacations = I.Seq(holidays + rc.vacations)
 
   def allocate(self, iv):
     if not self.sheet:
       return 0, iv, datetime.timedelta(0)
+    # TODO: take holidays and weekends into account
     last_iv = I.Interval(datetime.datetime(datetime.MAXYEAR, 12, 31))
     for i, (left, right) in enumerate(zip(self.sheet, self.sheet[1:] + [last_iv])):
       gap = I.Interval(left.finish, right.start)
@@ -130,7 +132,7 @@ class Timetable:
     self.acts = {}
     self.rcs = {}
     for rc in prj.members:
-      self.rcs[rc.name] = AllocationInfo(rc)
+      self.rcs[rc.name] = AllocationInfo(rc, prj.holidays)
 
   def is_completed(self, goal):
     return goal.name in self.goals

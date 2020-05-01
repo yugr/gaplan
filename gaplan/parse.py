@@ -270,7 +270,6 @@ class Parser(PA.BaseParser):
     def expect_one_value(loc, name, vals):
       error_if(len(vals) != 1, loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
 
-    # TODO: holidays
     if name in ['name', 'tracker_link', 'pr_link']:
       expect_one_value(l.loc, name, rhs)
       val = rhs[0]
@@ -295,6 +294,11 @@ class Parser(PA.BaseParser):
         team_name = M.group(1)
         rc_names = re.split(r'\s*,\s*', M.group(2).strip())
         val.append(project.Team(team_name, rc_names, attr_loc))
+    elif name == 'holidays':
+      val = []
+      for s in rhs:
+        iv = PA.read_date2(s, attr_loc)
+        val.append(iv)
     else:
       error(attr_loc, "unknown project attribute: %s" % name)
 
