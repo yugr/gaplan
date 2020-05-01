@@ -51,7 +51,7 @@ class Interval:
   def __eq__(self, i):
     return self.l == i.l and self.r == i.r
 
-  def __str__(self):
+  def __repr__(self):
     return '[%s, %s)' % (PR.print_date(self.l), PR.print_date(self.r))
 
 class Seq:
@@ -115,5 +115,5 @@ class Seq:
     for iv in ivs:
       self.add(iv)
 
-  def __str__(self):
+  def __repr__(self):
     return ', '.join(str(iv) for iv in self.ivs)

@@ -85,7 +85,7 @@ class Lexeme:
     self.loc = loc
     self.text = text
 
-  def __str__(self):
+  def __repr__(self):
     return '%s: %s: %s' % (self.loc, self.type, self.data)
 
 class BaseLexer:
