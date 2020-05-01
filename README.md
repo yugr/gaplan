@@ -141,12 +141,12 @@ Canonical notation has been extended with additional features which turned out t
 ```
 |Feature X added
 |<-  // 2d-1w
-   |      # Unnamed ("dummy") goal
    |<-
       |Prerequisite 1
    |<-
       |Prerequisite 2
 ```
+  Note that activity depends on unnamed implicit goal (which itself depends on Prerequisites 1 and 2).
 
 # Attributes
 
