@@ -191,13 +191,13 @@ class Activity:
     avg, dev = self.estimate()
     if avg is not None:
       dev_str = (' +/- %dh' % (2 * dev)) if dev != 0 else ''
-      p.writeln('estimated effort: %dh%s' % (avg, dev_str))
+      p.writeln("estimated effort: %dh%s" % (avg, dev_str))
 
     if self.effort.real is not None:
-      p.writeln('actual effort: %dh' % self.effort.real)
+      p.writeln("actual effort: %dh" % self.effort.real)
 
     if self.duration is not None:
-      p.writeln('duration: %s' % self.duration)
+      p.writeln("duration: %s" % self.duration)
 
     p.writelen("completion: %d%%" % int(100 * self.completion))
 
@@ -207,11 +207,11 @@ class Activity:
       par = self.parallel
     else:
       par = 'non'
-    p.writeln('allocated: %s (%s-parallel)%s'
+    p.writeln("allocated: %s (%s-parallel)%s"
             % (', '.join(self.alloc) if self.alloc else 'any', par,
                ("(actual %s)" % ', '.join(self.real_alloc)) if self.real_alloc else ""))
     if self.overlaps:
-      p.write('overlaps: ')
+      p.write("overlaps: ")
       p.writeln(', '.join('%s (%g)' % (id, over) for id, over in sorted(self.overlaps.items())))
 
     p.exit()
@@ -532,7 +532,7 @@ class Goal:
       p.writeln("%d child(ren):" % len(self.children))
       with p:
         for i, g in enumerate(self.children):
-          p.write('#%d:' % i)
+          p.write("#%d:" % i)
           with p:
             g.dump(p)
 
