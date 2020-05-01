@@ -29,7 +29,7 @@ def export(net, goal, duration, dump):
   G.visit_goals([goal], callback=scan_completed, hierarchical=True)
 
   # Also count partially completed tasks
-  today = datetime.datetime.now()
+  today = datetime.date.today()
   if today < duration.finish:
     counts[today] = int(partial[0])
 

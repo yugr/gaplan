@@ -62,8 +62,8 @@ class Project:
   def __init__(self, loc):
     self.name = 'Unknown'
     self.loc = loc
-    year = datetime.datetime.today().year
-    self.duration = I.Interval(datetime.datetime(year, 1, 1), datetime.datetime(year, 12, 31))
+    year = datetime.date.today().year
+    self.duration = I.Interval(datetime.date(year, 1, 1), datetime.date(year, 12, 31))
     self.members = []
     self.members_map = {}
     self.teams = {}

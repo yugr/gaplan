@@ -131,7 +131,7 @@ class AllocationInfo:
       self.sheet = []
       return ret
 
-    last_iv = I.Interval(datetime.datetime(datetime.MAXYEAR, 12, 31))
+    last_iv = I.Interval(datetime.date(datetime.MAXYEAR, 12, 31))
     for i, (left, right) in enumerate(zip(self.sheet, self.sheet[1:] + [last_iv])):
       gap = I.Interval(max(left.finish, start), right.start)
       ok, finish = self.cal.allows_effort(gap, effort)
@@ -266,7 +266,7 @@ class Scheduler:
       act_start = start
       if act.head is not None:
         if not self.table.is_completed(act.head):
-          self._schedule_goal(act.head, datetime.datetime.now(), [])
+          self._schedule_goal(act.head, datetime.date.today(), [])
           if not act.overlaps:
             act_start = max(act_start, self.table.get_completion_date(act.head))
           else:
@@ -330,7 +330,7 @@ class Scheduler:
     self.net = net
     self.sched = sched
     self.table = Timetable(prj)
-    start = datetime.datetime.now()
+    start = datetime.date.today()
     for block in sched.blocks:
       self._schedule_block(block, start, [])
     return self.table

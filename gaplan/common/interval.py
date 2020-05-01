@@ -16,7 +16,7 @@ class Interval:
   """Represents interval of time."""
 
   def __init__(self, l, r=None):
-    assert isinstance(l, datetime.datetime)
+    assert isinstance(l, datetime.date)
     self.l = l
     self.r = r or l
 

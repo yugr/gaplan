@@ -199,7 +199,7 @@ class Activity:
     if self.duration is not None:
       p.writeln("duration: %s" % self.duration)
 
-    p.writelen("completion: %d%%" % int(100 * self.completion))
+    p.writeln("completion: %d%%" % int(100 * self.completion))
 
     if self.is_max_parallel():
       par = 'max'
@@ -484,7 +484,7 @@ class Goal:
       else:
         name = attr
       v = getattr(self, attr)
-      if isinstance(v, datetime.datetime):
+      if isinstance(v, datetime.date):
         v = PR.print_date(v)
       if v is not None:
         p.writeln("%s: %s" % (name, v))

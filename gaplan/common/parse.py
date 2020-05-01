@@ -59,7 +59,7 @@ def read_date(s, loc):
   date_str = m.group(1)
   # If day is omitted, consider first day
   date_str += m.group(2) or '-01'
-  return datetime.datetime.strptime(date_str, '%Y-%m-%d'), m.group(3)
+  return datetime.datetime.strptime(date_str, '%Y-%m-%d').date(), m.group(3)
 
 def read_float(s, loc):
   m = re.search(r'^\s*([0-9]+(\.[0-9]+)?)(.*)', s)
