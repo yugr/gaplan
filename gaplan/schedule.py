@@ -18,48 +18,60 @@ import datetime
 import sys
 
 class SchedBlock:
-  def __init__(self, par, offset, loc):
-    self.par = par
+  def __init__(self, seq, offset, loc):
+    self.seq = seq
     self.offset = offset
     self.loc = loc
+    self.blocks = []
     self.alloc = []
+    self.deadline = None
     self.duration = None
     self.goal_name = None
-    self.deadline = None
-    self.blocks = []
+    self.parallel = None
 
-  def add_goal(self, goal_name, loc):
+  def add_goal(self, name, attrs, loc):
     block = SchedBlock(False, self.offset, loc)
-    block.goal_name = goal_name
+    block.goal_name = name
+    block.add_attrs(attrs, loc)
     self.blocks.append(block)
 
   def add_attrs(self, attrs, loc):
     for a in attrs:
-      if M.search(r'^@\s*(.*)', a):
-        self.alloc = M.group(1).split('/')
+      if a.startswith('@'):
+        self.alloc, _ = PA.read_alloc(a)
         continue
 
       if M.search(r'^[0-9]{4}-', a):
         self.duration = PA.read_date2(a, loc)
         continue
 
+      if a.startswith('||'):
+        self.parallel = PA.read_par(a)
+        continue
+
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
         error(loc, "failed to parse block attribute: %s" % a)
-
       k = M.group(1)
       v = M.group(2)
+
       if k == 'deadline':
         self.deadline, _ = PA.read_date(v, loc)
-      else:
-        error(loc, "unknown block attribute '%s'" % k)
+        continue
+
+      error(loc, "unknown block attribute '%s'" % k)
 
   def dump(self, p):
-    p.writeln("%s sched block (%s)" % ("Parallel" if self.par else "Sequential", self.loc))
+    p.writeln("%s sched block (%s)" % ("Sequential" if self.seq else "Parallel", self.loc))
     with p:
       if self.duration is not None:
         p.writeln("Duration: %s" % self.duration)
       if self.goal_name is not None:
         p.writeln("Goal: " + self.goal_name)
+        with p:
+          if self.parallel is not None:
+            p.writeln("parallelism: %s" % self.parallel)
+          if self.alloc:
+            p.writeln("alloc: " % ', '.join(self.alloc))
       if self.deadline is not None:
         p.writeln("Deadline: " + self.deadline)
       for block in self.blocks:
@@ -222,8 +234,12 @@ class Timetable:
         info.dump(p)
 
 class Scheduler:
-  def __init__(self):
+  def __init__(self, v=0):
     self.prj = self.net = self.sched = self.table = None
+    self.v = v
+
+  def _dbg(self, msg):
+    if self.v: print(msg)
 
   def _compute_time(self, W, alloc, start):
     # We want to detect optimal time to split effort 'W'
@@ -242,9 +258,13 @@ class Scheduler:
     t = W / sum(a.efficiency for a in alloc)
     return [(ts, t)] * len(alloc)
 
-  def _schedule_goal(self, goal, start, alloc):
+  def _schedule_goal(self, goal, start, alloc, par, warn_if_past=True):
+    self._dbg("_schedule_goal: scheduling goal '%s': start=%s, alloc=%s, par=%s"
+              % (goal.name, start, alloc, par))
+
     if goal.completion_date is not None:
-      if goal.completion_date < start:
+      self._dbg("_schedule_goal: goal already scheduled")
+      if warn_if_past and goal.completion_date < start:
         warn(goal.loc, "goal '%s' is completed on %s, before %s"
                        % (goal.name, goal.completion_date, start))
       # TODO: warn if completion_date < start
@@ -256,16 +276,18 @@ class Scheduler:
     for act in goal.preds:
       if act.duration is not None:
         # TODO: register spent time for devs
-        if act.duration.start < start:
+        if warn_if_past and act.duration.start < start:
           warn(act.loc, "activity '%s' started on %s, before %s"
-                        % (act.name, goal.completion_date, start))
+                        % (act.name, act.duration.start, start))
         completion_date = max(completion_date, act.duration.finish)
         continue
 
       act_start = start
       if act.head is not None:
         if not self.table.is_completed(act.head):
-          self._schedule_goal(act.head, datetime.date.today(), [])
+          # For goals that are not specified by schedule we use default settings
+          self._dbg("_schedule_goal: scheduling predecessor '%s'" % act.head.name)
+          self._schedule_goal(act.head, datetime.date.today(), [], None, warn_if_past=False)
           if not act.overlaps:
             act_start = max(act_start, self.table.get_completion_date(act.head))
           else:
@@ -290,9 +312,14 @@ class Scheduler:
       else:
         rcs = plan_rcs
 
-      effort, _ = act.estimate()
-      effort *= 1 - act.completion
-      iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, effort, act.parallel)
+      act_par = par
+      if act_par is None:
+        act_par = act.parallel
+
+      act_effort, _ = act.estimate()
+      act_effort *= 1 - act.completion
+
+      iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, act_effort, act_par)
       self.table.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
 
@@ -300,27 +327,30 @@ class Scheduler:
 
     return completion_date
 
-  def _schedule_block(self, block, start, alloc):
-    alloc = block.alloc or alloc
+  def _schedule_block(self, block, start, alloc, par):
+    self._dbg("_schedule_block: scheduling block in %s: start=%s, alloc=%s, par=%s"
+              % (block.loc, start, alloc, par))
 
+    alloc = block.alloc or alloc
+    par = block.parallel or par
     latest = start
 
     if block.goal_name is None:
       for b in block.blocks:
-        last = self._schedule_block(b, start, alloc)
+        last = self._schedule_block(b, start, alloc, par)
         latest = max(latest or last, last)
-        if not block.par:
+        if block.seq:
           start = last
     else:
       assert not block.blocks, "block with goals should have no subblocks"
       goal = self.net.name_to_goal.get(block.goal_name)
       error_if(goal is None, block.loc, "goal '%s' not found in plan" % block.goal_name)
-      goal_finish = self._schedule_goal(goal, start, alloc)
+      goal_finish = self._schedule_goal(goal, start, alloc, par)
       latest = max(latest, goal_finish)
 
     if block.deadline is not None and latest > block.deadline:
-      print("Failed to schedule block at %s before deadline %s"
-            % (block.loc, block.deadline))
+      warn("Failed to schedule block at %s before deadline %s"
+           % (block.loc, block.deadline))
 
     return latest
 
@@ -329,7 +359,6 @@ class Scheduler:
     self.net = net
     self.sched = sched
     self.table = Timetable(prj)
-    start = datetime.date.today()
     for block in sched.blocks:
-      self._schedule_block(block, start, [])
+      self._schedule_block(block, datetime.date.today(), [], None)
     return self.table

@@ -160,7 +160,7 @@ Examples:
   elif args.action == 'dump-wbs':
     wbs.dump(p)
   elif args.action == 'schedule':
-    scheduler = S.Scheduler()
+    scheduler = S.Scheduler(args.v)
     timetable = scheduler.schedule(project, net, sched)
     timetable.dump(p)
   elif args.action in ('burn', 'burndown'):

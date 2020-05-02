@@ -14,6 +14,7 @@ from gaplan.common.error import error, error_if
 from gaplan.common.ETA import ETA
 from gaplan.common.interval import Interval
 from gaplan.common.location import Location
+from gaplan.common import matcher as M
 
 def read_duration(s, loc):
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
@@ -77,6 +78,23 @@ def read_date2(s, loc):
     finish, rest = read_date(rest[1:], loc)
 
   return Interval(start, finish, True)
+
+def read_par(s):
+  m = re.match(r'^\|\|(\s*([0-9]+))?$', s)
+  return int(m.group(2) or sys.maxsize)
+
+def read_alloc(a):
+  aa = a.split('(')
+  if len(aa) > 2 or not M.search(r'^@\s*(.*)', aa[0]):
+    error(loc, "unexpected allocation syntax: %s" % a)
+  alloc = M.group(1).strip().split('/')
+  if len(aa) <= 1:
+    real_alloc = []
+  else:
+    if not M.search(r'^([^)]*)\)', a):
+      error(loc, "unexpected allocation syntax: %s" % a)
+    real_alloc = M.group(1).strip().split('/')
+  return alloc, real_alloc
 
 class Lexeme:
   def __init__(self, type, data, text, loc):

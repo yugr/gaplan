@@ -239,7 +239,7 @@ def _optimize_task(task, ancestors, v):
   for t in task.subtasks:
     _optimize_task(t, ancestors, v)
 
-  if v: print("Optimizing task %s (%s)" % (task.id, task.name))
+  if v: print("_optimize_task: optimizing task %s (%s)" % (task.id, task.name))
 
   # Eliminate useless intermediaries.
 
@@ -247,7 +247,7 @@ def _optimize_task(task, ancestors, v):
   task.subtasks = []
   for t in old_subtasks:
     if t.goal and t.goal.dummy and not t.activities:
-      if v: print("Removing intermediate dummy task %s (%s)" % (t.id, t.name))
+      if v: print("_optimize_task: removing intermediate dummy task %s (%s)" % (t.id, t.name))
       # All child activities are instant so we can remove it.
       # But be careful to update milestones and activities
       # which depended on it.
@@ -274,12 +274,12 @@ def _optimize_task(task, ancestors, v):
     if external_deps:
       task.milestones.append(t)
     else:
-      if v: print("Dropped instant dep %s (%s)" % (t.id, t.name))
+      if v: print("_optimize_task: dropped instant dep %s (%s)" % (t.id, t.name))
 
   # Merge all milestone subtasks into a one.
 
   if task.milestones:
-    if v: print("Merging all instant deps to %s (%s)" % (t.id, t.name))
+    if v: print("_optimize_task: merging all instant deps to %s (%s)" % (t.id, t.name))
     id = task.id
     t = Task(id + '_milestone', "External deps satisfied", task)
     t.depends = {st for t in task.milestones for st in t.depends}
@@ -290,14 +290,14 @@ def _optimize_task(task, ancestors, v):
   if not task.subtasks:
     if not task.milestones and len(task.activities) == 1:
       t = task.activities[0]
-      if v: print("Merging activity %s (%s)" % (t.id, t.name))
+      if v: print("_optimize_task: merging activity %s (%s)" % (t.id, t.name))
       assert not task.act
       task._set_action(t.act)
       task.depends.update(t.depends)
       task.activities = []
 
     if not task.activities and len(task.milestones) == 1:
-      if v: print("Merging milestone %s (%s)" % (t.id, t.name))
+      if v: print("_optimize_task: merging milestone %s (%s)" % (t.id, t.name))
       task.depends.update(task.milestones[0].depends)
       task.milestones = []
 

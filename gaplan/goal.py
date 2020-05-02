@@ -121,14 +121,7 @@ class Activity:
         continue
 
       if a.startswith('@'):
-        aa = a.split('(')
-        if len(aa) > 2 or not M.search(r'^@\s*(.*)', aa[0]):
-          error(loc, "unexpected allocation syntax: %s" % a)
-        self.alloc = M.group(1).strip().split('/')
-        if len(aa) > 1:
-          if not M.search(r'^([^)]*)\)', a):
-            error(loc, "unexpected allocation syntax: %s" % a)
-          self.real_alloc = M.group(1).strip().split('/')
+        self.alloc, self.real_alloc = PA.read_alloc(a)
         continue
 
       if M.search(r'^[0-9]{4}-', a):
@@ -149,18 +142,20 @@ class Activity:
           overlap /= 100
         self.overlaps[other_id] = overlap
 
-      if M.match(r'^\|\|(\s*([0-9]+))?$', a):
-        self.parallel = int(M.group(2)) if M.group(2) else sys.maxsize
+      if a.startswith('||'):
+        self.parallel = PA.read_par(a)
         continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
         error(loc, "failed to parse attribute: %s" % a)
       k = M.group(1)
 #      v = M.group(2)
+
       if k == 'global':
         self.globl = True
-      else:
-        error(loc, "unknown activity attribute: '%s'" % k)
+        continue
+
+      error(loc, "unknown activity attribute: '%s'" % k)
 
   def check(self, warn):
     if warn == 0:
@@ -303,12 +298,16 @@ class Goal:
         error(loc, "failed to parse goal attribute: %s" % a)
       k = M.group(1)
       v = M.group(2)
+
       if k == 'deadline':
         self.deadline, _ = PA.read_date(v, loc)
-      elif k == 'alias':
+        continue
+
+      if k == 'alias':
         self.alias, _ = PA.read_date(v, loc)
-      else:
-        error(loc, "unknown goal attribute '%s'" % k)
+        continue
+
+      error(loc, "unknown goal attribute '%s'" % k)
 
   @property
   def pretty_name(self):

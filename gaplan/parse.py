@@ -336,7 +336,7 @@ class Parser(PA.BaseParser):
         goal_name, goal_attrs = self.maybe_parse_goal_decl(offset + 2)
         if goal_name is None:
           break
-        block.add_goal(goal_name, l.loc)
+        block.add_goal(goal_name, goal_attrs, l.loc)
       elif l.type == LexemeType.SCHED:
         self._dbg("parse_sched_block: new block: %s" % l)
         subblock = self.parse_sched_block(offset + 2)
