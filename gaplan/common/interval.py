@@ -13,10 +13,12 @@ import datetime
 class Interval:
   """Represents interval of time."""
 
-  def __init__(self, l, r=None):
+  def __init__(self, l, r=None, closed=False):
     assert isinstance(l, datetime.date)
     self.l = l
     self.r = r or l
+    if closed:
+      self.r += datetime.timedelta(days=1)
 
   @property
   def start(self):

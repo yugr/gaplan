@@ -63,7 +63,8 @@ class Project:
     self.name = 'Unknown'
     self.loc = loc
     year = datetime.date.today().year
-    self.duration = I.Interval(datetime.date(year, 1, 1), datetime.date(year, 12, 31))
+    self.duration = I.Interval(datetime.date(year, 1, 1),
+                               datetime.date(year, 12, 31), True)
     self.members = []
     self.members_map = {}
     self.teams = {}

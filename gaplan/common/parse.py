@@ -76,7 +76,7 @@ def read_date2(s, loc):
   if rest and rest[0] == '-':
     finish, rest = read_date(rest[1:], loc)
 
-  return Interval(start, finish)
+  return Interval(start, finish, True)
 
 class Lexeme:
   def __init__(self, type, data, text, loc):
