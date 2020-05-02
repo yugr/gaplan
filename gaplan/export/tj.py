@@ -67,6 +67,7 @@ def _print_task(p, task, abs_ids, prj):
     resources = prj.get_resources(act.alloc)
 
     # TODO: handle act.parallel (in WBS)
+    # TODO: handle act.overalap
     if effort > 0:
       task_effort = float(effort)
 

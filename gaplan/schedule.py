@@ -9,7 +9,7 @@
 
 # This is WIP !!!
 
-from gaplan.common.error import error, error_if
+from gaplan.common.error import error, error_if, warn
 from gaplan.common import matcher as M
 from gaplan.common import parse as PA
 from gaplan.common import interval as I
@@ -245,7 +245,7 @@ class Scheduler:
   def _schedule_goal(self, goal, start, alloc):
     if goal.completion_date is not None:
       if goal.completion_date < start:
-        warn(self.loc, "goal '%s' is completed on %s, before %s"
+        warn(goal.loc, "goal '%s' is completed on %s, before %s"
                        % (goal.name, goal.completion_date, start))
       # TODO: warn if completion_date < start
       self.table.set_completion_date(goal, goal.completion_date)
@@ -257,8 +257,8 @@ class Scheduler:
       if act.duration is not None:
         # TODO: register spent time for devs
         if act.duration.start < start:
-          warn(self.loc, "activity '%s' started on %s, before %s"
-                         % (act.pretty_name, goal.completion_date, start))
+          warn(act.loc, "activity '%s' started on %s, before %s"
+                        % (act.name, goal.completion_date, start))
         completion_date = max(completion_date, act.duration.finish)
         continue
 
