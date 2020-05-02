@@ -232,9 +232,10 @@ $ pytest-3 gaplan
 
 High prio:
 * Implement simple scheduler (work-in-progress)
-* Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
+* Generic priority assignment/propagation strategies.
 
 Other:
+* Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 * Read arbitrary dates.
 * Docstrings.
 * Use f-strings.
