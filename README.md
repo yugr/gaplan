@@ -159,7 +159,7 @@ Goals can be annotated with special *attributes* listed in table below.
 | Deadline            | deadline *YYYY-MM-DD* | `deadline 2016-09-30` |              |
 | Iteration           | I*NUMBER*             | `I2`                  |              |
 | Accomplishment date | *YYYY-MM-DD*          | `2016-08-31`          |              |
-| Alias               | alias *NAME*          | `alias mod2_test`     | Short name   |
+| Identifier          | id *symbolic\_name*   | `id mod2_test`        | Short name   |
 
 3-stage scale is used for priorities:
 

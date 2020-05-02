@@ -51,8 +51,8 @@ class SchedBlock:
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
         error(loc, "failed to parse block attribute: %s" % a)
-      k = M.group(1)
-      v = M.group(2)
+      k = M.group(1).strip()
+      v = M.group(2).strip()
 
       if k == 'deadline':
         self.deadline, _ = PA.read_date(v, loc)

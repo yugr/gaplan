@@ -25,8 +25,8 @@ def add_common_attrs(loc, obj, attrs):
   other_attrs = []
   for a in attrs:
     if M.search(r'^([A-Za-z][A-Za-z0-9_]*)\s*(.*)', a):
-      k = M.group(1)
-      v = M.group(2)
+      k = M.group(1).strip()
+      v = M.group(2).strip()
       if k == 'task':
         obj.tracker.tasks = set(M.group(1).split('/'))
         continue
@@ -148,8 +148,8 @@ class Activity:
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
         error(loc, "failed to parse attribute: %s" % a)
-      k = M.group(1)
-#      v = M.group(2)
+      k = M.group(1).strip()
+      v = M.group(2).strip()
 
       if k == 'global':
         self.globl = True
@@ -217,7 +217,7 @@ class Goal:
     self.name = name
     self.loc = copy.copy(loc)
     self.dummy = dummy
-    self.alias = None
+    self.id = None
 
     # Completion criteria
     self.checks = []
@@ -296,15 +296,15 @@ class Goal:
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
         error(loc, "failed to parse goal attribute: %s" % a)
-      k = M.group(1)
-      v = M.group(2)
+      k = M.group(1).strip()
+      v = M.group(2).strip()
 
       if k == 'deadline':
         self.deadline, _ = PA.read_date(v, loc)
         continue
 
-      if k == 'alias':
-        self.alias, _ = PA.read_date(v, loc)
+      if k == 'id':
+        self.id = v
         continue
 
       error(loc, "unknown goal attribute '%s'" % k)
@@ -470,7 +470,7 @@ class Goal:
 
     for attr in [
         'loc',
-        'alias',
+        'id',
         'depth',
         'prio',
         'risk',
@@ -600,12 +600,12 @@ class Net:
     self.name_to_goal = {}
     def update_name_to_goal(g):
       self.name_to_goal[g.name] = g
-      if g.alias is not None:
-        other_goal = self.name_to_goal.get(g.alias, None)
+      if g.id is not None:
+        other_goal = self.name_to_goal.get(g.id, None)
         error_if(other_goal is not None and other_goal.name != g.name,
-                 "goals '%s' and '%s' use the same alias name '%s'"
-                 % (other_goal.name, g.name, g.alias))
-        self.name_to_goal[g.alias] = g
+                 "goals '%s' and '%s' use the same id '%s'"
+                 % (other_goal.name, g.name, g.id))
+        self.name_to_goal[g.id] = g
     self.visit_goals(callback=update_name_to_goal)
 
     # Assign parents for goals which are not explicitly nested

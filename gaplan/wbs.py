@@ -162,6 +162,7 @@ def _create_goal_task(goal, parent, ids):
     if a.is_instant():
       task.depends.add(a.head.name)
     elif not _is_activity_ignored(a):
+      # TODO: use a.id
       subtask = Task(id + '_%d' % task_num,
                      "Implementation %d" % task_num, task, act=a)
       task._add_subtask(subtask)
@@ -306,8 +307,8 @@ def create_wbs(net, hierarchy, v):
   ids = {}
   def assign_id(g):
     if g.name not in ids:
-      if g.alias is not None:
-        ids[g.name] = g.alias
+      if g.id is not None:
+        ids[g.name] = g.id
       else:
         ids[g.name] = 'id_%d' % next_id[0]
         next_id[0] += 1
