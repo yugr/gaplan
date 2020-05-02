@@ -1,7 +1,18 @@
 Some open questions about declarative planning. Please share if you have answers or comments.
 
-* artificial intermediate goals (like "All requirements for target fullfilled")
-  to get to single activity:
+* Since early days of PERT it was noticed that we often need
+  to introduce meaningless intermediate goals like
+  "All requirements for target fullfilled" in this example:
+```
+|Some goal
+|<-  // 1d-2d
+   |All requirements for target fullfilled
+   |<-
+      |Prerequisite 1
+   |<-
+      |Prerequisite 2
+```
+  Gaplan searches this by introducing anonymous ("dummy" in PERT terminology) goals:
 ```
 |Some goal
 |<-  // 1d-2d
@@ -10,16 +21,61 @@ Some open questions about declarative planning. Please share if you have answers
    |<-
       |Prerequisite 2
 ```
-* parameterized subnets e.g.
-    * some tests and deployment activities need to be performed for each release
-    * or same actions have to be performed for a family of features
-  how to specialize such parameterized networks (i.e. override subgoals) especially
-  as project evolves and individual instances are subdivided.
-* projection errors when making estimates i.e. estimator estimates
-  based on his own idea of who'll work on a task
-* overlap between tasks e.g. testing/debugging can be done roughly in parallel with testsuite preparation:
+* Parts of network often have isomorphic structure e.g.
+    * common set of verification and deployment activities needs
+      to be performed for each release
+    * same technology (i.e. sequence of actions) is used for a family of features
+  Can this commonality be expressed via parameterized subnetwork ("network functions")?
+  How can we specialize such parameterized networks (override subgoals, attributes, etc.)
+  especially as project evolves and individual instances are subdivided.
+* How can we avoid projection errors when making estimates i.e. estimator estimates
+  based on his own idea of who'll work on a task.
+* Would it make sense to keep a set of estimates from different estimators
+  and select a strategy for combining them?
+* What's the best way to represent overlap (i.e. "fast tracking") between tasks?
+  E.g. testing/debugging can often be done roughly in parallel
+  with testsuite preparation.
+  Ordinary dependencies are too inflexible for this:
 ```
-|All tests pass
+|Feature ready
 |<-
-   |Testsuite ready
+   |Feature developed
+   |<-  // 2w-1m
+|<-
+   |Feature tested
+   |<-  // 2w-1m
+      |Feature developed
 ```
+  Traditional PERT approach is to introduce intermediary goals:
+```
+|Feature ready
+|<-
+   |Feature partially developed
+   |[] ...
+   |<-  // 1w-2w
+|<-
+   |Feature developed
+   |<-  // 1w-2w
+      |Feature partially developed
+|<-
+   |Feature partially tested
+   |<-  // 1w-2w
+      |Feature partially developed
+|<-
+   |Feature tested
+   |<-  // 1w-2w
+      |Feature developed
+```
+  but this requires a lot of boilerplate.
+  Gaplan provides alternative approach: `over` directive:
+```
+|Feature ready
+|<-
+   |Feature developed
+   |<-  // 2w-1m, id feature-dev
+|<-
+   |Feature tested
+   |<-  // 2w-1m, over feature-dev 50%
+      |Feature developed
+```
+  
