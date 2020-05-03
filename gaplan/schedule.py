@@ -101,12 +101,15 @@ class HolidayCalendar:
     # Slow check
     # TODO: do this faster
     # TODO: hour-based precision
+    start = None
     for day in range(ndays):
       d = iv.start + datetime.timedelta(days=day)
       if d.weekday() < 5 and not self.holidays.contains(d):
+        if start is None:
+          start = d
         effort -= 8
       if effort <= 0:
-        return True, d
+        return True, I.Interval(start, d, closed=True)
     return False, None
 
 class GoalInfo:
@@ -135,21 +138,25 @@ class AllocationInfo:
     self.sheet = []
     self.cal = HolidayCalendar(holidays + rc.vacations)
 
-  def allocate(self, start, effort):
+  def allocate(self, start, effort, v):
     if not self.sheet:
       self.sheet = [I.Interval(start)]
-      ret = self.allocate(start, effort)
+      ret = self.allocate(start, effort, v)
       self.sheet = []
       return ret
+
+    if v: print("allocate: allocating effort %g @%s from %s" % (effort, self.name, start))
 
     last_iv = I.Interval(datetime.date(datetime.MAXYEAR, 12, 31))
     for i, (left, right) in enumerate(zip(self.sheet, self.sheet[1:] + [last_iv])):
       gap = I.Interval(max(left.finish, start), right.start)
-      ok, finish = self.cal.allows_effort(gap, effort)
+      if v: print("allocate: found free slow %s" % gap)
+      ok, iv = self.cal.allows_effort(gap, effort)
       if not ok:
+        if v: print("allocate: found free slot %s" % gap)
         continue
-      iv = I.Interval(gap.start, finish)
-      fragmentation = gap.start - left.finish
+      if v: print("allocate: updated due to holidays: %s" % iv)
+      fragmentation = iv.start - left.finish
       if gap.finish != sys.maxsize:
         fragmentation += gap.finish - iv.finish
       return i + 1, iv, fragmentation
@@ -162,10 +169,11 @@ class AllocationInfo:
     p.writeln("%s: %s" % (self.name, ', '.join(ss)))
 
 class Timetable:
-  def __init__(self, prj):
+  def __init__(self, prj, v):
     self.goals = {}
     self.acts = {}
     self.rcs = {}
+    self.v = v
     for rc in prj.members:
       self.rcs[rc.name] = AllocationInfo(rc, prj.holidays)
 
@@ -203,7 +211,7 @@ class Timetable:
       for rc in rcs:
         rc_info = self.rcs[rc.name]
         rc_effort = e * rc.efficiency
-        j, iv, frag = rc_info.allocate(start, effort)
+        j, iv, frag = rc_info.allocate(start, effort, self.v)
         sched_data.append((rc.name, j, iv, frag))
       sched_data.sort(key=lambda data: (data[2].finish, data[3]))  # I hate Python...
       finish = max(iv.finish for _1, _2, iv, _4 in sched_data[:i])
@@ -271,6 +279,11 @@ class Scheduler:
       self.table.set_completion_date(goal, goal.completion_date)
       return goal.completion_date
 
+    if goal.is_completed():
+      warn(goal.loc, "unable to schedule completed goal '%s' with no completion date" % goal.name)
+      self.table.set_completion_date(goal, datetime.date.today())
+      return datetime.date.today()
+
     completion_date = start
     goal_alloc = set()
     for act in goal.preds:
@@ -319,7 +332,13 @@ class Scheduler:
       act_effort, _ = act.estimate()
       act_effort *= 1 - act.completion
 
+      self._dbg("_schedule_goal: scheduling activity %s: start=%s, effort=%s, par=%s, rcs=%s"
+                % (act.name, act_start, act_effort, act_par, ', '.join(rc.name for rc in rcs)))
+
       iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, act_effort, act_par)
+      self._dbg("_schedule_goal: assignment for activity %s: @%s, duration %s"
+                % (act.name, ', '.join(rc.name for rc in rcs), iv))
+
       self.table.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
 
@@ -358,7 +377,7 @@ class Scheduler:
     self.prj = prj
     self.net = net
     self.sched = sched
-    self.table = Timetable(prj)
+    self.table = Timetable(prj, self.v)
     for block in sched.blocks:
       self._schedule_block(block, datetime.date.today(), [], None)
     return self.table
