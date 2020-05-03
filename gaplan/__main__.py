@@ -126,12 +126,11 @@ Examples:
 
   parser = PA.Parser(args.v)
   parser.reset(filename, f)
-  project, roots, sched = parser.parse()
+  net, project, sched = parser.parse(args.W)
 
   if args.action in ['tj', 'msp'] and not project.members:
     error("--tj and --msp require member info in project file")
 
-  net = G.Net(roots, args.W)
   net.check(args.W)
 
   if args.only is not None:

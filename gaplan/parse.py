@@ -108,13 +108,12 @@ class Lexer(PA.BaseLexer):
 class Parser(PA.BaseParser):
   def __init__(self, v=0):
     super(Parser, self).__init__(Lexer(v), v)
-    self.dummy_goal_count = self.project_attrs = self.names = self.project_loc = self.sched_loc = None
+    self.dummy_goal_count = self.project_attrs = self.names = None
 
   def reset(self, filename, f):
     super(Parser, self).reset(filename, f)
     self.dummy_goal_count = 0
     self.project_attrs = {}
-    self.project_loc = self.sched_loc = Location()
     self.names = {}
 
   def parse_attrs(self):
@@ -255,8 +254,6 @@ class Parser(PA.BaseParser):
     l = self.lex.next()
     name = l.data
     attr_loc = l.loc
-    if not self.project_loc:
-      self.project_loc = attr_loc
 
     self.lex.expect('=')
 
@@ -312,9 +309,6 @@ class Parser(PA.BaseParser):
       return None
     self.lex.skip()
 
-    if not self.sched_loc:
-      self.sched_loc = top_loc
-
     block = schedule.SchedBlock(l.data[1] == '--', l.data[0], top_loc)
 
     # Parse attributes
@@ -349,7 +343,9 @@ class Parser(PA.BaseParser):
 
     return block
 
-  def parse(self):
+  def parse(self, W):
+    net_loc = project_loc = sched_loc = Location()
+
     root_goals = []
     root_blocks = []
     while True:
@@ -360,12 +356,18 @@ class Parser(PA.BaseParser):
       if l.type == LexemeType.GOAL:
         error_if(l.data[0] != 0, l.loc, "root goal '%s' must be left-adjusted" % l.data[1])
         goal = self.parse_goal(l.data[0], None, False)
+        if not net_loc:
+          net_loc = goal.loc
         root_goals.append(goal)
       elif l.type == LexemeType.PRJ_ATTR:
+        if not project_loc:
+          project_loc = l.loc
         self.parse_project_attr()
       elif l.type == LexemeType.SCHED:
         error_if(l.data[0] != 0, l.loc, "root block must be left-adjusted")
         block = self.parse_sched_block(l.data[0])
+        if not sched_loc:
+          sched_loc = block.loc
         root_blocks.append(block)
       elif l.type == LexemeType.EOF:
         break
@@ -373,9 +375,11 @@ class Parser(PA.BaseParser):
         # TODO: anonymous goals
         error(l.loc, "unexpected lexeme: '%s'" % l.text)
 
-    prj = project.Project(self.project_loc)
+    net = G.Net(root_goals, W, net_loc)
+
+    prj = project.Project(project_loc)
     prj.add_attrs(self.project_attrs)
 
-    sched = schedule.Schedule(root_blocks, self.sched_loc)
+    sched = schedule.Schedule(root_blocks, sched_loc)
 
-    return prj, root_goals, sched
+    return net, prj, sched

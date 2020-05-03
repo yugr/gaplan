@@ -545,8 +545,9 @@ class Net:
 
   """Class which represents a single declarative plan (goals, iterations, etc.)."""
 
-  def __init__(self, roots, warn):
+  def __init__(self, roots, warn, loc):
     self.roots = roots
+    self.loc = loc
     self.name_to_goal = {}
     self.iter_to_goals = {}
     self._recompute(warn)
