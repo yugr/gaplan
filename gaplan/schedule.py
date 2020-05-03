@@ -71,9 +71,9 @@ class SchedBlock:
           if self.parallel is not None:
             p.writeln("parallelism: %s" % self.parallel)
           if self.alloc:
-            p.writeln("alloc: " % ', '.join(self.alloc))
+            p.writeln("alloc: %s" % ', '.join(self.alloc))
       if self.deadline is not None:
-        p.writeln("Deadline: " + self.deadline)
+        p.writeln("Deadline: %s" % self.deadline)
       for block in self.blocks:
         block.dump(p)
 
