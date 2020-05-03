@@ -663,6 +663,16 @@ class Net:
     visit_goals(self.roots, **args)
 
   def dump(self, p):
+    p.writeln("= Network at %s =\n" % self.loc)
+
+    num_actions = [0]
+    def update_num_actions(g):
+      num_actions[0] += len(g.preds)
+    self.visit_goals(callback=update_num_actions)
+    # TODO: more stats
+    p.writeln("Network contains %d goals (%d roots) and %d actions\n"
+              % (len(self.name_to_goal), len(self.roots), num_actions[0])) 
+
     for g in self.roots:
       g.dump(p)
       p.writeln('')

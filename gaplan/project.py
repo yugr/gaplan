@@ -112,12 +112,22 @@ class Project:
     return resources
 
   def dump(self, p):
-    p.writeln('= %s =\n' % self.name)
-    for dev in self.members:
-      dev.dump(p)
-    for team in self.teams:
-      team.dump(p)
+    p.writeln("= Project \"%s\" at %s =\n" % (self.name, self.loc))
+
+    p.writeln("Resources:")
+    with p:
+      for dev in self.members:
+        dev.dump(p)
+    p.writeln("")
+
+    p.writeln("Resources:")
+    with p:
+      for team in self.teams:
+        team.dump(p)
+    p.writeln("")
+
     p.writeln("Vacations:")
     with p:
       for duration in self.holidays:
         p.writeln(duration)
+    p.writeln("")

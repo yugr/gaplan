@@ -83,7 +83,7 @@ class Schedule:
     self.loc = loc
 
   def dump(self, p):
-    p.writeln("Schedule (%s)" % self.loc)
+    p.writeln("= Schedule at %s =\n" % self.loc)
     with p:
       for block in self.blocks:
         block.dump(p)
