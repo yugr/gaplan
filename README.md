@@ -87,6 +87,9 @@ $ mkdir -p tjdir
 $ tj3 plan.tjp -o tjdir
 ```
 
+All commands support `-W` (emit warnings for common errors)
+and `-v` (add diagnostic prints) switches.
+
 For additional details run
 ```
 $ python3 -mgaplan --help
@@ -233,9 +236,11 @@ $ pytest-3 gaplan
 High prio:
 * Implement simple scheduler (work-in-progress)
 * Generic priority assignment/propagation strategies.
+* Describe tracking info (actual efforts/durations, tracker links,
+  how to represent external/future milestones, etc.).
 
 Other:
-* Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
+* Use standard loggers for debug prints (verbosity should not be object field).
 * Read arbitrary dates.
 * Docstrings.
 * Use f-strings.
@@ -245,4 +250,5 @@ Other:
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include directives.
 * Describe tracking info (actual efforts and durations, Jira tasks, etc.) in README.
+* Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 * Fast tracking in TJ.
