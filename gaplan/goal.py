@@ -158,8 +158,8 @@ class Activity:
 
       error(loc, "unknown activity attribute: '%s'" % k)
 
-  def check(self, warn):
-    if warn == 0:
+  def check(self, W):
+    if W == 0:
       return
 
     if self.alloc and not self.effort.defined():
@@ -409,23 +409,23 @@ class Goal:
     if after is not None:
       after(self)
 
-  def check(self, warn):
-    if warn and not self.defined and not self.dummy:
+  def check(self, W):
+    if W and not self.defined and not self.dummy:
       warn(self.loc, "goal '%s' is undefined" % self.name)
 
     pending_conds = [c.name for c in self.checks if not c.done()]
-    if warn and self.completion_date and pending_conds:
+    if W and self.completion_date and pending_conds:
       warn(self.loc, "goal '%s' marked as completed but some checks are still pending:\n  %s" % (self.name, '\n  '.join(pending_conds)))
 
     for act in self.global_preds:
       if not act.is_instant():
         error(act.loc, "global dependencies must be instant")
 
-      if warn and not act.head:
+      if W and not act.head:
         warn(act.loc, "goal '%s' has empty global dependency" % self.name)
 
     for act in self.preds:
-      act.check(warn)
+      act.check(W)
 
       if act.head and self.iter is not None and act.head.iter is None:
         warn(self.loc, "goal has been scheduled but one of it's dependents is not: '%s'" % act.head.name)
@@ -545,12 +545,12 @@ class Net:
 
   """Class which represents a single declarative plan (goals, iterations, etc.)."""
 
-  def __init__(self, roots, warn, loc):
+  def __init__(self, roots, W, loc):
     self.roots = roots
     self.loc = loc
     self.name_to_goal = {}
     self.iter_to_goals = {}
-    self._recompute(warn)
+    self._recompute(W)
 
   def _propagate_attr(self, attr_name, join, less):
     """Performs backward propagation of attribute from goals for which it's defined."""
@@ -593,7 +593,7 @@ class Net:
           setattr(g, attr_name, new_attr)
     self.visit_goals(callback=assign_inferred_attrs)
 
-  def _recompute(self, warn):
+  def _recompute(self, W):
     """Computes aux data structures used for network analysis
        and propagates attributes."""
 
@@ -642,7 +642,7 @@ class Net:
       self.iter_to_goals.setdefault(g.iter, []).append(g)
     self.visit_goals(callback=update_iter_to_goals)
 
-  def filter(self, filtered_goals, warn):
+  def filter(self, filtered_goals, W):
     """Change network to include only supplied goals."""
 
     self.visit_goals(before=lambda g: g.filter(filtered_goals))
@@ -651,7 +651,7 @@ class Net:
     error_if(not new_roots, "set of top goals is empty after filtering")
 
     self.roots = new_roots
-    self._recompute(warn)
+    self._recompute(W)
 
   def visit_goals(self, **args):
     visit_goals(self.roots, **args)
@@ -661,13 +661,13 @@ class Net:
       g.dump(p)
       p.writeln('')
 
-  def check(self, warn):
-    if warn == 0:
+  def check(self, W):
+    if W == 0:
       return
 
     # Some checks already performed before: iteration assignments do not violate deps, prios match
 
-    self.visit_goals(callback=lambda g: g.check(warn))
+    self.visit_goals(callback=lambda g: g.check(W))
 
     # Check that iterations are continuous and start from 0
 
@@ -677,7 +677,7 @@ class Net:
         iters.add(g.iter)
     self.visit_goals(callback=collect_iters)
     iters = sorted(list(iters))
-    if warn and iters:
+    if W and iters:
       warn_if(iters[0] != 1, "iterations do not start with 1")
       for itr, nxt in zip(iters, iters[1:]):
         if itr + 1 != nxt:
