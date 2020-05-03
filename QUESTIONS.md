@@ -78,4 +78,14 @@ Some open questions about declarative planning. Please share if you have answers
    |<-  // 2w-1m, over feature-dev 50%
       |Feature developed
 ```
-  
+* Often developers work on task occasionally on different dates
+  so duration is broken to many small intervals which in practice
+  can not be tracked. Gaplan provides means to specify total duration
+  and actual "ideal hours" (i.e. real time spent on task):
+```
+# Developer has been working on a feature for 1 work week
+# in parallel with other tasks and spent 2 days in total.
+|Feature ready
+|<-  // 1d-1w (2d), 2020-01-13 - 2020-01-18
+```
+  It's unclear whether this is enough in practice.
