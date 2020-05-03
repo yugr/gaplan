@@ -89,3 +89,20 @@ Some open questions about declarative planning. Please share if you have answers
 |<-  // 1d-1w (2d), 2020-01-13 - 2020-01-18
 ```
   It's unclear whether this is enough in practice.
+* For generating nice MSP/TJ reports it's important to somehow infer
+  hierarchy for goals (i.e. WBS). Gaplan currently does this heuristically:
+  if goal is defined within another goal, it's considered to be a WBS child.
+  E.g. both "Feature implemented" and "Feature tested" are children of
+  "Feature ready" but "Another feature ready" is not:
+```
+|Feature ready
+|<-
+   |Feature implemented
+|<-
+   |Feature tested
+
+|Another feature ready
+|<-
+   ...
+```
+
