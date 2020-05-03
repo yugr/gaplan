@@ -414,8 +414,14 @@ class Goal:
       warn(self.loc, "goal '%s' is undefined" % self.name)
 
     pending_conds = [c.name for c in self.checks if not c.done()]
-    if W and self.completion_date and pending_conds:
+    if W and self.completion_date is not None \
+        and self.completion_date <= datetime.date.today() \
+        and pending_conds:
       warn(self.loc, "goal '%s' marked as completed but some checks are still pending:\n  %s" % (self.name, '\n  '.join(pending_conds)))
+
+    if W and self.is_completed() and not self.completion_date:
+      warn(self.loc, "goal '%s' marked as completed but is missing tracking data"
+                     % self.name)
 
     for act in self.global_preds:
       if not act.is_instant():
