@@ -117,13 +117,14 @@ class Activity:
 
     for a in attrs:
       if re.search(r'^[0-9]+(\.[0-9]+)?[hdwmy]', a):
-        self.effort = PA.read_duration3(a, loc)
+        self.effort = PA.read_effort3(a, loc)
         continue
 
       if a.startswith('@'):
         self.alloc, self.real_alloc = PA.read_alloc(a)
         continue
 
+      # TODO: specify in effort attribute?
       if M.search(r'^[0-9]{4}-', a):
         self.duration = PA.read_date2(a, loc)
         continue

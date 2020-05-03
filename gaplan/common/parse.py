@@ -16,9 +16,9 @@ from gaplan.common.interval import Interval
 from gaplan.common.location import Location
 from gaplan.common import matcher as M
 
-def read_duration(s, loc):
+def read_effort(s, loc):
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
-  error_if(m is None, "failed to parse duration: %s" % s)
+  error_if(m is None, "failed to parse effort: %s" % s)
   d = float(m.group(1))
   spec = m.group(2)
   rest = m.group(3)
@@ -33,19 +33,19 @@ def read_duration(s, loc):
   d = int(round(d))
   return d, rest
 
-def read_duration3(s, loc):
+def read_effort3(s, loc):
   # '1h' or '1h-3d' or '1h-3d (1d)'
 
-  m, rest = read_duration(s, loc)
+  m, rest = read_effort(s, loc)
 
   M = m
   if rest and rest[0] == '-':
-    M, rest = read_duration(rest[1:], loc)
+    M, rest = read_effort(rest[1:], loc)
 
   r = None
   if rest and rest[0] == '(':
     mm = re.search(r'\((.*)\)\s*$', rest)
-    r, rest = read_duration(mm.group(1), loc)
+    r, rest = read_effort(mm.group(1), loc)
 
   error_if(rest, loc, "trailing chars: %s" % rest)
 

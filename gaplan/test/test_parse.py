@@ -9,6 +9,6 @@ import pytest
 
 from gaplan.common import parse as PA
 
-def test_read_duration():
-  d, rest = PA.read_duration('0.5d___', None)
+def test_read_effort():
+  d, rest = PA.read_effort('0.5d___', None)
   assert d == 4 and rest == '___'
