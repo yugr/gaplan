@@ -238,6 +238,7 @@ High prio:
 * Generic priority assignment/propagation strategies.
 * Describe tracking info (actual efforts/durations, tracker links,
   how to represent external/future milestones, etc.).
+* Describe inferred attributes.
 
 Other:
 * Use standard loggers for debug prints (verbosity should not be object field).
@@ -249,6 +250,5 @@ Other:
 * Add Travis, codecov.
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include directives.
-* Describe tracking info (actual efforts and durations, Jira tasks, etc.) in README.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 * Fast tracking in TJ.
