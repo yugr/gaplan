@@ -17,6 +17,8 @@ class Interval:
     assert isinstance(l, datetime.date)
     self.l = l
     self.r = r or l
+    if self.r < self.l:
+      raise Exception("Trying to create invalid interval %s" % self)
     if closed:
       self.r += datetime.timedelta(days=1)
 
@@ -95,7 +97,7 @@ class Seq:
 
   def add(self, iv):
     # Search position by starting point of interval
-    i, hit = _find_date(iv.start)
+    i, hit = self._find_date(iv.start)
 
     if not hit and i < len(self.ivs):
       iv_next = self.ivs[i]

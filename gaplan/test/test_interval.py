@@ -15,6 +15,10 @@ d2 = datetime.date(2020, 1, 2)
 d3 = datetime.date(2020, 1, 3)
 d4 = datetime.date(2020, 1, 4)
 
+def test_create():
+  with pytest.raises(Exception):
+    I.Interval(d2, d1)
+
 def test_before():
   assert I.Interval(d1, d2).before(I.Interval(d2, d3))
   assert not I.Interval(d1, d2).before(I.Interval(d1, d2))

@@ -162,7 +162,7 @@ class Activity:
     if W == 0:
       return
 
-    if self.alloc and not self.effort.defined():
+    if self.alloc != ['all'] and not self.effort.defined():
       warn(self.loc, "activity is assigned but no effort is specified")
 
   def estimate(self):
@@ -615,6 +615,14 @@ class Net:
                  % (other_goal.name, g.name, g.id))
         self.name_to_goal[g.id] = g
     self.visit_goals(callback=update_name_to_goal)
+
+    # Infer completion dates for completed goals
+
+    def compute_completion_date(g):
+      if g.is_completed() and g.completion_date is None \
+          and g.preds and all(act.duration is not None for act in g.preds):
+        g.completion_date = max(act.duration.finish for act in g.preds)
+    self.visit_goals(callback=compute_completion_date)
 
     # Assign parents for goals which are not explicitly nested
 

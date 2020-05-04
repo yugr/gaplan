@@ -112,7 +112,7 @@ class Project:
     return resources
 
   def dump(self, p):
-    p.writeln("= Project \"%s\" at %s =\n" % (self.name, self.loc))
+    p.writeln("= Project '%s' at %s =\n" % (self.name, self.loc))
 
     p.writeln("Resources:")
     with p:
@@ -120,7 +120,7 @@ class Project:
         dev.dump(p)
     p.writeln("")
 
-    p.writeln("Resources:")
+    p.writeln("Teams:")
     with p:
       for team in self.teams:
         team.dump(p)

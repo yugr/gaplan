@@ -84,9 +84,11 @@ class Schedule:
 
   def dump(self, p):
     p.writeln("= Schedule at %s =\n" % self.loc)
+    p.writeln("Blocks:")
     with p:
       for block in self.blocks:
         block.dump(p)
+    p.writeln("")
 
 class HolidayCalendar:
   def __init__(self, holidays):
@@ -118,7 +120,7 @@ class GoalInfo:
     self.completion_date = completion_date
 
   def dump(self, p):
-    p.writeln("Goal '%s': %s" % (self.name, self.completion_date))
+    p.writeln("%s: %s" % (self.name, self.completion_date))
 
 class ActivityInfo:
   def __init__(self, act, iv, alloc):
@@ -128,8 +130,8 @@ class ActivityInfo:
 
   def dump(self, p):
     s = '/'.join([rc.name for rc in self.alloc])
-    p.writeln("Activity %s: %s%s" % (self.act.name, self.iv,
-                                     (" @%s" % s) if s else ""))
+    p.writeln("%s: %s%s" % (self.act.name, self.iv,
+                            (" @%s" % s) if s else ""))
 
 class AllocationInfo:
   def __init__(self, rc, holidays):
@@ -149,11 +151,13 @@ class AllocationInfo:
 
     last_iv = I.Interval(datetime.date(datetime.MAXYEAR, 12, 31))
     for i, (left, right) in enumerate(zip(self.sheet, self.sheet[1:] + [last_iv])):
+      if start >= right.start:
+        continue
       gap = I.Interval(max(left.finish, start), right.start)
-      if v: print("allocate: found free slow %s" % gap)
+      if v: print("allocate: found free slot %s" % gap)
       ok, iv = self.cal.allows_effort(gap, effort)
       if not ok:
-        if v: print("allocate: found free slot %s" % gap)
+        if v: print("allocate: slot %s rejected due to holidays" % gap)
         continue
       if v: print("allocate: updated due to holidays: %s" % iv)
       fragmentation = iv.start - left.finish
@@ -203,21 +207,29 @@ class Timetable:
     # How many chunks we can split work to?
     n = min(parallel, len(rcs))
 
+    if self.v:
+      print("assign_best_rcs: allocate %sh @%s ||%d"
+            % (effort, ', '.join(rc.name for rc in rcs), parallel))
+
     # Find optimal resource count
     best_allocs = best_finish = None
     for i in range(1, n + 1):
+      if self.v: print("assign_best_rcs: use ||%d" % i)
       sched_data = []
       e = effort / i
       for rc in rcs:
         rc_info = self.rcs[rc.name]
-        rc_effort = e * rc.efficiency
-        j, iv, frag = rc_info.allocate(start, effort, self.v)
+        rc_effort = e / rc.efficiency
+        j, iv, frag = rc_info.allocate(start, rc_effort, self.v)
         sched_data.append((rc.name, j, iv, frag))
       sched_data.sort(key=lambda data: (data[2].finish, data[3]))  # I hate Python...
       finish = max(iv.finish for _1, _2, iv, _4 in sched_data[:i])
       if best_finish is None or finish < best_finish:
         best_allocs = sched_data[:i]
         best_finish = finish
+      if self.v:
+        print("assign_best_rcs: finishing on %s @%s"
+              % (iv.finish, ', '.join(name for name, _2, _3, _4 in sched_date[:i])))
 
     # We found optimal number of resources so perform allocation
     e = effort / len(best_allocs)
@@ -232,13 +244,26 @@ class Timetable:
     return total_iv, total_rcs
 
   def dump(self, p):
-    p.writeln("Timetable:")
+    p.writeln("= Timetable =")
+
+    p.writeln("Scheduled %d goals and %d activities\n"
+              % (len(self.goals), len(self.acts)))
+
+    p.writeln("Goals:")
     with p:
-      for name, info in sorted(self.goals.items()):
+      for info in sorted(self.goals.values(), key=lambda i: (i.completion_date, i.name)):
         info.dump(p)
-      for name, info in sorted(self.acts.items()):
+    p.writeln("")
+
+    p.writeln("Activities:")
+    with p:
+      for info in sorted(self.acts.values(), key=lambda a: a.iv.start):
         info.dump(p)
-      for name, info in sorted(self.rcs.items()):
+    p.writeln("")
+
+    p.writeln("Resources:")
+    with p:
+      for _, info in sorted(self.rcs.items()):
         info.dump(p)
 
 class Scheduler:
@@ -337,7 +362,7 @@ class Scheduler:
 
       iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, act_effort, act_par)
       self._dbg("_schedule_goal: assignment for activity %s: @%s, duration %s"
-                % (act.name, ', '.join(rc.name for rc in rcs), iv))
+                % (act.name, ', '.join(rc.name for rc in assigned_rcs), iv))
 
       self.table.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
