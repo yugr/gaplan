@@ -8,14 +8,16 @@
 import pytest
 import datetime
 
-def test_add():
-  d1 = datetime.date(2020, 1, 1)
-  d2 = datetime.date(2020, 1, 2)
-  d3 = datetime.date(2020, 1, 3)
-  d4 = datetime.date(2020, 1, 4)
-  d5 = datetime.date(2020, 1, 5)
-  d6 = datetime.date(2020, 1, 6)
+from gaplan.common import interval as I
 
+d1 = datetime.date(2020, 1, 1)
+d2 = datetime.date(2020, 1, 2)
+d3 = datetime.date(2020, 1, 3)
+d4 = datetime.date(2020, 1, 4)
+d5 = datetime.date(2020, 1, 5)
+d6 = datetime.date(2020, 1, 6)
+
+def test_add():
   seq = I.Seq([I.Interval(d1, d2),
                I.Interval(d5, d6)])
   seq.add(I.Interval(d3, d4))

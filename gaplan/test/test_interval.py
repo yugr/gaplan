@@ -8,34 +8,27 @@
 import pytest
 import datetime
 
+from gaplan.common import interval as I
+
+d1 = datetime.date(2020, 1, 1)
+d2 = datetime.date(2020, 1, 2)
+d3 = datetime.date(2020, 1, 3)
+d4 = datetime.date(2020, 1, 4)
+
 def test_before():
-  d1 = datetime.date(2020, 1, 1)
-  d2 = datetime.date(2020, 1, 2)
-  d3 = datetime.date(2020, 1, 3)
   assert I.Interval(d1, d2).before(I.Interval(d2, d3))
   assert not I.Interval(d1, d2).before(I.Interval(d1, d2))
   assert not I.Interval(d2, d3).before(I.Interval(d1, d2))
 
 def test_after():
-  d1 = datetime.date(2020, 1, 1)
-  d2 = datetime.date(2020, 1, 2)
-  d3 = datetime.date(2020, 1, 3)
-  assert I.Interval(d2, d3).before(I.Interval(d1, d2))
-  assert not I.Interval(d1, d2).before(I.Interval(d1, d2))
-  assert not I.Interval(d1, d2).before(I.Interval(d2, d3))
+  assert I.Interval(d2, d3).after(I.Interval(d1, d2))
+  assert not I.Interval(d1, d2).after(I.Interval(d1, d2))
+  assert not I.Interval(d1, d2).after(I.Interval(d2, d3))
 
 def test_overlap():
-  d1 = datetime.date(2020, 1, 1)
-  d2 = datetime.date(2020, 1, 2)
-  d3 = datetime.date(2020, 1, 3)
-  d4 = datetime.date(2020, 1, 4)
-  assert I.Interval(d1, d3).before(I.Interval(d2, d4)
-  assert not I.Interval(d1, d2).before(I.Interval(d3, d4))
+  assert I.Interval(d1, d3).overlaps(I.Interval(d2, d4)
+  assert not I.Interval(d1, d2).overlaps(I.Interval(d3, d4))
 
 def test_union():
-  d1 = datetime.date(2020, 1, 1)
-  d2 = datetime.date(2020, 1, 2)
-  d3 = datetime.date(2020, 1, 3)
-  d4 = datetime.date(2020, 1, 4)
   assert I.Interval(d1, d3).union(I.Interval(d2, d4)) == I.Interval(d1, d4)
   assert I.Interval(d1, d2).union(I.Interval(d3, d4)) is None
