@@ -236,12 +236,13 @@ $ pytest-3 gaplan
 High prio:
 * Implement simple scheduler (work-in-progress)
 * Generic priority assignment/propagation strategies.
-* Describe tracking info (actual efforts/durations, tracker links,
+* Describe tracking info (actual efforts/durations, completion, tracker links,
   how to represent external/future milestones, etc.).
 * Describe inferred attributes.
 
 Other:
 * Use standard loggers for debug prints (verbosity should not be object field).
+* Use Enums (risk, prio, bias. etc.)
 * Read arbitrary dates.
 * Docstrings.
 * Use f-strings.
