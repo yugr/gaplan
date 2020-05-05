@@ -71,7 +71,7 @@ class SchedBlock:
           if self.parallel is not None:
             p.writeln("parallelism: %s" % self.parallel)
           if self.alloc:
-            p.writeln("alloc: %s" % ', '.join(self.alloc))
+            p.writeln("alloc: %s" % '/'.join(self.alloc))
       if self.deadline is not None:
         p.writeln("Deadline: %s" % self.deadline)
       for block in self.blocks:
@@ -209,7 +209,7 @@ class Timetable:
 
     if self.v:
       print("assign_best_rcs: allocate %sh @%s ||%d"
-            % (effort, ', '.join(rc.name for rc in rcs), parallel))
+            % (effort, '/'.join(rc.name for rc in rcs), parallel))
 
     # Find optimal resource count
     best_allocs = best_finish = None
@@ -229,7 +229,7 @@ class Timetable:
         best_finish = finish
       if self.v:
         print("assign_best_rcs: finishing on %s @%s"
-              % (iv.finish, ', '.join(name for name, _2, _3, _4 in sched_date[:i])))
+              % (iv.finish, '/'.join(name for name, _2, _3, _4 in sched_date[:i])))
 
     # We found optimal number of resources so perform allocation
     e = effort / len(best_allocs)
@@ -358,11 +358,11 @@ class Scheduler:
       act_effort *= 1 - act.completion
 
       self._dbg("_schedule_goal: scheduling activity %s: start=%s, effort=%s, par=%s, rcs=%s"
-                % (act.name, act_start, act_effort, act_par, ', '.join(rc.name for rc in rcs)))
+                % (act.name, act_start, act_effort, act_par, '/'.join(rc.name for rc in rcs)))
 
       iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, act_effort, act_par)
       self._dbg("_schedule_goal: assignment for activity %s: @%s, duration %s"
-                % (act.name, ', '.join(rc.name for rc in assigned_rcs), iv))
+                % (act.name, '/'.join(rc.name for rc in assigned_rcs), iv))
 
       self.table.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
