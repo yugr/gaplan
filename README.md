@@ -248,7 +248,7 @@ Other:
 * Use f-strings.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
-* Add Travis, codecov.
+* Add Travis (pytest, pylint, pytype), codecov.
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include directives.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).

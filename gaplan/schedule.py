@@ -38,7 +38,7 @@ class SchedBlock:
   def add_attrs(self, attrs, loc):
     for a in attrs:
       if a.startswith('@'):
-        self.alloc, _ = PA.read_alloc(a)
+        self.alloc, _ = PA.read_alloc(a, loc)
         continue
 
       if M.search(r'^[0-9]{4}-', a):
@@ -229,7 +229,7 @@ class Timetable:
         best_finish = finish
       if self.v:
         print("assign_best_rcs: finishing on %s @%s"
-              % (iv.finish, '/'.join(name for name, _2, _3, _4 in sched_date[:i])))
+              % (iv.finish, '/'.join(name for name, _2, _3, _4 in sched_data[:i])))
 
     # We found optimal number of resources so perform allocation
     e = effort / len(best_allocs)

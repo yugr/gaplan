@@ -121,7 +121,7 @@ class Activity:
         continue
 
       if a.startswith('@'):
-        self.alloc, self.real_alloc = PA.read_alloc(a)
+        self.alloc, self.real_alloc = PA.read_alloc(a, loc)
         continue
 
       # TODO: specify in effort attribute?

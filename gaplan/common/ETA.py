@@ -26,7 +26,7 @@ class Bias(IntEnum):
       return bias
     return Bias(bias - 1)
 
-_bias = 'none'
+_bias = Bias.NONE
 
 # This class holds interval of durations + an optional real durations.
 class ETA:

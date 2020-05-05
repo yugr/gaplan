@@ -9,6 +9,7 @@
 
 import datetime
 import re
+import sys
 
 from gaplan.common.error import error, error_if
 from gaplan.common.ETA import ETA
@@ -83,7 +84,7 @@ def read_par(s):
   m = re.match(r'^\|\|(\s*([0-9]+))?$', s)
   return int(m.group(2) or sys.maxsize)
 
-def read_alloc(a):
+def read_alloc(a, loc):
   aa = a.split('(')
   if len(aa) > 2 or not M.search(r'^@\s*(.*)', aa[0]):
     error(loc, "unexpected allocation syntax: %s" % a)

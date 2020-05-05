@@ -167,8 +167,7 @@ Examples:
       goal = roots[0]
     else:
       goals = net.iter_to_goals.get(args.iter)
-      if goals is None:
-        error_if(goals is None, "iteration '%s' is not present in plan" % args.phase)
+      error_if(goals is None, "iteration '%s' is not present in plan" % args.phase)
 
       # Start date is the minimum of start times for all goals in current iteration
       # or finish times of all goals in previous iterations.
