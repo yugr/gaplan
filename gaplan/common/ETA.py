@@ -9,6 +9,23 @@
 
 from gaplan.common.error import error
 
+from enum import IntEnum, unique
+
+@unique
+class Bias(IntEnum):
+  WORST_CASE = 1
+  PESSIMIST  = 2
+  NONE       = 3
+  OPTIMIST   = 4
+  BEST_CASE  = 5
+  COUNT      = 6
+
+  @staticmethod
+  def worse(bias):
+    if bias == Bias.WORST_CASE:
+      return bias
+    return Bias(bias - 1)
+
 _bias = 'none'
 
 # This class holds interval of durations + an optional real durations.
@@ -69,21 +86,18 @@ class ETA:
     if self.min is None or self.max is None:
       return None, None
 
-    if risk is None:
-      bias = _bias
-    else:
-      low = 'optimist' if _bias == 'none' else 'best-case'
-      high = 'pessimist' if _bias == 'none' else 'worst-case'
-      bias = {1 : low,
-              2 : 'none',
-              3 : high}[risk]
+    # Calibrate bias based on risk
+    bias = _bias
+    if risk is not None:
+      for _ in range(risk - 1):
+        bias = Bias.worse(bias)
 
     k = {
-      'none'       : 0.5,
-      'pessimist'  : 1.0 / 3,
-      'optimist'   : 2.0 / 3,
-      'worst-case' : 0,
-      'best-case'  : 1}[bias]
+      Bias.WORST_CASE : 0,
+      Bias.PESSIMIST  : 1.0 / 3,
+      Bias.NONE       : 0.5,
+      Bias.OPTIMIST   : 2.0 / 3,
+      Bias.BEST_CASE  : 1}[bias]
     avg = k * self.min + (1 - k) * self.max
 
     # "2 sigma rule"
@@ -114,7 +128,10 @@ class ETA:
 def set_options(**kwargs):
   for k, v in kwargs.items():
     if k == 'estimate_bias':
-      global _bias
-      _bias = v
+      try:
+        global _bias
+        _bias = Bias[v.upper().replace('-', '_')]
+      except KeyError:
+        error("unknown bias value '%s'" % v)
     else:
       error("ETA: unknown option: " + k)
