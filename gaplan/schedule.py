@@ -244,7 +244,7 @@ class Timetable:
     return total_iv, total_rcs
 
   def dump(self, p):
-    p.writeln("= Timetable =")
+    p.writeln("= Timetable =\n")
 
     p.writeln("Scheduled %d goals and %d activities\n"
               % (len(self.goals), len(self.acts)))
@@ -265,6 +265,7 @@ class Timetable:
     with p:
       for _, info in sorted(self.rcs.items()):
         info.dump(p)
+    p.writeln("")
 
 class Scheduler:
   def __init__(self, v=0):
@@ -295,6 +296,9 @@ class Scheduler:
     self._dbg("_schedule_goal: scheduling goal '%s': start=%s, alloc=%s, par=%s"
               % (goal.name, start, alloc, par))
 
+    if self.table.is_completed(goal):
+      return self.table.get_completion_date(goal)
+
     if goal.completion_date is not None:
       self._dbg("_schedule_goal: goal already scheduled")
       if warn_if_past and goal.completion_date < start:
@@ -312,6 +316,8 @@ class Scheduler:
     completion_date = start
     goal_alloc = set()
     for act in goal.preds:
+      self._dbg("_schedule_goal: scheduling activity '%s' for goal '%s'"
+                % (act.name, goal.name))
       if act.duration is not None:
         # TODO: register spent time for devs
         if warn_if_past and act.duration.start < start:
@@ -322,7 +328,9 @@ class Scheduler:
 
       act_start = start
       if act.head is not None:
-        if not self.table.is_completed(act.head):
+        if self.table.is_completed(act.head):
+          act_start = max(act_start, self.table.get_completion_date(act.head))
+        else:
           # For goals that are not specified by schedule we use default settings
           self._dbg("_schedule_goal: scheduling predecessor '%s'" % act.head.name)
           self._schedule_goal(act.head, datetime.date.today(), [], None, warn_if_past=False)
@@ -357,17 +365,23 @@ class Scheduler:
       act_effort, _ = act.estimate()
       act_effort *= 1 - act.completion
 
-      self._dbg("_schedule_goal: scheduling activity %s: start=%s, effort=%s, par=%s, rcs=%s"
+      self._dbg("_schedule_goal: scheduling activity '%s': start=%s, effort=%s, par=%s, rcs=%s"
                 % (act.name, act_start, act_effort, act_par, '/'.join(rc.name for rc in rcs)))
 
       iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, act_effort, act_par)
-      self._dbg("_schedule_goal: assignment for activity %s: @%s, duration %s"
+      self._dbg("_schedule_goal: assignment for activity '%s': @%s, duration %s"
                 % (act.name, '/'.join(rc.name for rc in assigned_rcs), iv))
 
       self.table.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
 
+    self._dbg("_schedule_goal: scheduled goal '%s' for %s"
+              % (goal.name, completion_date))
     self.table.set_completion_date(goal, completion_date)
+
+    if goal.deadline is not None and completion_date > goal.deadline:
+      warn("failed to schedule goal '%s' before deadline %s"
+           % (goal.name, goal.deadline))
 
     return completion_date
 
