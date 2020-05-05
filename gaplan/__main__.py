@@ -13,15 +13,14 @@
 import sys
 import argparse
 
-from gaplan.common.error import error, error_if, set_basename
-from gaplan.common import error as E
-from gaplan.common import interval as I
+from gaplan.common.error import error, error_if, set_basename, set_options
+import gaplan.common.interval as I
 from gaplan.common import ETA
-from gaplan.common import printers as PR
-from gaplan import parse as PA
-from gaplan import goal as G
-from gaplan import wbs as W
-from gaplan import schedule as S
+import gaplan.common.printers as PR
+import gaplan.parse as PA
+import gaplan.goal as G
+import gaplan.wbs as WBS
+import gaplan.schedule as S
 
 from gaplan.export import pert
 from gaplan.export import tj
@@ -115,7 +114,7 @@ Examples:
 
   ETA.set_options(estimate_bias=args.bias)
 
-  E.set_options(print_stack=args.print_stack)
+  set_options(print_stack=args.print_stack)
 
   if args.plan is None:
     filename = '<stdin>'
@@ -143,7 +142,7 @@ Examples:
     G.visit_goals(roots, callback=lambda g: goals.add(g.name), succs=False)
     net.filter(goals, args.W)
 
-  wbs = W.create_wbs(net, args.hierarchy, args.v)
+  wbs = WBS.create_wbs(net, args.hierarchy, args.v)
   p = PR.SourcePrinter()
 
   if args.action == 'tj':

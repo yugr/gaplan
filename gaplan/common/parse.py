@@ -12,9 +12,9 @@ import re
 
 from gaplan.common.error import error, error_if
 from gaplan.common.ETA import ETA
-from gaplan.common.interval import Interval
 from gaplan.common.location import Location
-from gaplan.common import matcher as M
+import gaplan.common.interval as I
+import gaplan.common.matcher as M
 
 def read_effort(s, loc):
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
@@ -77,7 +77,7 @@ def read_date2(s, loc):
   if rest and rest[0] == '-':
     finish, rest = read_date(rest[1:], loc)
 
-  return Interval(start, finish, True)
+  return I.Interval(start, finish, True)
 
 def read_par(s):
   m = re.match(r'^\|\|(\s*([0-9]+))?$', s)

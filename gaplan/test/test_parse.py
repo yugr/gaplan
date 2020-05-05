@@ -7,7 +7,7 @@
 
 import pytest
 
-from gaplan.common import parse as PA
+import gaplan.common.parse as PA
 
 def test_read_effort():
   d, rest = PA.read_effort('0.5d___', None)

@@ -8,7 +8,7 @@
 import pytest
 import datetime
 
-from gaplan.common import interval as I
+import gaplan.common.interval as I
 
 d1 = datetime.date(2020, 1, 1)
 d2 = datetime.date(2020, 1, 2)

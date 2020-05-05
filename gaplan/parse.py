@@ -10,12 +10,12 @@
 import re
 
 from gaplan.common.error import error, error_if
-from gaplan.common import parse as PA
-from gaplan.common import matcher as M
+import gaplan.common.parse as PA
+import gaplan.common.matcher as M
+import gaplan.goal as G
 from gaplan.common.location import Location
 from gaplan import project
 from gaplan import schedule
-from gaplan import goal as G
 
 class LexemeType:
   LARROW     = "|<-"

@@ -10,9 +10,9 @@
 # This is WIP !!!
 
 from gaplan.common.error import error, error_if, warn
-from gaplan.common import matcher as M
-from gaplan.common import parse as PA
-from gaplan.common import interval as I
+import gaplan.common.matcher as M
+import gaplan.common.parse as PA
+import gaplan.common.interval as I
 
 import datetime
 import sys

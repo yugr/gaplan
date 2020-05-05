@@ -16,9 +16,9 @@ import subprocess
 import re
 
 from gaplan.common.error import error
-from gaplan.common import printers as PR
+import gaplan.common.printers as PR
 from gaplan.common import platform
-from gaplan import goal
+import gaplan.goal as G
 
 time_format = '%Y-%m-%d'
 
@@ -44,7 +44,7 @@ def _print_task(p, task, abs_ids, prj):
 
   if task.prio is not None:
     # TODO: also task risk into account
-    prio = int(float(task.prio) / goal.Goal.MAX_PRIO * 1000)
+    prio = int(float(task.prio) / G.goal.Goal.MAX_PRIO * 1000)
     p.writeln('priority %d' % prio)
 
   if not task.subtasks and not task.activities and not task.act:

@@ -11,9 +11,9 @@
 import datetime
 
 from gaplan.common.error import error, error_if
-from gaplan.common import parse as P
-from gaplan.common import matcher as M
-from gaplan.common import interval as I
+import gaplan.common.parse as P
+import gaplan.common.matcher as M
+import gaplan.common.interval as I
 
 class Resource:
   """Describes a single developer."""

@@ -12,8 +12,8 @@ import datetime
 import io
 from collections import defaultdict
 
-from gaplan import goal as G
-from gaplan.common import printers as PR
+import gaplan.goal as G
+import gaplan.common.printers as PR
 
 def export(net, goal, duration, dump):
   counts = defaultdict(int)

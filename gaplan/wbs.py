@@ -8,7 +8,7 @@
 # This module provides APIs for converting declarative plan to WBS.
 
 from gaplan.common.error import error, warn, error_if, warn_if
-from gaplan.common import interval as I
+import gaplan.common.interval as I
 
 class Task:
   """Task is basically a named activity."""

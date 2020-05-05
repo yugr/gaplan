@@ -16,8 +16,8 @@ import copy
 
 from gaplan.common.error import error, warn, error_if, warn_if
 from gaplan.common.ETA import ETA
-from gaplan.common import parse as PA
-from gaplan.common import matcher as M
+import gaplan.common.parse as PA
+import gaplan.common.matcher as M
 
 def add_common_attrs(loc, obj, attrs):
   """Adds attributes that are common for goals, checks and activities."""
