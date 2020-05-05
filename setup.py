@@ -2,7 +2,7 @@
 
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016-2018 Yury Gribov
+# Copyright (c) 2016-2020 Yury Gribov
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
@@ -21,7 +21,7 @@ setuptools.setup(
   long_description=long_description,
   long_description_content_type='text/markdown',
   url='https://github.com/yugr/gaplan',
-  packages=setuptools.find_packages(),
+  packages=setuptools.find_packages(exclude=['test']),
   classifiers=[
     'Programming Language :: Python :: 3',
     'License :: OSI Approved :: MIT License',
