@@ -7,7 +7,6 @@
 #
 # This file contains APIs for describing and operating on time ranges.
 
-import sys
 import datetime
 
 class Interval:
@@ -89,7 +88,7 @@ class Seq:
       elif d < IV.start:
         r = m - 1
       else:
-        l = r = m
+        l = m
         hit = True
         break
 

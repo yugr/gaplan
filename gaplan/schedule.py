@@ -232,7 +232,6 @@ class Timetable:
               % (iv.finish, '/'.join(name for name, _2, _3, _4 in sched_data[:i])))
 
     # We found optimal number of resources so perform allocation
-    e = effort / len(best_allocs)
     total_iv = None
     total_rcs = []
     for name, j, iv, _ in best_allocs:
@@ -314,7 +313,6 @@ class Scheduler:
       return datetime.date.today()
 
     completion_date = start
-    goal_alloc = set()
     for act in goal.preds:
       self._dbg("_schedule_goal: scheduling activity '%s' for goal '%s'"
                 % (act.name, goal.name))
