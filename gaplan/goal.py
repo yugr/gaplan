@@ -89,7 +89,6 @@ class Activity:
     self.real_alloc = []
     self.parallel = 1
     self.overlaps = {}
-    self.completion = 0
 
     # Other
     self.tracker = TrackerLink()
@@ -116,8 +115,9 @@ class Activity:
     attrs = add_common_attrs(loc, self, attrs)
 
     for a in attrs:
-      if re.search(r'^[0-9]+(\.[0-9]+)?[hdwmy]', a):
-        self.effort = PA.read_effort3(a, loc)
+      if re.search(r'^[0-9.]+[hdwmy]', a):
+        # Parse estimate
+        self.effort = PA.read_eta(a, loc)
         continue
 
       if a.startswith('@'):
@@ -127,10 +127,6 @@ class Activity:
       # TODO: specify in effort attribute?
       if M.search(r'^[0-9]{4}-', a):
         self.duration = PA.read_date2(a, loc)
-        continue
-
-      if M.search(r'^([0-9]+)%', a):
-        self.completion = float(M.group(1)) / 100
         continue
 
       if M.match(r'^id\s+(.*)', a):
@@ -191,10 +187,10 @@ class Activity:
     if self.effort.real is not None:
       p.writeln("actual effort: %dh" % self.effort.real)
 
+    p.writeln("completion: %d%%" % int(100 * self.effort.completion))
+
     if self.duration is not None:
       p.writeln("duration: %s" % self.duration)
-
-    p.writeln("completion: %d%%" % int(100 * self.completion))
 
     if self.is_max_parallel():
       par = 'max'

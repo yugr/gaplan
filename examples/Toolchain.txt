@@ -58,7 +58,7 @@ teams = manager (john), developers (mike, george)
    |[] Code passes tests
    |[] Final version merged
    |[] Distro recompiled
-   |<-  // @developers, 1w-3w
+   |<-  // @developers, 1w-3w (1d, 10%)  # We spent 1 day and implemented 10% of work
 |<-
    |Feature A docs ready
    |[] Initial version written

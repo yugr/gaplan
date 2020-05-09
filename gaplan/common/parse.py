@@ -34,23 +34,27 @@ def read_effort(s, loc):
   d = int(round(d))
   return d, rest
 
-def read_effort3(s, loc):
+def read_eta(s, loc):
   # '1h' or '1h-3d' or '1h-3d (1d)'
 
-  m, rest = read_effort(s, loc)
+  min, rest = read_effort(s, loc)
 
-  M = m
+  max = min
   if rest and rest[0] == '-':
-    M, rest = read_effort(rest[1:], loc)
+    max, rest = read_effort(rest[1:], loc)
 
-  r = None
-  if rest and rest[0] == '(':
-    mm = re.search(r'\((.*)\)\s*$', rest)
-    r, rest = read_effort(mm.group(1), loc)
+  real = None
+  completion = 0
+  if M.search(r'^\s*\((.*)\)\s*$', rest):
+    for a in re.split(r'\s*,\s*', M.group(1)):
+      if re.search(r'^[0-9.]+[hdwmy]', a):
+        real, _ = read_effort(a, loc)
+      elif M.search(r'^([0-9]+)%', a):
+        completion = float(M.group(1)) / 100
+      else:
+        error("unknown ETA attribute: %s" % a)
 
-  error_if(rest, loc, "trailing chars: %s" % rest)
-
-  return ETA(m, M, r)
+  return ETA(min, max, real, completion)
 
 def read_date(s, loc):
   # We could allow shorter formats (e.g. 'Jan 10')

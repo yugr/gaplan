@@ -361,7 +361,7 @@ class Scheduler:
         act_par = act.parallel
 
       act_effort, _ = act.estimate()
-      act_effort *= 1 - act.completion
+      act_effort *= 1 - act.effort.completion
 
       self._dbg("_schedule_goal: scheduling activity '%s': start=%s, effort=%s, par=%s, rcs=%s"
                 % (act.name, act_start, act_effort, act_par, '/'.join(rc.name for rc in rcs)))

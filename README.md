@@ -205,8 +205,8 @@ There is a distinct set of attributes for activities:
 |--------------------|:-------------------------:|:--------------------------:|----------------------------------------------------|
 | Effort estimate    | *min*-*max*                 | `1h-3d`, `1w-1m`                   | Activity effort estimate (in ["ideal hours"](http://www.martinfowler.com/bliki/IdealTime.html)) |
 | Actual effort      | *min*-*max* (*real*)        | `1h-3d (1d)`, `1w-1m (2w)`         | Actual observed effort (used for tracking) |
+| Completion         | *min*-*max* (*X*%)          | `1h-3d (50%)`                      | Percentage of completion |
 | Actual duration    | *YYYY-MM-DD*-*YYYY-MM-DD*   | `2016-05-31-2016-06-02`            | Actual observed duration (used for tracking) |
-| Completion         | *X*%                        | `50%`                              | Percentage of completion |
 | Assignees          | @*dev1*/*dev2*/...          | `@yura/slava`                      | Developers assigned to the task |
 | Actual assignees   | @*dev1*/*dev2*/... (*real*) | `@yura/slava (max)`                | Developers who actually accomplished the task |
 | Parallel impl.     | \|\|                        | \|\|                               | Notes that developers can work on task in parallel |
