@@ -1,4 +1,5 @@
 [![License](http://img.shields.io/:license-MIT-blue.svg)](https://github.com/yugr/gaplan/blob/master/LICENSE.txt)
+[![Build Status](https://travis-ci.org/yugr/gaplan.svg?branch=master)](https://travis-ci.org/yugr/gaplan)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/yugr/gaplan.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yugr/gaplan/alerts/)
 
 # What is this?
@@ -252,7 +253,8 @@ $ pytest-3 gaplan
 * Use f-strings.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
-* Add Travis (pytest, pylint, pytype), codecov.
+* Add pylint/pytype to Travis (?)
+* Add codecov support
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include directives.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
