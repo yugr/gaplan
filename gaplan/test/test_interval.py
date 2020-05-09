@@ -30,7 +30,7 @@ def test_after():
   assert not I.Interval(d1, d2).after(I.Interval(d2, d3))
 
 def test_overlaps():
-  assert I.Interval(d1, d3).overlaps(I.Interval(d2, d4)
+  assert I.Interval(d1, d3).overlaps(I.Interval(d2, d4))
   assert not I.Interval(d1, d2).overlaps(I.Interval(d3, d4))
 
 def test_union():
