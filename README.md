@@ -41,6 +41,7 @@ or his numerous blogposts (sadly all in Russian):
 * [Инструмент планирования - notepad (2)](http://gaperton.livejournal.com/57204.html)
 * [Аннотация к моему докладу на SoftwarePeople](http://gaperton.livejournal.com/32051.html)
 * [Комментарий к "декларативному планированию"](http://gaperton.livejournal.com/32427.html)
+* [Guide for mastering project plans](https://gaperton.livejournal.com/25093.html)
 
 # Install
 
