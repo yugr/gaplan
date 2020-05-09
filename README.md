@@ -45,7 +45,7 @@ or his numerous blogposts (sadly all in Russian):
 
 `gaplan` is based on `setuptools` so to install simply run
 ```
-$ python3 -mpip install .
+$ pip3 install .
 ```
 in `gaplan`'s folder.
 
@@ -68,6 +68,11 @@ To generate TaskJuggler project:
 ```
 # Requires TaskJuggler in PATH
 $ python3 -mgaplan tj plan.txt
+```
+
+To compute project schedule (if defined for the project):
+```
+$ python3 -mgaplan schedule plan.txt
 ```
 
 To generate a burndown chart:
@@ -117,7 +122,7 @@ The core of the syntax is Vlad's text notation for graphs:
 Example above illustrates few core concepts:
 * only goals have names (`Invited friends`), priorities (`!3`) and internal structure (checklists)
 * only activities (arrows) have duration (`1h-2h`) and assignees (`@me`)
-See more examples in `examples/` subfoler.
+See more examples in [examples/](examples) subfoler.
 
 Canonical notation has been extended with additional features which turned out to be useful in practice:
 * Tool tries to infer hierarchical connections between tasks (i.e. [WBS](https://en.wikipedia.org/wiki/Work_breakdown_structure)) as they allow to produce more readable plans for TaskJuggler.
@@ -150,6 +155,7 @@ Canonical notation has been extended with additional features which turned out t
       |Prerequisite 2
 ```
   Note that activity depends on unnamed implicit goal (which itself depends on Prerequisites 1 and 2).
+* Plan can specify a custom time-boxed schedule (see [SCHEDULE.md](SCHEDULE.md) for details).
 
 # Attributes
 
@@ -180,6 +186,9 @@ and for risks:
 | 2    | No prior experience but known to be doable (e.g. already done by someone else) |
 | 3    | No prior experience, not clear whether doable at all                           |
 
+Priorities propagate to predecessors (i.e. if some goal has high priority,
+it's predecessors will inherit it).
+
 For example this statement
 ```
 |Compiler rebuilds full distro  // deadline 2016-09-01, !3, ?1
@@ -198,10 +207,10 @@ There is a distinct set of attributes for activities:
 | Actual duration    | *YYYY-MM-DD*-*YYYY-MM-DD*   | `2016-05-31-2016-06-02`            | Actual observed duration (used for tracking) |
 | Completion         | *X*%                        | `50%`                              | Percentage of completion |
 | Assignees          | @*dev1*/*dev2*/...          | `@yura/slava`                      | Developers assigned to the task |
-| Actual assignees   | @*dev1*/*dev2*/... (*real*) | `@yura/slava` (max)                | Developers who actually accomplished the task |
+| Actual assignees   | @*dev1*/*dev2*/... (*real*) | `@yura/slava (max)`                | Developers who actually accomplished the task |
 | Parallel impl.     | \|\|                        | \|\|                               | Notes that developers can work on task in parallel |
 | Identifier         | id *symbolic\_name*         | id enable-jenkins-job              | Gives symbolic name to activity |
-| Fast tracking      | over *id* *X*%              | over enable-jenkins-job 15% | How much activity can be overlapped with it's predecessors |
+| Fast tracking      | over *id* *X*%              | over enable-jenkins-job 15%        | How much activity can be overlapped with it's predecessor(s) (multiple `over`s can be specified) |
 
 The exact meaning of resource assignment attribute (@) depends on presense of "parallel" attribute (denoted with `||`):
 * with `||` (or `|| NUMBER`) - developers can work on task in parallel (e.g. it consists of many similar unrelated chunks)
@@ -223,7 +232,7 @@ Note that you can not
 
 Install in editable mode via
 ```
-python3 -mpip install -e .
+$ pip3 install -e .
 ```
 
 To test, install `pytest-3` and run
@@ -233,14 +242,9 @@ $ pytest-3 gaplan
 
 # TODO
 
-High prio:
-* Implement simple scheduler (work-in-progress)
 * Generic priority assignment/propagation strategies.
 * Describe tracking info (actual efforts/durations, completion, tracker links,
   how to represent external/future milestones, etc.).
-* Describe inferred attributes.
-
-Other:
 * Use standard loggers for debug prints (verbosity should not be object field).
 * Use Enums (risk, prio, etc.)
 * Read arbitrary dates.

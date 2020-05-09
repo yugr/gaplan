@@ -2,8 +2,8 @@
 # which consists of two main features: A and B.
 
 name = Toolchain
-start   = 2016-01-01
-finish  = 2017-03-31
+start   = 2020-04-01
+finish  = 2020-06-30
 members = john, mike (1.5, vacations 2016-06-01 - 2016-06-15), george (0.5)
 teams = manager (john), developers (mike, george)
 
@@ -93,3 +93,9 @@ teams = manager (john), developers (mike, george)
    |[] Distro recompiled
    |<-  // 2w-1m, @developers, || 2
       |Feature B approved for implementation
+
+# A simple schedule: start implementing
+
+|| // deadline 2020-04-30
+  |Performance impact of feature B known
+  |Feature A implemented
