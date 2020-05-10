@@ -8,17 +8,8 @@ script:
   - scripts/travis.sh
 jobs:
   include:
-    - stage: pythons
-      name: python3.6
-      python: "3.6"
-    - name: python3.7
-      python: "3.7"
-    - name: python3.8
-      python: "3.8"
-    - name: pypy3
-      python: "pypy3"
     - stage: coverage
-      python: "3"
+      python: "3.8"
       name: python3-coverage
       env:
         - PYTEST="py.test --cov-report=xml --cov=gaplan gaplan/test"
