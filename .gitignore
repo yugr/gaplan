@@ -24,6 +24,8 @@ MANIFEST
 
 # Pytest
 .cache
+*.coverage
+*coverage.xml
 
 py-lint.log
 scripts/wz_tooltip.js

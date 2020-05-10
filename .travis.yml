@@ -1,12 +1,29 @@
 language: python
-script: scripts/travis.sh
 python:
   - "3.6"
   - "3.7"
   - "3.8"
   - "pypy3"
-install:
-  - pip install .
 script:
-  - pytest
-
+  - scripts/travis.sh
+jobs:
+  include:
+    - stage: pythons
+      name: python3.6
+      python: "3.6"
+    - name: python3.7
+      python: "3.7"
+    - name: python3.8
+      python: "3.8"
+    - name: pypy3
+      python: "pypy3"
+    - stage: coverage
+      python: "3"
+      name: python3-coverage
+      env:
+        - PYTEST="py.test --cov-report=xml --cov=gaplan gaplan/test"
+        - CODECOV_TOKEN="1d1ffccb-9198-435e-b3a2-470c32f61802"
+      install:
+        - pip3 install pytest-cov codecov
+      after_success:
+        - codecov --required
