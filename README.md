@@ -158,21 +158,22 @@ Canonical notation has been extended with additional features which turned out t
 ```
   Note that activity depends on unnamed implicit goal (which itself depends on Prerequisites 1 and 2).
 * Plan can specify a custom time-boxed schedule (see [SCHEDULE.md](SCHEDULE.md) for details).
+* Special syntax is used for describing project attributes e.g. duration or resources (see [PROJECT.md](PROJECT.md) for details).
 
 # Attributes
 
 Goals can be annotated with special *attributes* listed in table below.
 
-| Attribute           | Syntax                | Example               | Comments     |
-|---------------------|:---------------------:|:---------------------:|:------------:|
-| Priority            | !*PRIO*               | `!3`                  |              |
-| Risk                | ?*RISK*               | `?3`                  |              |
-| Deadline            | deadline *YYYY-MM-DD* | `deadline 2016-09-30` |              |
-| Iteration           | I*NUMBER*             | `I2`                  |              |
-| Accomplishment date | *YYYY-MM-DD*          | `2016-08-31`          |              |
-| Identifier          | id *symbolic\_name*   | `id mod2_test`        | Short name   |
+| Attribute                        | Syntax                | Example               | Comments     |
+|----------------------------------|:---------------------:|:---------------------:|:------------:|
+| Priority                         | !*PRIO*               | `!3`                  | 1, 2 or 3    |
+| Risk                             | ?*RISK*               | `?3`                  | 1, 2 or 3    |
+| Deadline                         | deadline *YYYY-MM-DD* | `deadline 2016-09-30` |              |
+| Accomplishment (or planned) date | *YYYY-MM-DD*          | `2016-08-31`          |              |
+| Identifier                       | id *symbolic\_name*   | `id mod2_test`        | Short name   |
+| External issue                   | task *name*           | `task PRJ-123`        |              |
 
-3-stage scale is used for priorities:
+Priorities use a 3-level scale:
 
 | Prio | Description                                               |
 |------|-----------------------------------------------------------|
@@ -180,7 +181,7 @@ Goals can be annotated with special *attributes* listed in table below.
 | 2    | Desirable but not required for project completion         |
 | 3    | Project requirement (probably stated in project proposal) |
 
-and for risks:
+Same applies to risks:
 
 | Risk | Description                                                                    |
 |------|--------------------------------------------------------------------------------|
@@ -244,9 +245,7 @@ $ pytest-3 gaplan
 
 # TODO
 
-* Generic priority assignment/propagation strategies.
-* Describe tracking info (actual efforts/durations, completion, tracker links,
-  how to represent external/future milestones, etc.).
+* Document project settings (name, start/finish, teams, etc.).
 * Use standard loggers for debug prints (verbosity should not be object field).
 * Use Enums (risk, prio, etc.)
 * Read arbitrary dates.
@@ -254,9 +253,8 @@ $ pytest-3 gaplan
 * Use f-strings.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
-* Add pylint/pytype to Travis (?)
-* Add codecov support
 * Mark time- or risk-critical paths in PERT diagram.
-* Add include directives.
+* Add include files.
+* Generic priority assignment/propagation strategies.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 * Fast tracking in TJ.
