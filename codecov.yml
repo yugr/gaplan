@@ -1,5 +1,8 @@
+# To validate:
+#   curl --data-binary @codecov.yml https://codecov.io/validate
+
 codecov:
-  require_ci_to_pass: yess
+  require_ci_to_pass: yes
 
 ignore:
   - "gaplan/test"
