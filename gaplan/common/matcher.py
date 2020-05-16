@@ -4,11 +4,12 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
-#
-# This file contains a "regex cacher" which allows doing things like
-#   if Re.match(...):
-#     x = Re.group(1)
-#
+
+"""A "regex cacher" which allows doing things like
+   if Re.match(...):
+     x = Re.group(1)
+"""
+
 # TODO: hols state in parent frames instead of global variable.
 
 import re

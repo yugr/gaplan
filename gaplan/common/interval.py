@@ -4,8 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
-#
-# This file contains APIs for describing and operating on time ranges.
+
+"""APIs for describing and operating on time ranges."""
 
 import datetime
 

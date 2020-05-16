@@ -4,9 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
-#
-# This file provides APIs for building graphical PERT diagram
-# out of declarative plan.
+
+"""PERT diagram plotter for declarative plans."""
 
 import subprocess
 import io

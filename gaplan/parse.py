@@ -4,8 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
-#
-# This module provides APIs for parsing declarative plans.
+
+"""APIs for parsing declarative plans."""
 
 import re
 

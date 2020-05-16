@@ -4,8 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
-#
-# This module contains APIs for simple user-controlled time-boxed scheduling.
+
+"""APIs for simple user-controlled time-boxed scheduling."""
 
 # This is WIP !!!
 

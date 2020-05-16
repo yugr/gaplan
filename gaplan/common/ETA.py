@@ -5,7 +5,7 @@
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
 
-"""This file contains class which describes effort estimates and actuals."""
+"""Effort estimates and tracking info."""
 
 from gaplan.common.error import error
 

@@ -4,9 +4,8 @@
 # 
 # Use of this source code is governed by The MIT License (MIT)
 # that can be found in the LICENSE.txt file.
-#
-# This file provides APIs for exporing declarative plans
-# to TaskJuggler format.
+
+"""TaskJuggler exporter for declarative plans."""
 
 import datetime
 import io
