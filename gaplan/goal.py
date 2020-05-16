@@ -161,9 +161,6 @@ class Activity:
     if self.alloc != ['all'] and not self.effort.defined():
       warn(self.loc, "activity is assigned but no effort is specified")
 
-  def estimate(self):
-    return self.effort.estimate(self.tail.risk if self.tail else None)
-
   @property
   def name(self):
     return "%s -> %s%s" % (self.head.pretty_name if self.head else '',
@@ -179,15 +176,7 @@ class Activity:
 
     self.tracker.dump(p)
 
-    avg, dev = self.estimate()
-    if avg is not None:
-      dev_str = (' +/- %dh' % (2 * dev)) if dev != 0 else ''
-      p.writeln("estimated effort: %dh%s" % (avg, dev_str))
-
-    if self.effort.real is not None:
-      p.writeln("actual effort: %dh" % self.effort.real)
-
-    p.writeln("completion: %d%%" % int(100 * self.effort.completion))
+    p.writeln("effort: %s" % self.effort)
 
     if self.duration is not None:
       p.writeln("duration: %s" % self.duration)

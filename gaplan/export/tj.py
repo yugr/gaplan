@@ -34,7 +34,7 @@ def _print_jira_links(p, tracker, prj):
       p.writeln(('JiraLink "' + prj.pr_link + '" {label "PR #%s"}') % (pr, pr))
       break
 
-def _print_task(p, task, abs_ids, prj):
+def _print_task(p, task, abs_ids, prj, est):
   abs_id = abs_ids[task.id]
 
   p.writeln('task %s "%s" {' % (task.id, _escape(task.name)))
@@ -44,7 +44,7 @@ def _print_task(p, task, abs_ids, prj):
 
   if task.prio is not None:
     # TODO: also task risk into account
-    prio = int(float(task.prio) / G.goal.Goal.MAX_PRIO * 1000)
+    prio = int(float(task.prio) / G.Goal.MAX_PRIO * 1000)
     p.writeln('priority %d' % prio)
 
   if not task.subtasks and not task.activities and not task.act:
@@ -60,7 +60,7 @@ def _print_task(p, task, abs_ids, prj):
     effort = act.effort.real
     # TODO: act.effort.completion
     if effort is None:
-      effort, _ = act.estimate()
+      effort, _ = est.estimate(act)
     if effort is None:
       effort = 0
 
@@ -100,10 +100,10 @@ def _print_task(p, task, abs_ids, prj):
     p.writeln('scheduled')
 
   for subtask in (task.activities + task.milestones):
-    _print_task(p, subtask, abs_ids, prj)
+    _print_task(p, subtask, abs_ids, prj, est)
 
   for child in task.subtasks:
-    _print_task(p, child, abs_ids, prj)
+    _print_task(p, child, abs_ids, prj, est)
 
   p.exit()
   p.writeln('}')
@@ -117,7 +117,7 @@ def _print_task(p, task, abs_ids, prj):
     p.write('  maxstart %s' % task.deadline.strftime(time_format))
     p.write('}')
 
-def export(prj, wbs, dump=False):
+def export(prj, wbs, est, dump=False):
   today = datetime.date.today()
 
   p = PR.SourcePrinter(io.StringIO())
@@ -181,7 +181,7 @@ flags internal
   wbs.visit_tasks(cache_abs_id)
 
   for task in wbs.tasks:
-    _print_task(p, task, abs_ids, prj)
+    _print_task(p, task, abs_ids, prj, est)
 
   # A hack to prevent TJ from scheduling unfinished tasks in the past
   p.write('''\

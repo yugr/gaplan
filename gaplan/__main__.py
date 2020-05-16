@@ -21,6 +21,7 @@ import gaplan.parse as PA
 import gaplan.goal as G
 import gaplan.wbs as WBS
 import gaplan.schedule as S
+import gaplan.estimator as E
 
 from gaplan.export import pert
 from gaplan.export import tj
@@ -112,7 +113,14 @@ Examples:
   if args.iter is not None and args.action != 'burn':
     error("--iter/-i is only implemented for burndown charts")
 
-  ETA.set_options(estimate_bias=args.bias)
+  if args.bias is not None:
+    try:
+      bias = E.Bias[args.bias.upper().replace('-', '_')]
+    except KeyError:
+      error("unknown bias value '%s'" % v)
+  else:
+    bias = E.Bias.NONE
+  estimator = E.RiskBasedEstimator(bias)
 
   set_options(print_stack=args.print_stack)
 
@@ -146,7 +154,7 @@ Examples:
   p = PR.SourcePrinter()
 
   if args.action == 'tj':
-    tj.export(project, wbs, args.dump)
+    tj.export(project, wbs, estimator, args.dump)
   elif args.action == 'pert':
     pert.export(net, args.dump)
   elif args.action == 'msp':
@@ -158,7 +166,7 @@ Examples:
   elif args.action == 'dump-wbs':
     wbs.dump(p)
   elif args.action == 'schedule':
-    scheduler = S.Scheduler(args.v)
+    scheduler = S.Scheduler(estimator, args.v)
     timetable = scheduler.schedule(project, net, sched)
     timetable.dump(p)
   elif args.action in ('burn', 'burndown'):

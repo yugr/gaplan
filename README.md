@@ -212,9 +212,9 @@ There is a distinct set of attributes for activities:
 | Actual duration    | *YYYY-MM-DD*-*YYYY-MM-DD*   | `2016-05-31-2016-06-02`            | Actual observed duration (used for tracking) |
 | Assignees          | @*dev1*/*dev2*/...          | `@yura/slava`                      | Developers assigned to the task |
 | Actual assignees   | @*dev1*/*dev2*/... (*real*) | `@yura/slava (max)`                | Developers who actually accomplished the task |
-| Parallel impl.     | \|\|                        | \|\|                               | Notes that developers can work on task in parallel |
-| Identifier         | id *symbolic\_name*         | id enable-jenkins-job              | Gives symbolic name to activity |
-| Fast tracking      | over *id* *X*%              | over enable-jenkins-job 15%        | How much activity can be overlapped with it's predecessor(s) (multiple `over`s can be specified) |
+| Parallel impl.     | \|\|                        | `\|\|`                             | Notes that developers can work on task in parallel |
+| Identifier         | id *symbolic\_name*         | `id enable-jenkins-job`            | Gives symbolic name to activity |
+| Fast tracking      | over *id* *X*%              | `over enable-jenkins-job 15%`      | How much activity can be overlapped with it's predecessor(s) (multiple `over`s can be specified) |
 
 The exact meaning of resource assignment attribute (@) depends on presense of "parallel" attribute (denoted with `||`):
 * with `||` (or `|| NUMBER`) - developers can work on task in parallel (e.g. it consists of many similar unrelated chunks)

@@ -267,8 +267,9 @@ class Timetable:
     p.writeln("")
 
 class Scheduler:
-  def __init__(self, v=0):
+  def __init__(self, est, v=0):
     self.prj = self.net = self.sched = self.table = None
+    self.est = est
     self.v = v
 
   def _dbg(self, msg):
@@ -360,7 +361,7 @@ class Scheduler:
       if act_par is None:
         act_par = act.parallel
 
-      act_effort, _ = act.estimate()
+      act_effort, _ = self.est.estimate(act)
       act_effort *= 1 - act.effort.completion
 
       self._dbg("_schedule_goal: scheduling activity '%s': start=%s, effort=%s, par=%s, rcs=%s"
