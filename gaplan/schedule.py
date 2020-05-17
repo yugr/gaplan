@@ -18,6 +18,9 @@ import datetime
 import sys
 
 class SchedBlock:
+  """A unit of scheduling ("box") which contains a set of goals (or other blocks)
+     and instructions on how to schedule them."""
+
   def __init__(self, seq, offset, loc):
     self.seq = seq
     self.offset = offset
@@ -78,6 +81,10 @@ class SchedBlock:
         block.dump(p)
 
 class Schedule:
+  """Represents a schedule i.e. hierarchy of blocks from declarative plan."""
+
+  # TODO: rename to SchedPlan
+
   def __init__(self, blocks, loc):
     self.blocks = blocks
     self.loc = loc
@@ -91,6 +98,8 @@ class Schedule:
     p.writeln("")
 
 class HolidayCalendar:
+  """Holds info about holidays."""
+
   def __init__(self, holidays):
     self.holidays = I.Seq(holidays)
 
@@ -115,6 +124,8 @@ class HolidayCalendar:
     return False, None
 
 class GoalInfo:
+  """Represents info about scheduled goal."""
+
   def __init__(self, name, completion_date):
     self.name = name
     self.completion_date = completion_date
@@ -123,6 +134,8 @@ class GoalInfo:
     p.writeln("%s: %s" % (self.name, self.completion_date))
 
 class ActivityInfo:
+  """Represents info about scheduled activity."""
+
   def __init__(self, act, iv, alloc):
     self.act = act
     self.iv = iv
@@ -133,7 +146,9 @@ class ActivityInfo:
     p.writeln("%s: %s%s" % (self.act.name, self.iv,
                             (" @%s" % s) if s else ""))
 
-class AllocationInfo:
+class ResourceInfo:
+  """Represents info about resource allocations."""
+
   def __init__(self, rc, holidays):
     self.rc = rc
     self.name = rc.name
@@ -173,13 +188,17 @@ class AllocationInfo:
     p.writeln("%s: %s" % (self.name, ', '.join(ss)))
 
 class Timetable:
+  """Holds detailed scheduling info."""
+
+  # TODO: rename to Schedule
+
   def __init__(self, prj, v):
     self.goals = {}
     self.acts = {}
     self.rcs = {}
     self.v = v
     for rc in prj.members:
-      self.rcs[rc.name] = AllocationInfo(rc, prj.holidays)
+      self.rcs[rc.name] = ResourceInfo(rc, prj.holidays)
 
   def is_completed(self, goal):
     return goal.name in self.goals
@@ -267,6 +286,8 @@ class Timetable:
     p.writeln("")
 
 class Scheduler:
+  """Computes timetable."""
+
   def __init__(self, est, v=0):
     self.prj = self.net = self.sched = self.table = None
     self.est = est
@@ -412,6 +433,7 @@ class Scheduler:
     return latest
 
   def schedule(self, prj, net, sched):
+    """Compute timetable based on scheduling plan."""
     self.prj = prj
     self.net = net
     self.sched = sched

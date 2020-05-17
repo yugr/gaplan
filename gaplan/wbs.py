@@ -11,7 +11,7 @@ from gaplan.common.error import error, warn, error_if, warn_if
 import gaplan.common.interval as I
 
 class Task:
-  """Task is basically a named activity."""
+  """Task is a named activity. Task can include other tasks."""
 
   def __init__(self, id, name, parent, act=None, goal=None):
     self.id = id
@@ -32,6 +32,7 @@ class Task:
       self.act = self.duration = None
 
   def check(self):
+    """Verify invariants."""
     assert self.id is not None
     assert self.name is not None
     for t in self.activities:
@@ -115,10 +116,13 @@ class Task:
             task.dump(p)
 
 class WBS:
+  """Represents Work Breakdown Structure generated from declarative plan."""
+
   def __init__(self, tasks):
     self.tasks = tasks
 
   def check(self):
+    """Verify invariants."""
     self.visit_tasks(lambda t: t.check())
 
   def dump(self, p):
@@ -128,6 +132,7 @@ class WBS:
         task.dump(p)
 
   def visit_tasks(self, cb):
+    """Visitor pattern for task hierarchy."""
     def visit(task):
       cb(task)
       for t in task.activities:
@@ -303,6 +308,8 @@ def _optimize_task(task, ancestors, v):
       task.milestones = []
 
 def create_wbs(net, hierarchy, v):
+  """Generate WBS from declarative plan."""
+
   next_id = [0]  # Python's craziness
   ids = {}
   def assign_id(g):

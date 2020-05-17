@@ -12,11 +12,12 @@ import os
 
 from gaplan.common.error import error_if
 
-def open_file(f):
+def open_file(filename):
+  """Open file with appropriate reader."""
   if sys.platform == 'cygwin':
-    rc = os.system('cygstart %s' % f)
+    rc = os.system('cygstart %s' % filename)
   elif sys.platform.startswith('win'):
-    rc = os.system('explorer %s' % f)
+    rc = os.system('explorer %s' % filename)
   else:
-    rc = os.system('xdg-open %s' % f)
-  error_if(0 != rc, "failed to open pdf file '%s'" % f)
+    rc = os.system('xdg-open %s' % filename)
+  error_if(rc != 0, "failed to open pdf file '%s'" % filename)

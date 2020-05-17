@@ -95,6 +95,7 @@ class Project:
     self._recompute()
 
   def get_resources(self, names):
+    """Returns resources that match a set of team/resource names."""
     resources = []
     for name in names:
       team = self.teams_map.get(name)

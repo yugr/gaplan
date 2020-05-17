@@ -34,15 +34,19 @@ class Interval:
     return self.r - self.l
 
   def before(self, i):
+    """Does interval lie on the left of another?"""
     return self.r <= i.l
 
   def after(self, i):
+    """Does interval lie on the right of another?"""
     return self.l >= i.r
 
   def overlaps(self, i):
+    """Do intervals overlap?"""
     return not (self.before(i) or self.after(i))
 
   def union(self, i):
+    """Union of intervals."""
     if i.l < self.l:
       return i.union(self)
     if self.r < i.l:
@@ -56,7 +60,8 @@ class Interval:
     return '[%s, %s)' % (self.l, self.r)
 
 class Seq:
-  """A sorted sequence of non-intersecting intervals for efficient queries."""
+  """A sorted sequence of non-intersecting intervals
+     for efficient date queries."""
 
   def __init__(self, ivs):
     self.ivs = []
@@ -95,6 +100,8 @@ class Seq:
     return l, hit
 
   def add(self, iv):
+    """Insert interval into table."""
+
     # Search position by starting point of interval
     i, hit = self._find_date(iv.start)
 
@@ -108,13 +115,15 @@ class Seq:
 
     self.ivs.insert(i, iv)
 
-  def contains(self, d):
-    _, hit = self._find_date(d)
-    return hit
-
   def update(self, ivs):
+    """Insert intervals into table."""
     for iv in ivs:
       self.add(iv)
+
+  def contains(self, d):
+    """Does date belong to interval?"""
+    _, hit = self._find_date(d)
+    return hit
 
   def __repr__(self):
     return ', '.join(str(iv) for iv in self.ivs)

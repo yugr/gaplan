@@ -18,6 +18,7 @@ from gaplan import project
 from gaplan import schedule
 
 class LexemeType:
+  """Types of lexemes used in declarative plans."""
   LARROW     = "|<-"
   RARROW     = "|->"
   CHECK      = "|[]"
@@ -31,10 +32,13 @@ class LexemeType:
   EOF        = ''
 
 class LexerMode:
+  """Lexer modes."""
   NORMAL = "NORMAL"
   ATTR   = "ATTR"
 
 class Lexer(PA.BaseLexer):
+  """Lexer for declarative plans."""
+
   def __init__(self, v=0):
     super(Lexer, self).__init__(v)
     self.mode = LexerMode.NORMAL
@@ -106,6 +110,8 @@ class Lexer(PA.BaseLexer):
     self.lexemes.append(PA.Lexeme(type, data, text, self._loc()))
 
 class Parser(PA.BaseParser):
+  """Parser for declarative plans."""
+
   def __init__(self, v=0):
     super(Parser, self).__init__(Lexer(v), v)
     self.dummy_goal_count = self.project_attrs = self.names = None

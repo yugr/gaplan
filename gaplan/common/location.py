@@ -8,11 +8,14 @@
 """Source file locations."""
 
 class Location:
+  """Location in file."""
+
   def __init__(self, filename=None, lineno=None):
     self.filename = filename
     self.lineno = lineno
 
   def prior(self):
+    """Location of preceeding line."""
     return Location(self.filename, self.lineno - 1) if self else self
 
   def __str__(self):

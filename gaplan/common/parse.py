@@ -18,6 +18,7 @@ import gaplan.common.interval as I
 import gaplan.common.matcher as M
 
 def read_effort(s, loc):
+  """Parse effort estimate e.g. "1h" or "3d"."""
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
   error_if(m is None, "failed to parse effort: %s" % s)
   d = float(m.group(1))
@@ -35,7 +36,7 @@ def read_effort(s, loc):
   return d, rest
 
 def read_eta(s, loc):
-  # '1h' or '1h-3d' or '1h-3d (1d)'
+  """Parse effort estimate e.g. "1h", "1h-3d" or "1h-3d (1d)"."""
 
   min, rest = read_effort(s, loc)
 
@@ -57,9 +58,9 @@ def read_eta(s, loc):
   return ETA(min, max, real, completion)
 
 def read_date(s, loc):
-  # We could allow shorter formats (e.g. 'Jan 10')
-  # but what if someone uses this in 2020?
-  # TODO: allow UTC dates?
+  """Parse date duration e.g. "2020-01-10"."""
+  # TODO: allow shorter formats (e.g. 'Jan 10')
+  # but what if someone uses this in 2020?!
   m = re.search(r'^\s*([^-\s]*-[^-\s]*)(-[^-\s]*)?\s*(.*)', s)
   error_if(m is None, loc, "failed to parse date: %s" % s)
   date_str = m.group(1)
@@ -68,27 +69,27 @@ def read_date(s, loc):
   return datetime.datetime.strptime(date_str, '%Y-%m-%d').date(), m.group(3)
 
 def read_float(s, loc):
+  """Parse float number."""
   m = re.search(r'^\s*([0-9]+(\.[0-9]+)?)(.*)', s)
   error_if(m is None, loc, "failed to parse float: %s", s)
   return float(m.group(1)), m.group(3)
 
 # TODO: parse UTC times i.e. 2015-02-01T12:00 ?
 def read_date2(s, loc):
-  # '2015-02-01' or '2015-02-01 - 2015-02-03'
-
+  """Parse date duration e.g. "2015-02-01" or "2015-02-01 - 2015-02-03"."""
   start, rest = read_date(s, loc)
-
   finish = start
   if rest and rest[0] == '-':
     finish, rest = read_date(rest[1:], loc)
-
   return I.Interval(start, finish, True)
 
 def read_par(s):
+  """Parse parallel directive e.g. "|| 3"."""
   m = re.match(r'^\|\|(\s*([0-9]+))?$', s)
   return int(m.group(2) or sys.maxsize)
 
 def read_alloc(a, loc):
+  """Parse allocation directive e.g. "@dev1/dev2 (dev3)"."""
   aa = a.split('(')
   if len(aa) > 2 or not M.search(r'^@\s*(.*)', aa[0]):
     error(loc, "unexpected allocation syntax: %s" % a)
@@ -102,6 +103,8 @@ def read_alloc(a, loc):
   return alloc, real_alloc
 
 class Lexeme:
+  """Represents parsed lexeme."""
+
   def __init__(self, type, data, text, loc):
     self.type = type
     self.data = data
@@ -112,6 +115,8 @@ class Lexeme:
     return '%s: %s: %s' % (self.loc, self.type, self.data)
 
 class BaseLexer:
+  """Base class for lexers."""
+
   def __init__(self, v=0):
     self.lexemes = []
     self.filename = self.line = self.lineno = None
@@ -121,12 +126,14 @@ class BaseLexer:
     return Location(self.filename, self.lineno)
 
   def loc(self):
+    """Location of next lexeme."""
     if not self.lexemes:
       self.peek()
     return Location(self.filename, self.lineno)
 
   # Override in children
   def reset(self, filename, lines):
+    """Resets lexer state."""
     self.filename = filename
     self.lineno = 0
     self.line = ''
@@ -134,6 +141,7 @@ class BaseLexer:
 
   # Override in children
   def update_on_newline(self):
+    """Update state on newline."""
     pass
 
   # Override in children
@@ -150,6 +158,7 @@ class BaseLexer:
       self.update_on_newline()
 
   def peek(self):
+    """Return next lexeme without advancing lexeme."""
     if not self.lexemes:
       self.__skip_empty()
       self.next_internal()
@@ -159,15 +168,18 @@ class BaseLexer:
     return l
 
   def skip(self):
+    """Advance to next lexeme."""
     del self.lexemes[0]
 
   def next(self):
+    """Return current lexeme and advance to next."""
     l = self.peek()
     if l is not None:
       self.skip()
     return l
 
   def next_if(self, type):
+    """Return current lexeme and advance if type matches."""
     l = self.peek()
     if l is None:
       return None
@@ -176,6 +188,7 @@ class BaseLexer:
       return l
 
   def expect(self, type):
+    """Return current lexeme and advance if type matches."""
     l = self.next()
     if isinstance(type, list):
       if l.type not in type:
@@ -187,6 +200,7 @@ class BaseLexer:
 
 class BaseParser:
   def __init__(self, lex, v=0):
+    """Base class for parsers."""
     self.v = v
     self.lex = lex
 
@@ -196,6 +210,7 @@ class BaseParser:
 
   # Override in children
   def reset(self, filename, f):
+    """Resets lexer's state."""
     self.lex.reset(filename, f)
 
   # Override in children

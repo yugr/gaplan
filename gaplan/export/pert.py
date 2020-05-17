@@ -57,6 +57,8 @@ def _print_node_edges(g, p):
     g = g.parent
 
 def export(net, dump=False):
+  """Generate PERT chart in Graphviz from declarative plan."""
+
   p = PR.SourcePrinter(io.StringIO())
 
   p.writeln('digraph G {')

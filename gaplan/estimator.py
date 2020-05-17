@@ -11,6 +11,8 @@ from enum import IntEnum, unique
 
 @unique
 class Bias(IntEnum):
+  """Estimation bias."""
+
   WORST_CASE = 1
   PESSIMIST  = 2
   NONE       = 3
@@ -19,6 +21,7 @@ class Bias(IntEnum):
 
   @staticmethod
   def worse(bias):
+    """Returns next more pessimistic bias."""
     if bias == Bias.WORST_CASE:
       return bias
     return Bias(bias - 1)
@@ -26,6 +29,11 @@ class Bias(IntEnum):
 _bias = Bias.NONE
 
 class BaseEstimator:
+  """Base estimation strategy.
+
+     This strategy averages estimates based on bias.
+  """
+
   def __init__(self, bias=Bias.NONE):
     bias_map = {
       Bias.WORST_CASE : 0,
@@ -38,9 +46,12 @@ class BaseEstimator:
     self.q = 1 - self.p
 
   def probs(self, goal):
+    """Returns probabilities of pessimistic/optimistic estimates."""
     return self.p, self.q
 
   def estimate(self, act):
+    """Returns single-point estimate of action's effort."""
+
     effort = act.effort
     if effort.min is None or effort.max is None:
       return None, None
@@ -54,6 +65,11 @@ class BaseEstimator:
     return avg, dev
 
 class RiskBasedEstimator(BaseEstimator):
+  """Risk-base estimator.
+
+     This estimator pessimizes estimates for risky goals.
+  """
+
   def __init__(self, bias):
     super().__init__(bias)
     self.estimators = {}

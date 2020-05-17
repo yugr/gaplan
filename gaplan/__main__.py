@@ -75,9 +75,6 @@ Examples:
     help="Path to declarative plan.",
     nargs='?')
   parser.add_argument(
-    '-o', '--only',
-    help="Limit output to a particular goal and it's predecessors.")
-  parser.add_argument(
     '-b', '--bias',
     help="Estimation bias.",
     choices=['none', 'pessimist', 'optimist', 'worst-case', 'best-case'],
@@ -141,16 +138,6 @@ Examples:
     error("--tj and --msp require member info in project file")
 
   net.check(args.W)
-
-  if args.only is not None:
-    roots = []
-    for name in args.only.split(';'):
-      goal = net.name_to_goal.get(name)
-      error_if(goal is None, "goal '%s' not present in plan" % name)
-      roots.append(goal)
-    goals = set()
-    G.visit_goals(roots, callback=lambda g: goals.add(g.name), succs=False)
-    net.filter(goals, args.W)
 
   wbs = WBS.create_wbs(net, args.hierarchy, args.v)
   p = PR.SourcePrinter()

@@ -15,6 +15,8 @@ import gaplan.goal as G
 import gaplan.common.printers as PR
 
 def export(net, goal, duration, dump):
+  """Generate gnuplot chart for all children of goal within time interval."""
+
   counts = defaultdict(int)
   counts[duration.start] = 0
   partial = [0]

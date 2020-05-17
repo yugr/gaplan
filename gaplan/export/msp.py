@@ -135,6 +135,8 @@ def _print_goal(g, uids, ids, out):
   # Contact
 
 def export(project, net, hierarchy, dump=False):
+  """Generate MS Project plan from declarative plan."""
+
 #  today = datetime.date.today()
 
   next_uid = [0]  # Python's craziness

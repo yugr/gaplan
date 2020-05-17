@@ -67,6 +67,7 @@ class Condition:
     error_if(attrs, loc, "unknown condition attribute(s): %s" % ', '.join(attrs))
 
   def done(self):
+    """Is Condition completed?"""
     return self.status != ''
 
 class Activity:
@@ -102,12 +103,15 @@ class Activity:
       self.tail = g2
 
   def is_scheduled(self):
+    """Does action have assigned dates?"""
     return self.duration is not None
 
   def is_max_parallel(self):
+    """Is action parallelizable to any number of resources?"""
     return self.parallel == sys.maxsize
 
   def is_instant(self):
+    """Does action have zero effort?"""
     return self.effort.real is None and self.effort.min is None
 
   def add_attrs(self, attrs, loc):
@@ -154,6 +158,8 @@ class Activity:
       error(loc, "unknown activity attribute: '%s'" % k)
 
   def check(self, W):
+    """Verify invariants."""
+
     if W == 0:
       return
 
@@ -240,6 +246,7 @@ class Goal:
       lst.append(act)
 
   def is_scheduled(self):
+    """Does goal have assigned dates?"""
     return self.completion_date is not None
 
   def add_child(self, goal):
@@ -296,6 +303,7 @@ class Goal:
 
   @property
   def pretty_name(self):
+    """Return readable goal name (needed for dummy goals)."""
     if not self.dummy:
       return self.name
     names = []
@@ -329,6 +337,8 @@ class Goal:
       return None
 
   def complete(self):
+    """Estimate goal completion percentage."""
+
     if self.completion_date is not None:
       return 100
 
@@ -344,19 +354,21 @@ class Goal:
     return int(round(float(res) / total))
 
   def is_completed(self):
+    """Are all goal conditions completed?"""
     return self.complete() == 100
 
-  # Such goals may be identified with their underlying activities
-  # (which is useful for export to scheduling tools).
   def has_single_activity(self):
+    """
+    Does goal have single preceeding activity.
+
+    Such goals may be identified with their underlying activities
+    (which is useful for export to scheduling tools).
+    """
     return len(self.preds) == 1
 
   def is_instant(self):
-    """Is this a milestone i.e. all preceding edges are instant?"""
-    for act in self.preds:
-      if not act.is_instant():
-        return False
-    return True
+    """Is this a milestone i.e. all preceding activities are instant?"""
+    return all(map(lambda a: a.is_instant(), self.preds))
 
   def visit(self, visited=None, **args):
     """Visitor pattern of goal network.
@@ -394,6 +406,8 @@ class Goal:
       after(self)
 
   def check(self, W):
+    """Verify invariants."""
+
     if W and not self.defined and not self.dummy:
       warn(self.loc, "goal '%s' is undefined" % self.name)
 
@@ -422,37 +436,6 @@ class Goal:
 
       if self.is_completed() and (not act.duration or not act.effort.real):
         warn(self.loc, "goal '%s' is achieved but one of it's actions is missing tracking data" % self.name)
-
-  def filter(self, only_goals):
-    new_preds = []
-    for act in self.preds:
-      if act.head is not None and act.head.name in only_goals:
-        new_preds.append(act)
-    self.preds = new_preds
-
-    new_global_preds = []
-    for act in self.global_preds:
-      if act.head is not None and act.head.name in only_goals:
-        new_global_preds.append(act)
-    self.global_preds = new_global_preds
-
-    new_succs = []
-    for act in self.succs:
-      if act.head is not None and act.head.name in only_goals:
-        new_succs.append(act)
-    self.succs = new_succs
-
-    new_global_succs = []
-    for act in self.global_succs:
-      if act.head is not None and act.head.name in only_goals:
-        new_global_succs.append(act)
-    self.global_succs = new_global_succs
-
-    new_children = []
-    for g in self.children:
-      if g.name in only_goals:
-        new_children.append(act)
-    self.children = new_children
 
   def dump(self, p):
     p.writeln(self.name + (' (dummy)' if self.dummy else ''))
@@ -524,12 +507,6 @@ class Goal:
             g.dump(p)
 
     p.exit()
-
-def visit_goals(goals, visited=None, **args):
-  if visited is None:
-    visited = set()
-  for g in goals:
-    g.visit(visited, **args)
 
 class Net:
 
@@ -640,19 +617,11 @@ class Net:
       self.iter_to_goals.setdefault(g.iter, []).append(g)
     self.visit_goals(callback=update_iter_to_goals)
 
-  def filter(self, filtered_goals, W):
-    """Change network to include only supplied goals."""
-
-    self.visit_goals(before=lambda g: g.filter(filtered_goals))
-
-    new_roots = [g for g in self.roots if g.name in filtered_goals]
-    error_if(not new_roots, "set of top goals is empty after filtering")
-
-    self.roots = new_roots
-    self._recompute(W)
-
   def visit_goals(self, **args):
-    visit_goals(self.roots, **args)
+    """Visitor pattern for network's goals."""
+    visited = set()
+    for g in self.roots:
+      g.visit(visited, **args)
 
   def dump(self, p):
     p.writeln("= Network at %s =\n" % self.loc)
@@ -670,6 +639,8 @@ class Net:
       p.writeln('')
 
   def check(self, W):
+    """Verify invariants."""
+
     if W == 0:
       return
 

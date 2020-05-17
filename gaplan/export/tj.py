@@ -117,6 +117,8 @@ def _print_task(p, task, abs_ids, prj, est):
     p.write('}')
 
 def export(prj, wbs, est, dump=False):
+  """Generate TaskJuggler plan from declarative plan."""
+
   today = datetime.date.today()
 
   p = PR.SourcePrinter(io.StringIO())

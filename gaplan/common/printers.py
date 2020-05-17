@@ -10,6 +10,8 @@
 import sys
 
 class SourcePrinter:
+  """Formatting printer."""
+
   def __init__(self, out=sys.stdout, tab='  '):
     self.out = out
     self.tabs = ['']
