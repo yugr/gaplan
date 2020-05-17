@@ -20,7 +20,7 @@ import gaplan.common.matcher as M
 def read_effort(s, loc):
   """Parse effort estimate e.g. "1h" or "3d"."""
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
-  error_if(m is None, "failed to parse effort: %s" % s)
+  error_if(m is None, f"failed to parse effort: {s}")
   d = float(m.group(1))
   spec = m.group(2)
   rest = m.group(3)
@@ -53,7 +53,7 @@ def read_eta(s, loc):
       elif M.search(r'^([0-9]+)%', a):
         completion = float(M.group(1)) / 100
       else:
-        error("unknown ETA attribute: %s" % a)
+        error(f"unknown ETA attribute: {a}")
 
   return ETA(min, max, real, completion)
 
@@ -62,7 +62,7 @@ def read_date(s, loc):
   # TODO: allow shorter formats (e.g. 'Jan 10')
   # but what if someone uses this in 2020?!
   m = re.search(r'^\s*([^-\s]*-[^-\s]*)(-[^-\s]*)?\s*(.*)', s)
-  error_if(m is None, loc, "failed to parse date: %s" % s)
+  error_if(m is None, loc, f"failed to parse date: {s}")
   date_str = m.group(1)
   # If day is omitted, consider first day
   date_str += m.group(2) or '-01'
@@ -71,7 +71,7 @@ def read_date(s, loc):
 def read_float(s, loc):
   """Parse float number."""
   m = re.search(r'^\s*([0-9]+(\.[0-9]+)?)(.*)', s)
-  error_if(m is None, loc, "failed to parse float: %s", s)
+  error_if(m is None, loc, f"failed to parse float: {s}")
   return float(m.group(1)), m.group(3)
 
 # TODO: parse UTC times i.e. 2015-02-01T12:00 ?
@@ -92,13 +92,13 @@ def read_alloc(a, loc):
   """Parse allocation directive e.g. "@dev1/dev2 (dev3)"."""
   aa = a.split('(')
   if len(aa) > 2 or not M.search(r'^@\s*(.*)', aa[0]):
-    error(loc, "unexpected allocation syntax: %s" % a)
+    error(loc, f"unexpected allocation syntax: {a}")
   alloc = M.group(1).strip().split('/')
   if len(aa) <= 1:
     real_alloc = []
   else:
     if not M.search(r'^([^)]*)\)', a):
-      error(loc, "unexpected allocation syntax: %s" % a)
+      error(loc, f"unexpected allocation syntax: {a}")
     real_alloc = M.group(1).strip().split('/')
   return alloc, real_alloc
 
@@ -193,9 +193,9 @@ class BaseLexer:
     if isinstance(type, list):
       if l.type not in type:
         type_str = ', '.join(map(lambda t: '\'%s\'' % t, type))
-        error(l.loc, "expecting %s, got '%s'" % (type_str, l.type))
+        error(l.loc, f"expecting '{type_str}', got '{l.type}'")
     elif l.type != type:
-      error(l.loc, "expecting '%s', got '%s'" % (type, l.type))
+      error(l.loc, f"expecting '{type}', got '{l.type}'")
     return l
 
 class BaseParser:

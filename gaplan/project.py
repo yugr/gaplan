@@ -31,10 +31,10 @@ class Resource:
         duration = P.read_date2(M.group(1), loc)
         self.vacations.append(duration)
       else:
-        error(loc, "unexpected resource attribute: %s" % a)
+        error(loc, f"unexpected resource attribute: {a}")
 
   def dump(self, p):
-    p.writeln("Developer %s (%s, %f)" % (self.name, self.loc, self.efficiency))
+    p.writeln(f"Developer {self.name} ({self.loc}, {self.efficiency})")
     vv = []
     for iv in self.vacations:
       vv.append('%s' % iv)
@@ -49,7 +49,7 @@ class Team:
     self.loc = loc
 
   def dump(self, p):
-    p.writeln("Team %s (%s):" % (self.name, self.loc))
+    p.writeln(f"Team {self.name} ({self.loc}):")
     p.enter()
     for rc in self.members:
       rc.dump(p)
@@ -81,12 +81,12 @@ class Project:
     # Resolve resources
     for team in self.teams:
       error_if(team.name in self.members_map, team.loc,
-               "team '%s' clashes with developer '%s'" % (team.name, team.name))
+               f"team '{team.name}' clashes with developer '{team.name}'")
       for i, name in enumerate(team.members):
         if not isinstance(name, str):
           continue
         m = self.members_map.get(name)
-        error_if(m is None, team.loc, "no member with name '%s'" % name)
+        error_if(m is None, team.loc, f"no member with name '{name}'")
         team.members[i] = m
 
   def add_attrs(self, attrs):
@@ -105,14 +105,14 @@ class Project:
             resources.append(rc)
       else:
         rc = self.members_map.get(name)
-        error_if(rc is None, "resource '%s' not defined" % name)
+        error_if(rc is None, f"resource '{name}' not defined")
         if rc not in resources:
           resources.append(rc)
     resources = sorted(resources, key=lambda rc: rc.name)
     return resources
 
   def dump(self, p):
-    p.writeln("= Project '%s' at %s =\n" % (self.name, self.loc))
+    p.writeln(f"= Project '{self.name}' at {self.loc} =\n")
 
     p.writeln("Resources:")
     with p:

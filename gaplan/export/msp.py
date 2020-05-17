@@ -33,16 +33,16 @@ def _print_activity_body(a, uids, out):
     s = _print_date(a.duration.start)
     f = _print_date(a.duration.finish)
     # "Must start on"
-    print('''\
+    print(f'''\
       <ConstraintType>2</ConstraintType>
-      <ConstraintDate>%s</ConstraintDate>
-      <Start>%s</Start>
-      <Finish>%s</Finish>
-      <ManualStart>%s</ManualStart>
-      <ManualFinish>%s</ManualFinish>
-      <ActualStart>%s</ActualStart>
-      <ActualFinish>%s</ActualFinish>
-''' % (s, s, f, s, f, s, f), file=out)
+      <ConstraintDate>{s}</ConstraintDate>
+      <Start>{s}</Start>
+      <Finish>{f}</Finish>
+      <ManualStart>{s}</ManualStart>
+      <ManualFinish>{f}</ManualFinish>
+      <ActualStart>{s}</ActualStart>
+      <ActualFinish>{f}</ActualFinish>
+''', file=out)
   else:
     # "As soon as possible"
     print('''\
@@ -58,13 +58,13 @@ def _print_activity_body(a, uids, out):
 
 def _print_activity(a, name, uids, out):
   uid = uids[a]
-  print('''\
+  print(f'''\
     <Task>
-      <UID>%d</UID>
-      <ID>%d</ID>
-      <Name>%s</Name>
+      <UID>{uid}</UID>
+      <ID>{uid}</ID>
+      <Name></Name>
       <IsNull>0</IsNull>
-''' % (uid, uid,), file=out)
+''', file=out)
 
   # TODO
 
@@ -78,26 +78,26 @@ def _print_goal(g, uids, ids, out):
 #  num_acts = len(goal.preds)
 #  complete = goal.complete()
 
-  print('''\
+  print(f'''\
     <Task>
-      <UID>%d</UID>
-      <ID>%d</ID>
-      <Name>%s</Name>
+      <UID>{uid}</UID>
+      <ID>{uid}</ID>
+      <Name>{g.name}</Name>
       <IsNull>0</IsNull>
-''' % (uid, uid, g.name), file=out)
+''', file=out)
 
   print('''\
-      <Priority>%d</Priority>
-''' % _prio(g), file=out)
+      <Priority>{_prio(g)}</Priority>
+''', file=out)
 
   if g.deadline is not None:
     # "Finish no later than"
     d = _print_date(g.deadline)
-    print('''\
+    print(f'''\
       <ConstraintType>7</ConstraintType>
-      <ConstraintDate>%s</ConstraintDate>
-      <Deadline>%s</Deadline>
-''' % (d, d), file=out)
+      <ConstraintDate>{d}</ConstraintDate>
+      <Deadline>{d}</Deadline>
+''', file=out)
 
   if g.is_leaf():
     # We can merge activity and goal
@@ -161,17 +161,17 @@ def export(project, net, hierarchy, dump=False):
   out = io.StringIO()
 
   # Based upon "Introduction to Project XML Data": https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx
-  print('''\
+  print(f'''\
 <Project xmlns="http://schemas.microsoft.com/project">
-  <Name>%s</Name>
-  <StartDate>%s</StartDate>
-  <FinishDate>%s</FinishDate>
+  <Name>{net.project.name}</Name>
+  <StartDate>{net.project.start}</StartDate>
+  <FinishDate>{net.project.finish}</FinishDate>
   <DefaultStartTime>09:00:00</DefaultStartTime>
   <DefaultFinishTime>17:00:00</DefaultFinishTime>
   <SpreadPercentComplete>0</SpreadPercentComplete>
 
   <Tasks>
-''' % (net.project.name, net.project.start, net.project.finish), file=out)
+''', file=out)
 
   # TODO
   net.visit_goals(callback=lambda g: _print_goal(g, uids, ids, out))

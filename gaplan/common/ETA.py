@@ -48,5 +48,5 @@ class ETA:
     max_s = '?' if self.max is None else str(self.max)
     real_s = '?' if self.real is None else str(self.real)
     if min_s == max_s:
-      return '%sh (%sh, %g%%)' % (min_s, real_s, self.completion)
-    return '%sh-%sh (%sh, %g%%)' % (min_s, max_s, real_s, self.completion)
+      return f'{min_s}h ({real_s}h, {self.completion}%)'
+    return f'{min_s}h-{max_s}h ({real_s}h, {self.completion}%)'

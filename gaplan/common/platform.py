@@ -20,4 +20,4 @@ def open_file(filename):
     rc = os.system('explorer %s' % filename)
   else:
     rc = os.system('xdg-open %s' % filename)
-  error_if(rc != 0, "failed to open pdf file '%s'" % filename)
+  error_if(rc != 0, f"failed to open pdf file '{filename}'")

@@ -250,7 +250,6 @@ $ pytest-3 gaplan
 * Use standard loggers for debug prints (verbosity should not be object field).
 * Use Enums (risk, prio, etc.)
 * Read arbitrary dates.
-* Use f-strings.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
 * Mark time- or risk-critical paths in PERT diagram.

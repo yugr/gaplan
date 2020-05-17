@@ -53,7 +53,7 @@ class SchedBlock:
         continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
-        error(loc, "failed to parse block attribute: %s" % a)
+        error(loc, f"failed to parse block attribute: {a}")
       k = M.group(1).strip()
       v = M.group(2).strip()
 
@@ -61,22 +61,22 @@ class SchedBlock:
         self.deadline, _ = PA.read_date(v, loc)
         continue
 
-      error(loc, "unknown block attribute '%s'" % k)
+      error(loc, f"unknown block attribute '{k}'")
 
   def dump(self, p):
     p.writeln("%s sched block (%s)" % ("Sequential" if self.seq else "Parallel", self.loc))
     with p:
       if self.duration is not None:
-        p.writeln("Duration: %s" % self.duration)
+        p.writeln(f"Duration: {self.duration}")
       if self.goal_name is not None:
-        p.writeln("Goal: " + self.goal_name)
+        p.writeln(f"Goal: {self.goal_name}")
         with p:
           if self.parallel is not None:
-            p.writeln("parallelism: %s" % self.parallel)
+            p.writeln(f"parallelism: {self.parallel}")
           if self.alloc:
-            p.writeln("alloc: %s" % '/'.join(self.alloc))
+            p.writeln(f"alloc: {'/'.join(self.alloc)}")
       if self.deadline is not None:
-        p.writeln("Deadline: %s" % self.deadline)
+        p.writeln(f"Deadline: {self.deadline}")
       for block in self.blocks:
         block.dump(p)
 
@@ -88,7 +88,7 @@ class SchedPlan:
     self.loc = loc
 
   def dump(self, p):
-    p.writeln("= SchedPlan at %s =\n" % self.loc)
+    p.writeln(f"= SchedPlan at {self.loc} =\n")
     p.writeln("Blocks:")
     with p:
       for block in self.blocks:
@@ -160,19 +160,19 @@ class ResourceInfo:
       self.sheet = []
       return ret
 
-    if v: print("allocate: allocating effort %g @%s from %s" % (effort, self.name, start))
+    if v: print(f"allocate: allocating effort {effort} @{self.name} from {start}")
 
     last_iv = I.Interval(datetime.date(datetime.MAXYEAR, 12, 31))
     for i, (left, right) in enumerate(zip(self.sheet, self.sheet[1:] + [last_iv])):
       if start >= right.start:
         continue
       gap = I.Interval(max(left.finish, start), right.start)
-      if v: print("allocate: found free slot %s" % gap)
+      if v: print(f"allocate: found free slot {gap}")
       ok, iv = self.cal.allows_effort(gap, effort)
       if not ok:
-        if v: print("allocate: slot %s rejected due to holidays" % gap)
+        if v: print(f"allocate: slot {gap} rejected due to holidays")
         continue
-      if v: print("allocate: updated due to holidays: %s" % iv)
+      if v: print(f"allocate: updated due to holidays: {iv}")
       fragmentation = iv.start - left.finish
       if gap.finish != sys.maxsize:
         fragmentation += gap.finish - iv.finish
@@ -204,7 +204,7 @@ class Schedule:
 
   def set_completion_date(self, goal, d):
     error_if(self.is_completed(goal), 
-             "goal '%s' scheduled more than once" % goal.name)
+             f"goal '{goal.name}' scheduled more than once")
     self.goals[goal.name] = GoalInfo(goal.name, d)
 
   def is_done(self, act):
@@ -215,7 +215,7 @@ class Schedule:
 
   def set_duration(self, act, iv, alloc):
     error_if(self.is_done(act), 
-             "activity '%s' scheduled more than once" % act.name)
+             f"activity '{act.name}' scheduled more than once")
     self.acts[act.name] = ActivityInfo(act, iv, alloc)
 
   def assign_best_rcs(self, rcs, start, effort, parallel):
@@ -229,7 +229,7 @@ class Schedule:
     # Find optimal resource count
     best_allocs = best_finish = None
     for i in range(1, n + 1):
-      if self.v: print("assign_best_rcs: use ||%d" % i)
+      if self.v: print(f"assign_best_rcs: use ||{i}")
       sched_data = []
       e = effort / i
       for rc in rcs:
@@ -310,8 +310,7 @@ class Scheduler:
     return [(ts, t)] * len(alloc)
 
   def _schedule_goal(self, goal, start, alloc, par, warn_if_past=True):
-    self._dbg("_schedule_goal: scheduling goal '%s': start=%s, alloc=%s, par=%s"
-              % (goal.name, start, alloc, par))
+    self._dbg(f"_schedule_goal: scheduling goal '{goal.name}': start={start}, alloc={alloc}, par={par}")
 
     if self.sched.is_completed(goal):
       return self.sched.get_completion_date(goal)
@@ -319,26 +318,23 @@ class Scheduler:
     if goal.completion_date is not None:
       self._dbg("_schedule_goal: goal already scheduled")
       if warn_if_past and goal.completion_date < start:
-        warn(goal.loc, "goal '%s' is completed on %s, before %s"
-                       % (goal.name, goal.completion_date, start))
+        warn(goal.loc, f"goal '{goal.name}' is completed on {goal.completion_date}, before {start}")
       # TODO: warn if completion_date < start
       self.sched.set_completion_date(goal, goal.completion_date)
       return goal.completion_date
 
     if goal.is_completed():
-      warn(goal.loc, "unable to schedule completed goal '%s' with no completion date" % goal.name)
+      warn(goal.loc, f"unable to schedule completed goal '{goal.name}' with no completion date")
       self.sched.set_completion_date(goal, datetime.date.today())
       return datetime.date.today()
 
     completion_date = start
     for act in goal.preds:
-      self._dbg("_schedule_goal: scheduling activity '%s' for goal '%s'"
-                % (act.name, goal.name))
+      self._dbg(f"_schedule_goal: scheduling activity '{act.name}' for goal '{goal.name}'")
       if act.duration is not None:
         # TODO: register spent time for devs
         if warn_if_past and act.duration.start < start:
-          warn(act.loc, "activity '%s' started on %s, before %s"
-                        % (act.name, act.duration.start, start))
+          warn(act.loc, f"activity '{act.name}' started on {act.duration.start}, before {start}")
         completion_date = max(completion_date, act.duration.finish)
         continue
 
@@ -348,7 +344,7 @@ class Scheduler:
           act_start = max(act_start, self.sched.get_completion_date(act.head))
         else:
           # For goals that are not specified by schedule we use default settings
-          self._dbg("_schedule_goal: scheduling predecessor '%s'" % act.head.name)
+          self._dbg(f"_schedule_goal: scheduling predecessor '{act.head.name}'")
           self._schedule_goal(act.head, datetime.date.today(), [], None, warn_if_past=False)
           if not act.overlaps:
             act_start = max(act_start, self.sched.get_completion_date(act.head))
@@ -391,19 +387,16 @@ class Scheduler:
       self.sched.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
 
-    self._dbg("_schedule_goal: scheduled goal '%s' for %s"
-              % (goal.name, completion_date))
+    self._dbg(f"_schedule_goal: scheduled goal '{goal.name}' for completion_date")
     self.sched.set_completion_date(goal, completion_date)
 
     if goal.deadline is not None and completion_date > goal.deadline:
-      warn("failed to schedule goal '%s' before deadline %s"
-           % (goal.name, goal.deadline))
+      warn(f"failed to schedule goal '{goal.name}' before deadline goal.deadline")
 
     return completion_date
 
   def _schedule_block(self, block, start, alloc, par):
-    self._dbg("_schedule_block: scheduling block in %s: start=%s, alloc=%s, par=%s"
-              % (block.loc, start, alloc, par))
+    self._dbg(f"_schedule_block: scheduling block in {block.loc}: start={start}, alloc={alloc}, par={par}")
 
     alloc = block.alloc or alloc
     par = block.parallel or par
@@ -418,13 +411,12 @@ class Scheduler:
     else:
       assert not block.blocks, "block with goals should have no subblocks"
       goal = self.net.name_to_goal.get(block.goal_name)
-      error_if(goal is None, block.loc, "goal '%s' not found in plan" % block.goal_name)
+      error_if(goal is None, block.loc, f"goal '{block.goal_name}' not found in plan")
       goal_finish = self._schedule_goal(goal, start, alloc, par)
       latest = max(latest, goal_finish)
 
     if block.deadline is not None and latest > block.deadline:
-      warn("Failed to schedule block at %s before deadline %s"
-           % (block.loc, block.deadline))
+      warn("Failed to schedule block at {block.loc} before deadline {block.deadline}")
 
     return latest
 

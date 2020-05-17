@@ -116,7 +116,7 @@ Examples:
     try:
       bias = E.Bias[args.bias.upper().replace('-', '_')]
     except KeyError:
-      error("unknown bias value '%s'" % v)
+      error(f"unknown bias value '{v}'")
   else:
     bias = E.Bias.NONE
   estimator = E.RiskBasedEstimator(bias)
@@ -164,7 +164,7 @@ Examples:
       goal = roots[0]
     else:
       goals = net.iter_to_goals.get(args.iter)
-      error_if(goals is None, "iteration '%s' is not present in plan" % args.phase)
+      error_if(goals is None, f"iteration '{args.phase}' is not present in plan")
 
       # Start date is the minimum of start times for all goals in current iteration
       # or finish times of all goals in previous iterations.
@@ -177,8 +177,8 @@ Examples:
             start_date = min(start_date or pred.finish_date, pred.finish_date)
         if g.deadline is not None:
           finish_date = min(finish_date or g.deadline, g.deadline)
-      error_if(start_date is None, "unable to determine start date for iteration '%s'" % args.iter)
-      error_if(finish_date is None, "unable to determine finish date for deadline '%s'" % args.iter)
+      error_if(start_date is None, f"unable to determine start date for iteration '{args.iter}'")
+      error_if(finish_date is None, f"unable to determine finish date for deadline '{args.iter}'")
       duration = I.Interval(start_date, finish_date)
 
     burn.export(net, goal, duration, args.dump)

@@ -96,7 +96,7 @@ class Task:
     p.writeln("Task %s \"%s\"" % (self.id, self.pretty_name()))
     with p:
       if self.goal:
-        p.writeln("Goal \"%s\"" % self.goal.name)
+        p.writeln(f"Goal \"{self.goal.name}\"")
       if self.act:
         self.act.dump(p)
       if self.activities:
@@ -169,7 +169,7 @@ def _create_goal_task(goal, parent, ids):
     elif not _is_activity_ignored(a):
       # TODO: use a.id
       subtask = Task(id + '_%d' % task_num,
-                     "Implementation %d" % task_num, task, act=a)
+                     f"Implementation {task_num}", task, act=a)
       task._add_subtask(subtask)
       task_num += 1
 
@@ -187,7 +187,7 @@ def _create_wbs_iterative(net, ids, v):
   for i in user_iters + [None]:
     i_num = last_iter if i is None else i
 
-    task = Task('iter_%d' % i_num, 'Iteration %d' % i_num, None)
+    task = Task('iter_%d' % i_num, f'Iteration {i_num}', None)
     task.depends.add('iter_%d' % (i_num - 1))
     tasks.append(task)
 
@@ -213,12 +213,12 @@ def _create_goal_task_hierarchical(goal, parent, ids, ancestors):
   task_num = ms_num = 1
   for a in goal.preds:
     if a.is_instant():
-      t = Task('%s_%d_milestone' % (id, ms_num), "External dep %d satisfied" % ms_num, task)
+      t = Task(f'{id}_{ms_num}_milestone', f"External dep {ms_num} satisfied", task)
       t.depends.add(a.head.name)
       ms_num += 1
       task.milestones.append(t)
     else:
-      t = Task("%s_%d" % (id, task_num), "Implementation %d" % task_num, task, act=a)
+      t = Task("%s_%d" % (id, task_num), f"Implementation {task_num}", task, act=a)
       t.depends.add(a.head.name)
       task_num += 1
       task.activities.append(t)
@@ -245,7 +245,7 @@ def _optimize_task(task, ancestors, v):
   for t in task.subtasks:
     _optimize_task(t, ancestors, v)
 
-  if v: print("_optimize_task: optimizing task %s (%s)" % (task.id, task.name))
+  if v: print(f"_optimize_task: optimizing task {task.id} ({task.name})")
 
   # Eliminate useless intermediaries.
 
@@ -253,7 +253,7 @@ def _optimize_task(task, ancestors, v):
   task.subtasks = []
   for t in old_subtasks:
     if t.goal and t.goal.dummy and not t.activities:
-      if v: print("_optimize_task: removing intermediate dummy task %s (%s)" % (t.id, t.name))
+      if v: print(f"_optimize_task: removing intermediate dummy task {t.id} ({t.name})")
       # All child activities are instant so we can remove it.
       # But be careful to update milestones and activities
       # which depended on it.
@@ -280,12 +280,12 @@ def _optimize_task(task, ancestors, v):
     if external_deps:
       task.milestones.append(t)
     else:
-      if v: print("_optimize_task: dropped instant dep %s (%s)" % (t.id, t.name))
+      if v: print(f"_optimize_task: dropped instant dep {t.id} ({t.name})")
 
   # Merge all milestone subtasks into a one.
 
   if task.milestones:
-    if v: print("_optimize_task: merging all instant deps to %s (%s)" % (t.id, t.name))
+    if v: print(f"_optimize_task: merging all instant deps to {t.id} ({t.name})")
     id = task.id
     t = Task(id + '_milestone', "External deps satisfied", task)
     t.depends = {st for t in task.milestones for st in t.depends}
@@ -296,14 +296,14 @@ def _optimize_task(task, ancestors, v):
   if not task.subtasks:
     if not task.milestones and len(task.activities) == 1:
       t = task.activities[0]
-      if v: print("_optimize_task: merging activity %s (%s)" % (t.id, t.name))
+      if v: print(f"_optimize_task: merging activity {t.id} ({t.name})")
       assert not task.act
       task._set_action(t.act)
       task.depends.update(t.depends)
       task.activities = []
 
     if not task.activities and len(task.milestones) == 1:
-      if v: print("_optimize_task: merging milestone %s (%s)" % (t.id, t.name))
+      if v: print(f"_optimize_task: merging milestone {t.id} ({t.name})")
       task.depends.update(task.milestones[0].depends)
       task.milestones = []
 

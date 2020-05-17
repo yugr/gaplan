@@ -45,24 +45,24 @@ def export(net, goal, duration, dump):
 
   p.writeln('set terminal png')
 
-  p.write('''
+  p.write(f'''
 reset
 
-set title "%s (burndown chart)"
-set timefmt "%%Y-%%m-%%d"
+set title "{goal.name} (burndown chart)"
+set timefmt "%Y-%m-%d"
 
 set xlabel "Days"
-set format x "%%b-%%d"
+set format x "%b-%d"
 set xdata time
-set xrange ["%s":"%s"]
+set xrange ["{duration.start}":"{duration.finish}"]
 set xtics nomirror
 
 set ylabel "#Goals"
-set yrange [0:%d]
+set yrange [0:{total_children[0]}]
 set ytics mirror
 
 plot "-" using 1:2 title 'Real' with lines, "-" using 1:2 title "Planned" with lines
-''' % (goal.name, duration.start, duration.finish, total_children[0]))
+''')
 
   for date in sorted_dates:
     n = counts[date]

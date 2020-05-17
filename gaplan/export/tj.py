@@ -26,11 +26,11 @@ def _escape(name):
 
 def _print_jira_links(p, tracker, prj):
   for t in tracker.tasks:
-    p.writeln(('JiraLink "' + prj.tracker_link + '" {label "#%s"}') % (t, t))
+    p.writeln(f'JiraLink "{prj.tracker_link}" {{label "#{t}"}}')
     break
   else:
     for pr in tracker.prs:
-      p.writeln(('JiraLink "' + prj.pr_link + '" {label "PR #%s"}') % (pr, pr))
+      p.writeln(f'JiraLink "{prj.pr_link}" {{label "PR #{pr}"}}')
       break
 
 def _print_task(p, task, abs_ids, prj, est):
@@ -44,13 +44,13 @@ def _print_task(p, task, abs_ids, prj, est):
   if task.prio is not None:
     # TODO: also task risk into account
     prio = int(float(task.prio) / G.Goal.MAX_PRIO * 1000)
-    p.writeln('priority %d' % prio)
+    p.writeln(f'priority {prio}')
 
   if not task.subtasks and not task.activities and not task.act:
     p.writeln('milestone')
 
   for dep in task.depends:
-    p.writeln('depends %s' % abs_ids[dep])
+    p.writeln(f'depends {abs_ids[dep]}')
 
   act = task.act
   if act is not None:
@@ -72,7 +72,7 @@ def _print_task(p, task, abs_ids, prj, est):
 
       if task.complete is not None:
         if task.complete == 100:
-          p.writeln('complete %d' % task.complete)
+          p.writeln(f'complete {task.complete}')
         else:
           task_effort = task_effort * (1 - task.complete / 100.0)
 #          p.writeln('complete %d' % task.complete)
@@ -80,22 +80,22 @@ def _print_task(p, task, abs_ids, prj, est):
       else:
         p.writeln('depends now')
 
-      p.writeln('effort %dh' % round(task_effort))
+      p.writeln(f'effort {round(task_effort)}h')
 
       # We print allocated resources only if effort > 0
       # (TJ aborts otherwise)
       if act.is_max_parallel():
         for rc in resources:
-          p.writeln('allocate %s' % rc.name)
+          p.writeln(f'allocate {rc.name}')
       else:
         first = resources[0].name
         rest = list(map(lambda rc: rc.name, resources[1:]))
         alts = ('alternative ' + ', '.join(rest)) if rest else ''
-        p.writeln('allocate %s { %s select minloaded persistent}' % (first, alts))
+        p.writeln(f'allocate {first} {{ {alts} select minloaded persistent }}')
 
   if task.duration is not None:
-    p.writeln('start %s' % act.duration.start)
-    p.writeln('end %s' % act.duration.finish)
+    p.writeln(f'start {act.duration.start}')
+    p.writeln(f'end {act.duration.finish}')
     p.writeln('scheduled')
 
   for subtask in (task.activities + task.milestones):
@@ -111,7 +111,7 @@ def _print_task(p, task, abs_ids, prj, est):
     p.writeln('task %s_deadline "%s (deadline)" {' % (task.id, _escape(task.name)))
     p.write('  scheduling asap')
     p.write('  milestone')
-    p.write('  depends %s' % abs_id)
+    p.write(f'  depends {abs_id}')
     #p.write('%s  start %s' % task.deadline.strftime(time_format))
     p.write('  maxstart %s' % task.deadline.strftime(time_format))
     p.write('}')
@@ -126,10 +126,10 @@ def export(prj, wbs, est, dump=False):
   # Print header
   # (based upon http://www.taskjuggler.org/tj3/manual/Tutorial.html)
 
-  p.write('''\
-project "{project_name}" {start} - {finish} {{
+  p.write(f'''\
+project "{prj.name}" {prj.start} - {prj.finish} {{
   timeformat "{time_format}"
-  now {now}
+  now {today.strftime(time_format)}
   timezone "Europe/Moscow"
   currency "USD"
   extend task {{
@@ -139,11 +139,7 @@ project "{project_name}" {start} - {finish} {{
 
 flags internal
 
-'''.format(project_name=prj.name,
-           start=prj.start,
-           finish=prj.finish,
-           time_format=time_format,
-           now=today.strftime(time_format)))
+''')
 
   # Print holidays
   # TODO: additional holidays in plan
@@ -196,9 +192,9 @@ task now "Now" {
 
   # Print reports
 
-  p.write('''\
+  p.write(f'''\
 taskreport gantt "GanttChart" {{
-  headline "{project_name} - Gantt Chart"
+  headline "{prj.name} - Gantt Chart"
   timeformat "%Y-%m-%d"
   formats html
   columns bsi {{ title 'ID' }}, name, JiraLink, start, end, effort, resources, chart {{ width 5000 }}
@@ -227,7 +223,7 @@ tracereport trace "TraceReport" {{
 export msproject "{project_name}" {{
   formats mspxml
 }}
-'''.format(project_name=prj.name))
+''')
 
   if dump:
     print(p.out.getvalue())

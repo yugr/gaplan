@@ -104,7 +104,7 @@ class Lexer(PA.BaseLexer):
         type = LexemeType.ASSIGN
         self.mode = LexerMode.ATTR
       else:
-        error(self._loc(), "unexpected syntax: %s" % self.line)
+        error(self._loc(), f"unexpected syntax: {self.line}")
       self.line = self.line[len(M.group(0)):]
       text = M.group(0)
     self.lexemes.append(PA.Lexeme(type, data, text, self._loc()))
@@ -128,7 +128,7 @@ class Parser(PA.BaseParser):
       l = self.lex.next_if(LexemeType.LIST_ELT)
       if l is None:
         break
-      self._dbg("parse_attrs: new attribute: %s" % l)
+      self._dbg(f"parse_attrs: new attribute: {l}")
       a.append(l.data)
       if not self.lex.next_if(','):
         break
@@ -139,7 +139,7 @@ class Parser(PA.BaseParser):
     if l.type != LexemeType.GOAL:
       return None, []
 
-    self._dbg("maybe_parse_goal_decl: goal: %s" % l)
+    self._dbg(f"maybe_parse_goal_decl: goal: {l}")
     goal_offset, goal_name = l.data
     if offset != goal_offset:
       self._dbg("maybe_parse_goal_decl: not a subgoal, exiting")
@@ -154,7 +154,7 @@ class Parser(PA.BaseParser):
         if l is None:
           break
         a.append(l.data)
-        self._dbg("maybe_parse_goal_decl: new attribute: %s" % l)
+        self._dbg(f"maybe_parse_goal_decl: new attribute: {l}")
         l = self.lex.next_if(',')
         if l is None:
           break
@@ -176,11 +176,11 @@ class Parser(PA.BaseParser):
       l = self.lex.next_if(LexemeType.CHECK)
       if l is None:
         return
-      self._dbg("parse_checks: new check: %s" % l)
+      self._dbg(f"parse_checks: new check: {l}")
 
       check_offset, status, text = l.data
       error_if(check_offset != goal_offset, l.loc, "check is not properly nested")
-      error_if(status not in ['X', 'F', ''], l.loc, "unexpected check status: '%s'" % status)
+      error_if(status not in ['X', 'F', ''], l.loc, f"unexpected check status: '{status}'")
 
       check = G.Condition(text, status, l.loc)
       g.add_check(check)
@@ -194,13 +194,13 @@ class Parser(PA.BaseParser):
       l = self.lex.peek()
       if l.type not in [LexemeType.LARROW, LexemeType.RARROW]:
         return
-      self._dbg("parse_subgoals: new edge: %s" % l)
+      self._dbg(f"parse_subgoals: new edge: {l}")
 
       is_pred = l.type == LexemeType.LARROW
       edge_offset = l.data
       if edge_offset != offset:
         return
-      self._dbg("parse_subgoals: new subgoal: %s" % l)
+      self._dbg(f"parse_subgoals: new subgoal: {l}")
 
       act = self.parse_edge()
       subgoal = self.parse_goal(edge_offset + len('|<-'),
@@ -219,7 +219,7 @@ class Parser(PA.BaseParser):
     return goal
 
   def parse_goal(self, offset, other_goal, is_pred, allow_empty=False):
-    self._dbg("parse_goal: start lex: %s" % self.lex.peek())
+    self._dbg(f"parse_goal: start lex: {self.lex.peek()}")
     loc = self.lex.loc()
     goal_name, goal_attrs = self.maybe_parse_goal_decl(offset)
 
@@ -235,13 +235,13 @@ class Parser(PA.BaseParser):
       if goal is None:
         was_defined = False
         goal = self.names[goal_name] = G.Goal(goal_name, loc)
-        self._dbg("parse_goal: parsed new goal: %s" % goal.name)
+        self._dbg(f"parse_goal: parsed new goal: {goal.name}")
       else:
         was_defined = goal.defined
-        self._dbg("parse_goal: parsed existing goal: %s" % goal.name)
+        self._dbg(f"parse_goal: parsed existing goal: {goal.name}")
 
     if goal_attrs:
-      error_if(was_defined, loc, "duplicate definition of goal '%s' (previous definition was in %s)" % (goal.name, goal.loc))
+      error_if(was_defined, loc, f"duplicate definition of goal '{goal.name}' (previous definition was in {goal.loc})")
       goal.add_attrs(goal_attrs, loc)
 
     # TODO: Gaperton's examples contain interwined checks and deps
@@ -283,7 +283,7 @@ class Parser(PA.BaseParser):
       val = []
       for rc_info in rhs:
         if not M.match(r'([A-Za-z][A-Za-z0-9_]*)\s*(?:\(([^\)]*)\))?', rc_info):
-          error(attr_loc, "failed to parse resource declaration: %s" % rc_info)
+          error(attr_loc, f"failed to parse resource declaration: {rc_info}")
         rc_name, attrs = M.groups()
         rc = project.Resource(rc_name, attr_loc)
         if attrs:
@@ -293,7 +293,7 @@ class Parser(PA.BaseParser):
       val = []
       for team_info in rhs:
         if not M.match(r'\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)$', team_info):
-          error(attr_loc, "invalid team declaration: %s" % team_info)
+          error(attr_loc, f"invalid team declaration: {team_info}")
         team_name = M.group(1)
         rc_names = re.split(r'\s*,\s*', M.group(2).strip())
         val.append(project.Team(team_name, rc_names, attr_loc))
@@ -303,7 +303,7 @@ class Parser(PA.BaseParser):
         iv = PA.read_date2(s, attr_loc)
         val.append(iv)
     else:
-      error(attr_loc, "unknown project attribute: %s" % name)
+      error(attr_loc, f"unknown project attribute: {name}")
 
     self.project_attrs[name] = val
 
@@ -338,11 +338,11 @@ class Parser(PA.BaseParser):
           break
         block.add_goal(goal_name, goal_attrs, l.loc)
       elif l.type == LexemeType.SCHED:
-        self._dbg("parse_sched_block: new block: %s" % l)
+        self._dbg(f"parse_sched_block: new block: {l}")
         subblock = self.parse_sched_block(offset + 2)
         if subblock is None:
           break
-        self._dbg("parse_sched_block: new subblock: %s" % l)
+        self._dbg(f"parse_sched_block: new subblock: {l}")
         block.blocks.append(subblock)
       else:
         break
@@ -358,9 +358,9 @@ class Parser(PA.BaseParser):
       l = self.lex.peek()
       if l is None:
         break
-      self._dbg("parse: next lexeme: %s" % l)
+      self._dbg(f"parse: next lexeme: {l}")
       if l.type == LexemeType.GOAL:
-        error_if(l.data[0] != 0, l.loc, "root goal '%s' must be left-adjusted" % l.data[1])
+        error_if(l.data[0] != 0, l.loc, f"root goal '{l.data[1]}' must be left-adjusted")
         goal = self.parse_goal(l.data[0], None, False)
         if not net_loc:
           net_loc = goal.loc
@@ -379,7 +379,7 @@ class Parser(PA.BaseParser):
         break
       else:
         # TODO: anonymous goals
-        error(l.loc, "unexpected lexeme: '%s'" % l.text)
+        error(l.loc, f"unexpected lexeme: '{l.text}'")
 
     net = G.Net(root_goals, W, net_loc)
 

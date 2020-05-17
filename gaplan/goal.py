@@ -147,7 +147,7 @@ class Activity:
         continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
-        error(loc, "failed to parse attribute: %s" % a)
+        error(loc, f"failed to parse attribute: {a}")
       k = M.group(1).strip()
       v = M.group(2).strip()
 
@@ -155,7 +155,7 @@ class Activity:
         self.globl = True
         continue
 
-      error(loc, "unknown activity attribute: '%s'" % k)
+      error(loc, f"unknown activity attribute: '{k}'")
 
   def check(self, W):
     """Verify invariants."""
@@ -177,14 +177,14 @@ class Activity:
 
     p.enter()
 
-    p.writeln("Defined in %s" % self.loc)
+    p.writeln(f"Defined in {self.loc}")
 
     self.tracker.dump(p)
 
-    p.writeln("effort: %s" % self.effort)
+    p.writeln(f"effort: {self.effort}")
 
     if self.duration is not None:
-      p.writeln("duration: %s" % self.duration)
+      p.writeln(f"duration: {self.duration}")
 
     if self.is_max_parallel():
       par = 'max'
@@ -269,13 +269,13 @@ class Goal:
       if a.find('!') == 0:
         self.prio = int(a[1:])
         error_if(not Goal.MIN_PRIO <= self.prio <= Goal.MAX_PRIO,
-                 loc, "invalid priority value %d" % self.prio)
+                 loc, f"invalid priority value {self.prio}")
         continue
 
       if a.find('?') == 0:
         self.risk = int(a[1:])
         error_if(not Goal.MIN_RISK <= self.risk <= Goal.MAX_RISK,
-                 loc, "invalid risk value %d" % self.risk)
+                 loc, f"invalid risk value {self.risk}")
         continue
 
       if M.search(r'^I[0-9]+$', a):
@@ -287,7 +287,7 @@ class Goal:
         continue
 
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
-        error(loc, "failed to parse goal attribute: %s" % a)
+        error(loc, f"failed to parse goal attribute: {a}")
       k = M.group(1).strip()
       v = M.group(2).strip()
 
@@ -299,7 +299,7 @@ class Goal:
         self.id = v
         continue
 
-      error(loc, "unknown goal attribute '%s'" % k)
+      error(loc, f"unknown goal attribute '{k}'")
 
   @property
   def pretty_name(self):
@@ -409,7 +409,7 @@ class Goal:
     """Verify invariants."""
 
     if W and not self.defined and not self.dummy:
-      warn(self.loc, "goal '%s' is undefined" % self.name)
+      warn(self.loc, f"goal '{self.name}' is undefined")
 
     pending_conds = [c.name for c in self.checks if not c.done()]
     if W and self.completion_date is not None \
@@ -418,24 +418,23 @@ class Goal:
       warn(self.loc, "goal '%s' marked as completed but some checks are still pending:\n  %s" % (self.name, '\n  '.join(pending_conds)))
 
     if W and self.is_completed() and not self.completion_date:
-      warn(self.loc, "goal '%s' marked as completed but is missing tracking data"
-                     % self.name)
+      warn(self.loc, f"goal '{self.name}' marked as completed but is missing tracking data")
 
     for act in self.global_preds:
       if not act.is_instant():
         error(act.loc, "global dependencies must be instant")
 
       if W and not act.head:
-        warn(act.loc, "goal '%s' has empty global dependency" % self.name)
+        warn(act.loc, f"goal '{self.name}' has empty global dependency")
 
     for act in self.preds:
       act.check(W)
 
       if act.head and self.iter is not None and act.head.iter is None:
-        warn(self.loc, "goal has been scheduled but one of it's dependents is not: '%s'" % act.head.name)
+        warn(self.loc, f"goal has been scheduled but one of it's dependents is not: '{act.head.name}'")
 
       if self.is_completed() and (not act.duration or not act.effort.real):
-        warn(self.loc, "goal '%s' is achieved but one of it's actions is missing tracking data" % self.name)
+        warn(self.loc, f"goal '{self.name}' is achieved but one of it's actions is missing tracking data")
 
   def dump(self, p):
     p.writeln(self.name + (' (dummy)' if self.dummy else ''))
@@ -556,7 +555,7 @@ class Net:
         if old_attr is None:
           setattr(g, attr_name, new_attr)
         elif less(old_attr, new_attr):
-          warn(g.loc, "inferred (%s) and assigned (%s) %s for goal '%s' do not match" % (new_attr, old_attr, attr_name, g.name))
+          warn(g.loc, f"inferred ({new_attr}) and assigned ({old_attr}) {attr_name} for goal '{g.name}' do not match")
           setattr(g, attr_name, new_attr)
     self.visit_goals(callback=assign_inferred_attrs)
 
@@ -572,8 +571,7 @@ class Net:
       if g.id is not None:
         other_goal = self.name_to_goal.get(g.id, None)
         error_if(other_goal is not None and other_goal.name != g.name,
-                 "goals '%s' and '%s' use the same id '%s'"
-                 % (other_goal.name, g.name, g.id))
+                 f"goals '{other_goal.name}' and '{g.name}' use the same id '{g.id}'")
         self.name_to_goal[g.id] = g
     self.visit_goals(callback=update_name_to_goal)
 
@@ -624,7 +622,7 @@ class Net:
       g.visit(visited, **args)
 
   def dump(self, p):
-    p.writeln("= Network at %s =\n" % self.loc)
+    p.writeln(f"= Network at {self.loc} =\n")
 
     num_actions = [0]
     def update_num_actions(g):
@@ -660,7 +658,7 @@ class Net:
       warn_if(iters[0] != 1, "iterations do not start with 1")
       for itr, nxt in zip(iters, iters[1:]):
         if itr + 1 != nxt:
-          warn("iterations are not consecutive: %d and %d" % (itr, nxt))
+          warn(f"iterations are not consecutive: {itr} and {nxt}")
           break
 
     # Check for loops
@@ -668,7 +666,7 @@ class Net:
     for root in self.roots:
       path = []
       def enter(g, path):
-        error_if(g.name in path, "found a cycle:%s" % '\n  '.join(path))
+        error_if(g.name in path, "found a cycle: %s" % '\n  '.join(path))
         path.append(g.name)
       def exit(g, path):
         path[:] = path[:-1]

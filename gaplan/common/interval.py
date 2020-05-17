@@ -17,7 +17,7 @@ class Interval:
     self.l = l
     self.r = r or l
     if self.r < self.l:
-      raise Exception("Trying to create invalid interval %s" % self)
+      raise Exception(f"Trying to create invalid interval {self}")
     if closed:
       self.r += datetime.timedelta(days=1)
 
@@ -57,7 +57,7 @@ class Interval:
     return self.l == i.l and self.r == i.r
 
   def __repr__(self):
-    return '[%s, %s)' % (self.l, self.r)
+    return f'[{self.l}, {self.r})'
 
 class Seq:
   """A sorted sequence of non-intersecting intervals
@@ -111,7 +111,7 @@ class Seq:
         hit = True
 
     if hit:
-      raise Exception("Inserting overlapping interval %s into %s" % (iv, self))
+      raise Exception(f"Inserting overlapping interval {iv} into {self}")
 
     self.ivs.insert(i, iv)
 
