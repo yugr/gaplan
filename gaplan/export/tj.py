@@ -43,7 +43,7 @@ def _print_task(p, task, abs_ids, prj, est):
 
   if task.prio is not None:
     # TODO: also task risk into account
-    prio = int(float(task.prio) / G.Goal.MAX_PRIO * 1000)
+    prio = int(1000 * G.Priority.rel(task.prio))
     p.writeln(f'priority {prio}')
 
   if not task.subtasks and not task.activities and not task.act:
@@ -204,7 +204,7 @@ taskreport gantt "GanttChart" {{
 }}
 
 resourcereport resources "ResourceGraph" {{
-  headline "{project_name} - Resource Allocation Report"
+  headline "{prj.name} - Resource Allocation Report"
   timeformat "%Y-%m-%d"
   formats html
   columns bsi, name, JiraLink, start, end, effort, chart {{ width 5000 }}
@@ -220,7 +220,7 @@ tracereport trace "TraceReport" {{
   formats csv
 }}
 
-export msproject "{project_name}" {{
+export msproject "{prj.name}" {{
   formats mspxml
 }}
 ''')

@@ -248,7 +248,6 @@ $ pytest-3 gaplan
 
 * Document project settings (name, start/finish, teams, etc.).
 * Use standard loggers for debug prints (verbosity should not be object field).
-* Use Enums (risk, prio, etc.)
 * Read arbitrary dates.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.

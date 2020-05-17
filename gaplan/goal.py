@@ -18,6 +18,26 @@ from gaplan.common.ETA import ETA
 import gaplan.common.parse as PA
 import gaplan.common.matcher as M
 
+from enum import IntEnum
+
+class Priority(IntEnum):
+  LOW  = 1
+  MED  = 2
+  HIGH = 3
+  MAX  = HIGH
+
+  def rel(prio):
+    return prio.value / Priority.MAX.value
+
+class Risk(IntEnum):
+  LOW  = 1
+  MED  = 2
+  HIGH = 3
+  MAX  = HIGH
+
+  def rel(risk):
+    return risk.value / Risk.MAX.value
+
 def add_common_attrs(loc, obj, attrs):
   """Adds attributes that are common for goals, checks and activities."""
 
@@ -256,26 +276,22 @@ class Goal:
   def add_check(self, check):
     self.checks.append(check)
 
-  MIN_PRIO = 1
-  MAX_PRIO = 3
-
-  MIN_RISK = 1
-  MAX_RISK = 3
-
   def add_attrs(self, attrs, loc):
     attrs = add_common_attrs(loc, self, attrs)
 
     for a in attrs:
       if a.find('!') == 0:
-        self.prio = int(a[1:])
-        error_if(not Goal.MIN_PRIO <= self.prio <= Goal.MAX_PRIO,
-                 loc, f"invalid priority value {self.prio}")
+        try:
+          self.prio = Priority(int(a[1:]))
+        except ValueError:
+          error(loc, f"invalid priority value: {a}")
         continue
 
       if a.find('?') == 0:
-        self.risk = int(a[1:])
-        error_if(not Goal.MIN_RISK <= self.risk <= Goal.MAX_RISK,
-                 loc, f"invalid risk value {self.risk}")
+        try:
+          self.risk = Risk(int(a[1:]))
+        except ValueError:
+          error(loc, f"invalid risk value: {a}")
         continue
 
       if M.search(r'^I[0-9]+$', a):
@@ -323,8 +339,8 @@ class Goal:
 
   def priority(self):
     """Combined priority which uses both risk and assigned priority."""
-    prio = None if self.prio is None else float(self.prio) / Goal.MAX_PRIO
-    risk = None if self.risk is None else float(self.risk) / Goal.MAX_RISK
+    prio = None if self.prio is None else Priority.rel(self.prio)
+    risk = None if self.risk is None else Risk.rel(self.risk)
     if prio is not None and risk is not None:
       # TODO: do something more reasonable
       alpha = 2.0 / 3
