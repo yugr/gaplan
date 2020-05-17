@@ -386,6 +386,6 @@ class Parser(PA.BaseParser):
     prj = project.Project(project_loc)
     prj.add_attrs(self.project_attrs)
 
-    sched = schedule.Schedule(root_blocks, sched_loc)
+    sched = schedule.SchedPlan(root_blocks, sched_loc)
 
     return net, prj, sched

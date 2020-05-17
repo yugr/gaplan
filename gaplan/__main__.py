@@ -132,7 +132,7 @@ Examples:
 
   parser = PA.Parser(args.v)
   parser.reset(filename, f)
-  net, project, sched = parser.parse(args.W)
+  net, project, sched_plan = parser.parse(args.W)
 
   if args.action in ['tj', 'msp'] and not project.members:
     error("--tj and --msp require member info in project file")
@@ -151,13 +151,13 @@ Examples:
   elif args.action == 'dump':
     project.dump(p)
     net.dump(p)
-    sched.dump(p)
+    sched_plan.dump(p)
   elif args.action == 'dump-wbs':
     wbs.dump(p)
   elif args.action == 'schedule':
     scheduler = S.Scheduler(estimator, args.v)
-    timetable = scheduler.schedule(project, net, sched)
-    timetable.dump(p)
+    sched = scheduler.schedule(project, net, sched_plan)
+    sched.dump(p)
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
       duration = project.duration

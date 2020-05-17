@@ -80,17 +80,15 @@ class SchedBlock:
       for block in self.blocks:
         block.dump(p)
 
-class Schedule:
-  """Represents a schedule i.e. hierarchy of blocks from declarative plan."""
-
-  # TODO: rename to SchedPlan
+class SchedPlan:
+  """Represents a hierarchy of blocks from declarative plan."""
 
   def __init__(self, blocks, loc):
     self.blocks = blocks
     self.loc = loc
 
   def dump(self, p):
-    p.writeln("= Schedule at %s =\n" % self.loc)
+    p.writeln("= SchedPlan at %s =\n" % self.loc)
     p.writeln("Blocks:")
     with p:
       for block in self.blocks:
@@ -187,10 +185,8 @@ class ResourceInfo:
       ss.append("%s - %s" % (iv.start, iv.finish))
     p.writeln("%s: %s" % (self.name, ', '.join(ss)))
 
-class Timetable:
+class Schedule:
   """Holds detailed scheduling info."""
-
-  # TODO: rename to Schedule
 
   def __init__(self, prj, v):
     self.goals = {}
@@ -262,7 +258,7 @@ class Timetable:
     return total_iv, total_rcs
 
   def dump(self, p):
-    p.writeln("= Timetable =\n")
+    p.writeln("= Schedule =\n")
 
     p.writeln("Scheduled %d goals and %d activities\n"
               % (len(self.goals), len(self.acts)))
@@ -286,10 +282,10 @@ class Timetable:
     p.writeln("")
 
 class Scheduler:
-  """Computes timetable."""
+  """Schedule calculator."""
 
   def __init__(self, est, v=0):
-    self.prj = self.net = self.sched = self.table = None
+    self.prj = self.net = self.sched_plan = self.sched = None
     self.est = est
     self.v = v
 
@@ -309,7 +305,7 @@ class Scheduler:
     # TODO: relieve the assumption of uniform 'ts' and 't'
     ts = start
     for a in alloc:
-      ts = self.table.get_earliest_after(a.name, ts)
+      ts = self.sched.get_earliest_after(a.name, ts)
     t = W / sum(a.efficiency for a in alloc)
     return [(ts, t)] * len(alloc)
 
@@ -317,8 +313,8 @@ class Scheduler:
     self._dbg("_schedule_goal: scheduling goal '%s': start=%s, alloc=%s, par=%s"
               % (goal.name, start, alloc, par))
 
-    if self.table.is_completed(goal):
-      return self.table.get_completion_date(goal)
+    if self.sched.is_completed(goal):
+      return self.sched.get_completion_date(goal)
 
     if goal.completion_date is not None:
       self._dbg("_schedule_goal: goal already scheduled")
@@ -326,12 +322,12 @@ class Scheduler:
         warn(goal.loc, "goal '%s' is completed on %s, before %s"
                        % (goal.name, goal.completion_date, start))
       # TODO: warn if completion_date < start
-      self.table.set_completion_date(goal, goal.completion_date)
+      self.sched.set_completion_date(goal, goal.completion_date)
       return goal.completion_date
 
     if goal.is_completed():
       warn(goal.loc, "unable to schedule completed goal '%s' with no completion date" % goal.name)
-      self.table.set_completion_date(goal, datetime.date.today())
+      self.sched.set_completion_date(goal, datetime.date.today())
       return datetime.date.today()
 
     completion_date = start
@@ -348,19 +344,19 @@ class Scheduler:
 
       act_start = start
       if act.head is not None:
-        if self.table.is_completed(act.head):
-          act_start = max(act_start, self.table.get_completion_date(act.head))
+        if self.sched.is_completed(act.head):
+          act_start = max(act_start, self.sched.get_completion_date(act.head))
         else:
           # For goals that are not specified by schedule we use default settings
           self._dbg("_schedule_goal: scheduling predecessor '%s'" % act.head.name)
           self._schedule_goal(act.head, datetime.date.today(), [], None, warn_if_past=False)
           if not act.overlaps:
-            act_start = max(act_start, self.table.get_completion_date(act.head))
+            act_start = max(act_start, self.sched.get_completion_date(act.head))
           else:
             for pred in self.head.preds:
               overlap = act.overlaps.get(pred.id)
               if overlap is not None:
-                pred_iv = selt.table.get_duration(pred)
+                pred_iv = selt.sched.get_duration(pred)
                 span = (pred_iv.finish - pred_iv.start) * (1 - overlap)
                 act_start = max(act_start, pred_iv.start + span)
 
@@ -388,16 +384,16 @@ class Scheduler:
       self._dbg("_schedule_goal: scheduling activity '%s': start=%s, effort=%s, par=%s, rcs=%s"
                 % (act.name, act_start, act_effort, act_par, '/'.join(rc.name for rc in rcs)))
 
-      iv, assigned_rcs = self.table.assign_best_rcs(rcs, act_start, act_effort, act_par)
+      iv, assigned_rcs = self.sched.assign_best_rcs(rcs, act_start, act_effort, act_par)
       self._dbg("_schedule_goal: assignment for activity '%s': @%s, duration %s"
                 % (act.name, '/'.join(rc.name for rc in assigned_rcs), iv))
 
-      self.table.set_duration(act, iv, assigned_rcs)
+      self.sched.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
 
     self._dbg("_schedule_goal: scheduled goal '%s' for %s"
               % (goal.name, completion_date))
-    self.table.set_completion_date(goal, completion_date)
+    self.sched.set_completion_date(goal, completion_date)
 
     if goal.deadline is not None and completion_date > goal.deadline:
       warn("failed to schedule goal '%s' before deadline %s"
@@ -432,12 +428,12 @@ class Scheduler:
 
     return latest
 
-  def schedule(self, prj, net, sched):
-    """Compute timetable based on scheduling plan."""
+  def schedule(self, prj, net, sched_plan):
+    """Compute schedule based on scheduling plan."""
     self.prj = prj
     self.net = net
-    self.sched = sched
-    self.table = Timetable(prj, self.v)
-    for block in sched.blocks:
+    self.sched_plan = sched_plan
+    self.sched = Schedule(prj, self.v)
+    for block in sched_plan.blocks:
       self._schedule_block(block, datetime.date.today(), [], None)
-    return self.table
+    return self.sched
