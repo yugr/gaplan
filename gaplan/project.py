@@ -25,8 +25,8 @@ class Resource:
 
   def add_attrs(self, attrs, loc):
     for a in attrs:
-      if M.search(r'^[0-9.]+$', a):
-        self.efficiency = float(a)
+      if a[0].isdigit():
+        self.efficiency = P.read_fraction(a, loc)
       elif M.search(r'vacations?\s+(.*)', a):
         duration = P.read_date2(M.group(1), loc)
         self.vacations.append(duration)

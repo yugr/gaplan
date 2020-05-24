@@ -17,6 +17,13 @@ import datetime
 import re
 import sys
 
+def read_fraction(s, loc):
+  if M.search(r'^[0-9.]+$', s):
+    return float(s)
+  if M.search(r'^([0-9]+)%$', s):
+    return int(M.group(1)) / 100
+  error(loc, f"unexpected fraction syntax: {s}")
+
 def read_effort(s, loc):
   """Parse effort estimate e.g. "1h" or "3d"."""
   m = re.search(r'^\s*([0-9]+(?:\.[0-9]+)?)([hdwmy])\s*(.*)', s)
@@ -53,7 +60,7 @@ def read_eta(s, loc):
       elif M.search(r'^([0-9]+)%', a):
         completion = float(M.group(1)) / 100
       else:
-        error(f"unknown ETA attribute: {a}")
+        error(loc, f"unknown ETA attribute: {a}")
 
   return ETA(min, max, real, completion)
 
