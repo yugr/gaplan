@@ -26,6 +26,7 @@ class Priority(IntEnum):
   HIGH = 3
   MAX  = HIGH
 
+  @staticmethod
   def rel(prio):
     return prio.value / Priority.MAX.value
 
@@ -35,6 +36,7 @@ class Risk(IntEnum):
   HIGH = 3
   MAX  = HIGH
 
+  @staticmethod
   def rel(risk):
     return risk.value / Risk.MAX.value
 

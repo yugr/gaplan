@@ -18,10 +18,8 @@ import logging
 
 from gaplan.common.error import error, error_if, set_basename, set_options
 import gaplan.common.interval as I
-from gaplan.common import ETA
 import gaplan.common.printers as PR
 import gaplan.parse as PA
-import gaplan.goal as G
 import gaplan.wbs as WBS
 import gaplan.schedule as S
 import gaplan.estimator as E
