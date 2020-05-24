@@ -16,6 +16,9 @@ import gaplan.common.interval as I
 
 import datetime
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SchedBlock:
   """A unit of scheduling ("box") which contains a set of goals (or other blocks)
@@ -153,26 +156,26 @@ class ResourceInfo:
     self.sheet = []
     self.cal = HolidayCalendar(holidays + rc.vacations)
 
-  def allocate(self, start, effort, v):
+  def allocate(self, start, effort):
     if not self.sheet:
       self.sheet = [I.Interval(start)]
-      ret = self.allocate(start, effort, v)
+      ret = self.allocate(start, effort)
       self.sheet = []
       return ret
 
-    if v: print(f"allocate: allocating effort {effort} @{self.name} from {start}")
+    logger.debug(f"allocate: allocating effort {effort} @{self.name} from {start}")
 
     last_iv = I.Interval(datetime.date(datetime.MAXYEAR, 12, 31))
     for i, (left, right) in enumerate(zip(self.sheet, self.sheet[1:] + [last_iv])):
       if start >= right.start:
         continue
       gap = I.Interval(max(left.finish, start), right.start)
-      if v: print(f"allocate: found free slot {gap}")
+      logger.debug(f"allocate: found free slot {gap}")
       ok, iv = self.cal.allows_effort(gap, effort)
       if not ok:
-        if v: print(f"allocate: slot {gap} rejected due to holidays")
+        logger.debug(f"allocate: slot {gap} rejected due to holidays")
         continue
-      if v: print(f"allocate: updated due to holidays: {iv}")
+      logger.debug(f"allocate: updated due to holidays: {iv}")
       fragmentation = iv.start - left.finish
       if gap.finish != sys.maxsize:
         fragmentation += gap.finish - iv.finish
@@ -188,11 +191,10 @@ class ResourceInfo:
 class Schedule:
   """Holds detailed scheduling info."""
 
-  def __init__(self, prj, v):
+  def __init__(self, prj):
     self.goals = {}
     self.acts = {}
     self.rcs = {}
-    self.v = v
     for rc in prj.members:
       self.rcs[rc.name] = ResourceInfo(rc, prj.holidays)
 
@@ -222,29 +224,27 @@ class Schedule:
     # How many chunks we can split work to?
     n = min(parallel, len(rcs))
 
-    if self.v:
-      print("assign_best_rcs: allocate %sh @%s ||%d"
-            % (effort, '/'.join(rc.name for rc in rcs), parallel))
+    logger.debug("assign_best_rcs: allocate %sh @%s ||%d"
+                 % (effort, '/'.join(rc.name for rc in rcs), parallel))
 
     # Find optimal resource count
     best_allocs = best_finish = None
     for i in range(1, n + 1):
-      if self.v: print(f"assign_best_rcs: use ||{i}")
+      logger.debug(f"assign_best_rcs: use ||{i}")
       sched_data = []
       e = effort / i
       for rc in rcs:
         rc_info = self.rcs[rc.name]
         rc_effort = e / rc.efficiency
-        j, iv, frag = rc_info.allocate(start, rc_effort, self.v)
+        j, iv, frag = rc_info.allocate(start, rc_effort)
         sched_data.append((rc.name, j, iv, frag))
       sched_data.sort(key=lambda data: (data[2].finish, data[3]))  # I hate Python...
       finish = max(iv.finish for _1, _2, iv, _4 in sched_data[:i])
       if best_finish is None or finish < best_finish:
         best_allocs = sched_data[:i]
         best_finish = finish
-      if self.v:
-        print("assign_best_rcs: finishing on %s @%s"
-              % (iv.finish, '/'.join(name for name, _2, _3, _4 in sched_data[:i])))
+      logger.debug("assign_best_rcs: finishing on %s @%s"
+                   % (iv.finish, '/'.join(name for name, _2, _3, _4 in sched_data[:i])))
 
     # We found optimal number of resources so perform allocation
     total_iv = None
@@ -284,13 +284,9 @@ class Schedule:
 class Scheduler:
   """Schedule calculator."""
 
-  def __init__(self, est, v=0):
+  def __init__(self, est):
     self.prj = self.net = self.sched_plan = self.sched = None
     self.est = est
-    self.v = v
-
-  def _dbg(self, msg):
-    if self.v: print(msg)
 
   def _compute_time(self, W, alloc, start):
     # We want to detect optimal time to split effort 'W'
@@ -310,13 +306,13 @@ class Scheduler:
     return [(ts, t)] * len(alloc)
 
   def _schedule_goal(self, goal, start, alloc, par, warn_if_past=True):
-    self._dbg(f"_schedule_goal: scheduling goal '{goal.name}': start={start}, alloc={alloc}, par={par}")
+    logger.debug(f"_schedule_goal: scheduling goal '{goal.name}': start={start}, alloc={alloc}, par={par}")
 
     if self.sched.is_completed(goal):
       return self.sched.get_completion_date(goal)
 
     if goal.completion_date is not None:
-      self._dbg("_schedule_goal: goal already scheduled")
+      logger.debug("_schedule_goal: goal already scheduled")
       if warn_if_past and goal.completion_date < start:
         warn(goal.loc, f"goal '{goal.name}' is completed on {goal.completion_date}, before {start}")
       # TODO: warn if completion_date < start
@@ -330,7 +326,7 @@ class Scheduler:
 
     completion_date = start
     for act in goal.preds:
-      self._dbg(f"_schedule_goal: scheduling activity '{act.name}' for goal '{goal.name}'")
+      logger.debug(f"_schedule_goal: scheduling activity '{act.name}' for goal '{goal.name}'")
       if act.duration is not None:
         # TODO: register spent time for devs
         if warn_if_past and act.duration.start < start:
@@ -344,7 +340,7 @@ class Scheduler:
           act_start = max(act_start, self.sched.get_completion_date(act.head))
         else:
           # For goals that are not specified by schedule we use default settings
-          self._dbg(f"_schedule_goal: scheduling predecessor '{act.head.name}'")
+          logger.debug(f"_schedule_goal: scheduling predecessor '{act.head.name}'")
           self._schedule_goal(act.head, datetime.date.today(), [], None, warn_if_past=False)
           if not act.overlaps:
             act_start = max(act_start, self.sched.get_completion_date(act.head))
@@ -377,17 +373,17 @@ class Scheduler:
       act_effort, _ = self.est.estimate(act)
       act_effort *= 1 - act.effort.completion
 
-      self._dbg("_schedule_goal: scheduling activity '%s': start=%s, effort=%s, par=%s, rcs=%s"
+      logger.debug("_schedule_goal: scheduling activity '%s': start=%s, effort=%s, par=%s, rcs=%s"
                 % (act.name, act_start, act_effort, act_par, '/'.join(rc.name for rc in rcs)))
 
       iv, assigned_rcs = self.sched.assign_best_rcs(rcs, act_start, act_effort, act_par)
-      self._dbg("_schedule_goal: assignment for activity '%s': @%s, duration %s"
+      logger.debug("_schedule_goal: assignment for activity '%s': @%s, duration %s"
                 % (act.name, '/'.join(rc.name for rc in assigned_rcs), iv))
 
       self.sched.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
 
-    self._dbg(f"_schedule_goal: scheduled goal '{goal.name}' for completion_date")
+    logger.debug(f"_schedule_goal: scheduled goal '{goal.name}' for completion_date")
     self.sched.set_completion_date(goal, completion_date)
 
     if goal.deadline is not None and completion_date > goal.deadline:
@@ -396,7 +392,7 @@ class Scheduler:
     return completion_date
 
   def _schedule_block(self, block, start, alloc, par):
-    self._dbg(f"_schedule_block: scheduling block in {block.loc}: start={start}, alloc={alloc}, par={par}")
+    logger.debug(f"_schedule_block: scheduling block in {block.loc}: start={start}, alloc={alloc}, par={par}")
 
     alloc = block.alloc or alloc
     par = block.parallel or par
@@ -425,7 +421,7 @@ class Scheduler:
     self.prj = prj
     self.net = net
     self.sched_plan = sched_plan
-    self.sched = Schedule(prj, self.v)
+    self.sched = Schedule(prj)
     for block in sched_plan.blocks:
       self._schedule_block(block, datetime.date.today(), [], None)
     return self.sched

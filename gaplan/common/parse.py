@@ -7,15 +7,15 @@
 
 """Common parsing functions."""
 
-import datetime
-import re
-import sys
-
 from gaplan.common.error import error, error_if
 from gaplan.common.ETA import ETA
 from gaplan.common.location import Location
 import gaplan.common.interval as I
 import gaplan.common.matcher as M
+
+import datetime
+import re
+import sys
 
 def read_effort(s, loc):
   """Parse effort estimate e.g. "1h" or "3d"."""
@@ -117,10 +117,9 @@ class Lexeme:
 class BaseLexer:
   """Base class for lexers."""
 
-  def __init__(self, v=0):
+  def __init__(self):
     self.lexemes = []
     self.filename = self.line = self.lineno = None
-    self.v = v
 
   def _loc(self):
     return Location(self.filename, self.lineno)
@@ -199,14 +198,9 @@ class BaseLexer:
     return l
 
 class BaseParser:
-  def __init__(self, lex, v=0):
+  def __init__(self, lex):
     """Base class for parsers."""
-    self.v = v
     self.lex = lex
-
-  def _dbg(self, msg, v=1):
-    if self.v >= v:
-      print(msg)
 
   # Override in children
   def reset(self, filename, f):

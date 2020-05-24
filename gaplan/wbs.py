@@ -10,6 +10,10 @@
 from gaplan.common.error import error, warn, error_if, warn_if
 import gaplan.common.interval as I
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class Task:
   """Task is a named activity. Task can include other tasks."""
 
@@ -175,7 +179,7 @@ def _create_goal_task(goal, parent, ids):
 
   return task
 
-def _create_wbs_iterative(net, ids, v):
+def _create_wbs_iterative(net, ids):
   user_iters = list(filter(lambda i: i is not None, net.iter_to_goals.keys()))
   error_if(not user_iters, "no iterations defined in plan")
 
@@ -229,23 +233,23 @@ def _create_goal_task_hierarchical(goal, parent, ids, ancestors):
 
   return task
 
-def _create_wbs_hierarchical(net, ids, ancestors, v):
+def _create_wbs_hierarchical(net, ids, ancestors):
   tasks = []
   for g in net.roots:
     task = _create_goal_task_hierarchical(g, None, ids, ancestors)
     tasks.append(task)
   return WBS(tasks)
 
-def _optimize_task(task, ancestors, v):
+def _optimize_task(task, ancestors):
   """Try to optimize structure of WBS
      by removing various dummy subtasks."""
 
   # Optimize kids
 
   for t in task.subtasks:
-    _optimize_task(t, ancestors, v)
+    _optimize_task(t, ancestors)
 
-  if v: print(f"_optimize_task: optimizing task {task.id} ({task.name})")
+  logger.debug(f"_optimize_task: optimizing task {task.id} ({task.name})")
 
   # Eliminate useless intermediaries.
 
@@ -253,7 +257,7 @@ def _optimize_task(task, ancestors, v):
   task.subtasks = []
   for t in old_subtasks:
     if t.goal and t.goal.dummy and not t.activities:
-      if v: print(f"_optimize_task: removing intermediate dummy task {t.id} ({t.name})")
+      logger.debug(f"_optimize_task: removing intermediate dummy task {t.id} ({t.name})")
       # All child activities are instant so we can remove it.
       # But be careful to update milestones and activities
       # which depended on it.
@@ -280,12 +284,12 @@ def _optimize_task(task, ancestors, v):
     if external_deps:
       task.milestones.append(t)
     else:
-      if v: print(f"_optimize_task: dropped instant dep {t.id} ({t.name})")
+      logger.debug(f"_optimize_task: dropped instant dep {t.id} ({t.name})")
 
   # Merge all milestone subtasks into a one.
 
   if task.milestones:
-    if v: print(f"_optimize_task: merging all instant deps to {t.id} ({t.name})")
+    logger.debug(f"_optimize_task: merging all instant deps to {t.id} ({t.name})")
     id = task.id
     t = Task(id + '_milestone', "External deps satisfied", task)
     t.depends = {st for t in task.milestones for st in t.depends}
@@ -296,18 +300,18 @@ def _optimize_task(task, ancestors, v):
   if not task.subtasks:
     if not task.milestones and len(task.activities) == 1:
       t = task.activities[0]
-      if v: print(f"_optimize_task: merging activity {t.id} ({t.name})")
+      logger.debug(f"_optimize_task: merging activity {t.id} ({t.name})")
       assert not task.act
       task._set_action(t.act)
       task.depends.update(t.depends)
       task.activities = []
 
     if not task.activities and len(task.milestones) == 1:
-      if v: print(f"_optimize_task: merging milestone {t.id} ({t.name})")
+      logger.debug(f"_optimize_task: merging milestone {t.id} ({t.name})")
       task.depends.update(task.milestones[0].depends)
       task.milestones = []
 
-def create_wbs(net, hierarchy, v):
+def create_wbs(net, hierarchy):
   """Generate WBS from declarative plan."""
 
   next_id = [0]  # Python's craziness
@@ -330,14 +334,14 @@ def create_wbs(net, hierarchy, v):
   net.visit_goals(after=cache_ancestors, hierarchical=True)
 
   if hierarchy:
-    wbs = _create_wbs_hierarchical(net, ids, ancestors, v)
+    wbs = _create_wbs_hierarchical(net, ids, ancestors)
   else:
-    wbs = _create_wbs_iterative(net, ids, v)
+    wbs = _create_wbs_iterative(net, ids)
 
   wbs.check()
 
   for task in wbs.tasks:
-    _optimize_task(task, ancestors, v)
+    _optimize_task(task, ancestors)
 
   wbs.check()
 

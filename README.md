@@ -247,12 +247,10 @@ $ pytest-3 gaplan
 # TODO
 
 * Document project settings (name, start/finish, teams, etc.).
-* Use standard loggers for debug prints (verbosity should not be object field).
 * Read arbitrary dates.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
 * Mark time- or risk-critical paths in PERT diagram.
 * Add include files.
-* Generic priority assignment/propagation strategies.
 * Export to MS Project (Project Elements and XML Structure: https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx).
 * Fast tracking in TJ.

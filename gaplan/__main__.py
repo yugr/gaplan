@@ -14,6 +14,7 @@ Run with --help for details.
 
 import sys
 import argparse
+import logging
 
 from gaplan.common.error import error, error_if, set_basename, set_options
 import gaplan.common.interval as I
@@ -33,8 +34,9 @@ from gaplan.export import burn
 def main():
   set_basename('gaplan')
 
+  class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
   parser = argparse.ArgumentParser(
-    formatter_class=argparse.RawDescriptionHelpFormatter,
+    formatter_class=Formatter,
     description="A toolset for working with declarative plans (google 'Gaperton notepad' for more details).",
     epilog="""\
 
@@ -88,7 +90,7 @@ Examples:
     action='count',
     default=0)
   parser.add_argument(
-    '-v',
+    '--verbose', '-v',
     help="Print diagnostic info.",
     action='count',
     default=0)
@@ -116,10 +118,14 @@ Examples:
     try:
       bias = E.Bias[args.bias.upper().replace('-', '_')]
     except KeyError:
-      error(f"unknown bias value '{v}'")
+      error(f"unknown bias value '{args.bias}'")
   else:
     bias = E.Bias.NONE
   estimator = E.RiskBasedEstimator(bias)
+
+  v = min(2, args.verbose)
+  loglevel = logging.WARNING - 10 * v
+  logging.basicConfig(level=loglevel)
 
   set_options(print_stack=args.print_stack)
 
@@ -130,7 +136,7 @@ Examples:
     filename = args.plan
     f = open(filename, 'r')
 
-  parser = PA.Parser(args.v)
+  parser = PA.Parser()
   parser.reset(filename, f)
   net, project, sched_plan = parser.parse(args.W)
 
@@ -139,7 +145,7 @@ Examples:
 
   net.check(args.W)
 
-  wbs = WBS.create_wbs(net, args.hierarchy, args.v)
+  wbs = WBS.create_wbs(net, args.hierarchy)
   p = PR.SourcePrinter()
 
   if args.action == 'tj':
@@ -155,7 +161,7 @@ Examples:
   elif args.action == 'dump-wbs':
     wbs.dump(p)
   elif args.action == 'schedule':
-    scheduler = S.Scheduler(estimator, args.v)
+    scheduler = S.Scheduler(estimator)
     sched = scheduler.schedule(project, net, sched_plan)
     sched.dump(p)
   elif args.action in ('burn', 'burndown'):

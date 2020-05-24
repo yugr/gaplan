@@ -7,8 +7,6 @@
 
 """APIs for parsing declarative plans."""
 
-import re
-
 from gaplan.common.error import error, error_if
 import gaplan.common.parse as PA
 import gaplan.common.matcher as M
@@ -16,6 +14,11 @@ import gaplan.goal as G
 from gaplan.common.location import Location
 from gaplan import project
 from gaplan import schedule
+
+import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LexemeType:
   """Types of lexemes used in declarative plans."""
@@ -39,8 +42,8 @@ class LexerMode:
 class Lexer(PA.BaseLexer):
   """Lexer for declarative plans."""
 
-  def __init__(self, v=0):
-    super(Lexer, self).__init__(v)
+  def __init__(self):
+    super(Lexer, self).__init__()
     self.mode = LexerMode.NORMAL
 
   def reset(self, filename, f):
@@ -112,8 +115,8 @@ class Lexer(PA.BaseLexer):
 class Parser(PA.BaseParser):
   """Parser for declarative plans."""
 
-  def __init__(self, v=0):
-    super(Parser, self).__init__(Lexer(v), v)
+  def __init__(self):
+    super(Parser, self).__init__(Lexer())
     self.dummy_goal_count = self.project_attrs = self.names = None
 
   def reset(self, filename, f):
@@ -128,7 +131,7 @@ class Parser(PA.BaseParser):
       l = self.lex.next_if(LexemeType.LIST_ELT)
       if l is None:
         break
-      self._dbg(f"parse_attrs: new attribute: {l}")
+      logger.debug(f"parse_attrs: new attribute: {l}")
       a.append(l.data)
       if not self.lex.next_if(','):
         break
@@ -139,10 +142,10 @@ class Parser(PA.BaseParser):
     if l.type != LexemeType.GOAL:
       return None, []
 
-    self._dbg(f"maybe_parse_goal_decl: goal: {l}")
+    logger.debug(f"maybe_parse_goal_decl: goal: {l}")
     goal_offset, goal_name = l.data
     if offset != goal_offset:
-      self._dbg("maybe_parse_goal_decl: not a subgoal, exiting")
+      logger.debug("maybe_parse_goal_decl: not a subgoal, exiting")
       return None, []
     self.lex.skip()
 
@@ -154,7 +157,7 @@ class Parser(PA.BaseParser):
         if l is None:
           break
         a.append(l.data)
-        self._dbg(f"maybe_parse_goal_decl: new attribute: {l}")
+        logger.debug(f"maybe_parse_goal_decl: new attribute: {l}")
         l = self.lex.next_if(',')
         if l is None:
           break
@@ -163,7 +166,7 @@ class Parser(PA.BaseParser):
   def parse_edge(self):
     l = self.lex.expect([LexemeType.LARROW, LexemeType.RARROW])
     act = G.Activity(l.loc)
-    self._dbg("parse_edge: new activity: l")
+    logger.debug("parse_edge: new activity: l")
 
     if self.lex.next_if(LexemeType.ATTR_START) is not None:
       a = self.parse_attrs()
@@ -176,7 +179,7 @@ class Parser(PA.BaseParser):
       l = self.lex.next_if(LexemeType.CHECK)
       if l is None:
         return
-      self._dbg(f"parse_checks: new check: {l}")
+      logger.debug(f"parse_checks: new check: {l}")
 
       check_offset, status, text = l.data
       error_if(check_offset != goal_offset, l.loc, "check is not properly nested")
@@ -194,13 +197,13 @@ class Parser(PA.BaseParser):
       l = self.lex.peek()
       if l.type not in [LexemeType.LARROW, LexemeType.RARROW]:
         return
-      self._dbg(f"parse_subgoals: new edge: {l}")
+      logger.debug(f"parse_subgoals: new edge: {l}")
 
       is_pred = l.type == LexemeType.LARROW
       edge_offset = l.data
       if edge_offset != offset:
         return
-      self._dbg(f"parse_subgoals: new subgoal: {l}")
+      logger.debug(f"parse_subgoals: new subgoal: {l}")
 
       act = self.parse_edge()
       subgoal = self.parse_goal(edge_offset + len('|<-'),
@@ -219,7 +222,7 @@ class Parser(PA.BaseParser):
     return goal
 
   def parse_goal(self, offset, other_goal, is_pred, allow_empty=False):
-    self._dbg(f"parse_goal: start lex: {self.lex.peek()}")
+    logger.debug(f"parse_goal: start lex: {self.lex.peek()}")
     loc = self.lex.loc()
     goal_name, goal_attrs = self.maybe_parse_goal_decl(offset)
 
@@ -229,16 +232,16 @@ class Parser(PA.BaseParser):
       # The infamous PERT dummy goals
       goal = self._make_dummy_goal(loc)
       was_defined = False
-      self._dbg("parse_goal: creating dummy goal")
+      logger.debug("parse_goal: creating dummy goal")
     else:
       goal = self.names.get(goal_name)
       if goal is None:
         was_defined = False
         goal = self.names[goal_name] = G.Goal(goal_name, loc)
-        self._dbg(f"parse_goal: parsed new goal: {goal.name}")
+        logger.debug(f"parse_goal: parsed new goal: {goal.name}")
       else:
         was_defined = goal.defined
-        self._dbg(f"parse_goal: parsed existing goal: {goal.name}")
+        logger.debug(f"parse_goal: parsed existing goal: {goal.name}")
 
     if goal_attrs:
       error_if(was_defined, loc, f"duplicate definition of goal '{goal.name}' (previous definition was in {goal.loc})")
@@ -338,11 +341,11 @@ class Parser(PA.BaseParser):
           break
         block.add_goal(goal_name, goal_attrs, l.loc)
       elif l.type == LexemeType.SCHED:
-        self._dbg(f"parse_sched_block: new block: {l}")
+        logger.debug(f"parse_sched_block: new block: {l}")
         subblock = self.parse_sched_block(offset + 2)
         if subblock is None:
           break
-        self._dbg(f"parse_sched_block: new subblock: {l}")
+        logger.debug(f"parse_sched_block: new subblock: {l}")
         block.blocks.append(subblock)
       else:
         break
@@ -358,7 +361,7 @@ class Parser(PA.BaseParser):
       l = self.lex.peek()
       if l is None:
         break
-      self._dbg(f"parse: next lexeme: {l}")
+      logger.debug(f"parse: next lexeme: {l}")
       if l.type == LexemeType.GOAL:
         error_if(l.data[0] != 0, l.loc, f"root goal '{l.data[1]}' must be left-adjusted")
         goal = self.parse_goal(l.data[0], None, False)
