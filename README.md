@@ -246,7 +246,6 @@ $ pytest-3 gaplan
 
 # TODO
 
-* Document project settings (name, start/finish, teams, etc.).
 * Read arbitrary dates.
 * Fix remaining TODO and FIXME.
 * Add (many) more unittests.
