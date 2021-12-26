@@ -1,5 +1,5 @@
 [![License](http://img.shields.io/:license-MIT-blue.svg)](https://github.com/yugr/gaplan/blob/master/LICENSE.txt)
-[![Build Status](https://travis-ci.org/yugr/gaplan.svg?branch=master)](https://travis-ci.org/yugr/gaplan)
+[![Build Status](https://github.com/yugr/gaplan/actions/workflows/ci.yml/badge.svg)](https://github.com/yugr/gaplan/actions)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/yugr/gaplan.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/yugr/gaplan/alerts/)
 [![Codecov](https://codecov.io/gh/yugr/gaplan/branch/master/graph/badge.svg)](https://codecov.io/gh/yugr/gaplan)
 

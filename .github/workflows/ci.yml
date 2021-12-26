@@ -1,0 +1,28 @@
+# TODO:
+# * pypy
+
+name: CI
+on:
+  push:
+    paths-ignore:
+    - 'LICENSE.txt'
+    - 'README.md'
+  pull_request:
+    paths-ignore:
+    - 'LICENSE.txt'
+    - 'README.md'
+jobs:
+  Coverage:
+    runs-on: ubuntu-latest
+    environment: secrets
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      PYTEST: 'py.test --cov-report=xml --cov=gaplan gaplan/test'
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: sudo pip3 install pytest-cov codecov
+    - name: Run tests
+      run: scripts/travis.sh
+    - name: Upload coverage
+      run: codecov --required
