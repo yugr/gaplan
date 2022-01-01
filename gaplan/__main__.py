@@ -138,7 +138,7 @@ Examples:
   parser.reset(filename, f)
   net, project, sched_plan = parser.parse(args.W)
 
-  if args.action in ['tj', 'msp'] and not project.members:
+  if args.action in {'tj', 'msp'} and not project.members:
     error("--tj and --msp require member info in project file")
 
   net.check(args.W)

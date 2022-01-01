@@ -183,7 +183,7 @@ class Parser(PA.BaseParser):
 
       check_offset, status, text = l.data
       error_if(check_offset != goal_offset, l.loc, "check is not properly nested")
-      error_if(status not in ['X', 'F', ''], l.loc, f"unexpected check status: '{status}'")
+      error_if(status not in {'X', 'F', ''}, l.loc, f"unexpected check status: '{status}'")
 
       check = G.Condition(text, status, l.loc)
       g.add_check(check)
@@ -195,7 +195,7 @@ class Parser(PA.BaseParser):
   def parse_subgoals(self, goal, offset):
     while True:
       l = self.lex.peek()
-      if l.type not in [LexemeType.LARROW, LexemeType.RARROW]:
+      if l.type not in {LexemeType.LARROW, LexemeType.RARROW}:
         return
       logger.debug(f"parse_subgoals: new edge: {l}")
 
@@ -276,10 +276,10 @@ class Parser(PA.BaseParser):
     def expect_one_value(loc, name, vals):
       error_if(len(vals) != 1, loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
 
-    if name in ['name', 'tracker_link', 'pr_link']:
+    if name in {'name', 'tracker_link', 'pr_link'}:
       expect_one_value(l.loc, name, rhs)
       val = rhs[0]
-    elif name in ['start', 'finish']:
+    elif name in {'start', 'finish'}:
       expect_one_value(l.loc, name, rhs)
       val, _ = PA.read_date(rhs[0], attr_loc)
     elif name == 'members':
