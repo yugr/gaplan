@@ -181,7 +181,7 @@ class ResourceInfo:
       if gap.finish != sys.maxsize:
         fragmentation += gap.finish - iv.finish
       return i + 1, iv, fragmentation
-    assert ""
+    raise ValueError("unreachable")
 
   def dump(self, p):
     ss = []
