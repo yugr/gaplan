@@ -7,10 +7,10 @@
 
 """Error handling APIs."""
 
-from gaplan.common.location import Location
-
 import sys
 import os.path
+
+from gaplan.common.location import Location
 
 _print_stack = False
 _me = os.path.basename(sys.argv[0])

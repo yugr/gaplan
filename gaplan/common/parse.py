@@ -7,15 +7,15 @@
 
 """Common parsing functions."""
 
+import datetime
+import re
+import sys
+
 from gaplan.common.error import error, error_if
 from gaplan.common.ETA import ETA
 from gaplan.common.location import Location
 import gaplan.common.interval as I
 import gaplan.common.matcher as M
-
-import datetime
-import re
-import sys
 
 def read_fraction(s, loc):
   if M.search(r'^[0-9.]+$', s):

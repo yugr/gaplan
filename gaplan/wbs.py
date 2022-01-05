@@ -7,10 +7,10 @@
 
 """APIs for converting declarative plan to WBS."""
 
+import logging
+
 from gaplan.common.error import error, warn, error_if, warn_if
 import gaplan.common.interval as I
-
-import logging
 
 logger = logging.getLogger(__name__)
 

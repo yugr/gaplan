@@ -7,6 +7,9 @@
 
 """APIs for parsing declarative plans."""
 
+import re
+import logging
+
 from gaplan.common.error import error, error_if
 import gaplan.common.parse as PA
 import gaplan.common.matcher as M
@@ -14,9 +17,6 @@ import gaplan.goal as G
 from gaplan.common.location import Location
 from gaplan import project
 from gaplan import schedule
-
-import re
-import logging
 
 logger = logging.getLogger(__name__)
 

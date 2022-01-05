@@ -9,14 +9,14 @@
 
 # This is WIP !!!
 
+import datetime
+import sys
+import logging
+
 from gaplan.common.error import error, error_if, warn
 import gaplan.common.matcher as M
 import gaplan.common.parse as PA
 import gaplan.common.interval as I
-
-import datetime
-import sys
-import logging
 
 logger = logging.getLogger(__name__)
 
