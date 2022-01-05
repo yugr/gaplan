@@ -73,8 +73,7 @@ class RiskBasedEstimator(BaseEstimator):
   def __init__(self, bias):
     super().__init__(bias)
     self.estimators = {}
-    for bias in Bias:
-      self.estimators[bias] = BaseEstimator(bias)
+    self.estimators = {b: BaseEstimator(b) for b in Bias}
 
   def probs(self, goal):
     bias = self.bias

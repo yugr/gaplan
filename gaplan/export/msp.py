@@ -160,7 +160,8 @@ def export(project, net, hierarchy, dump=False):
 
   out = io.StringIO()
 
-  # Based upon "Introduction to Project XML Data": https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx
+  # Based upon "Introduction to Project XML Data":
+  # https://msdn.microsoft.com/en-us/library/bb968652%28v=office.12%29.aspx
   print(f'''\
 <Project xmlns="http://schemas.microsoft.com/project">
   <Name>{net.project.name}</Name>
@@ -174,6 +175,7 @@ def export(project, net, hierarchy, dump=False):
 ''', file=out)
 
   # TODO
+  ids = {}
   net.visit_goals(callback=lambda g: _print_goal(g, uids, ids, out))
 
   print('''\
@@ -186,6 +188,5 @@ def export(project, net, hierarchy, dump=False):
   else:
     xml_file = 'plan.xml'
 
-    f = open(xml_file, 'w')
-    f.write(out.getvalue())
-    f.close()
+    with open(xml_file, 'w') as f:
+      f.write(out.getvalue())

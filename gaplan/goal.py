@@ -12,13 +12,12 @@ import re
 import datetime
 import operator
 import copy
+from enum import IntEnum
 
 from gaplan.common.error import error, warn, error_if, warn_if
 from gaplan.common.ETA import ETA
 import gaplan.common.parse as PA
 import gaplan.common.matcher as M
-
-from enum import IntEnum
 
 class Priority(IntEnum):
   LOW  = 1
@@ -47,11 +46,11 @@ def add_common_attrs(loc, obj, attrs):
   for a in attrs:
     if M.search(r'^([A-Za-z][A-Za-z0-9_]*)\s*(.*)', a):
       k = M.group(1).strip()
-      v = M.group(2).strip()
+      #v = M.group(2).strip()
       if k == 'task':
         obj.tracker.tasks = set(M.group(1).split('/'))
         continue
-      elif k == 'PR':
+      if k == 'PR':
         obj.tracker.prs = set(M.group(1).split('/'))
         continue
 
@@ -159,7 +158,7 @@ class Activity:
 
       if M.match(r'over\s+(\S+)\s+(.*)', a):
         other_id = M.group(1)
-        overlap, a = PA.read_float(M.group(2))
+        overlap, a = PA.read_float(M.group(2), loc)
         if a == '%':
           overlap /= 100
         self.overlaps[other_id] = overlap
@@ -171,7 +170,7 @@ class Activity:
       if not M.search(r'^([a-z_0-9]+)\s*(.*)', a):
         error(loc, f"failed to parse attribute: {a}")
       k = M.group(1).strip()
-      v = M.group(2).strip()
+      #v = M.group(2).strip()
 
       if k == 'global':
         self.globl = True
@@ -348,12 +347,11 @@ class Goal:
       # TODO: do something more reasonable
       alpha = 2.0 / 3
       return prio * alpha + risk * (1 - alpha)
-    elif prio is not None:
+    if prio is not None:
       return prio
-    elif risk is not None:
+    if risk is not None:
       return risk
-    else:
-      return None
+    return None
 
   def complete(self):
     """Estimate goal completion percentage."""
@@ -434,7 +432,9 @@ class Goal:
     if W and self.completion_date is not None \
         and self.completion_date <= datetime.date.today() \
         and pending_conds:
-      warn(self.loc, "goal '%s' marked as completed but some checks are still pending:\n  %s" % (self.name, '\n  '.join(pending_conds)))
+      warn(self.loc,
+           "goal '%s' marked as completed but some checks are still pending:\n  %s"
+           % (self.name, '\n  '.join(pending_conds)))
 
     if W and self.is_completed() and not self.completion_date:
       warn(self.loc, f"goal '{self.name}' marked as completed but is missing tracking data")
@@ -450,10 +450,14 @@ class Goal:
       act.check(W)
 
       if act.head and self.iter is not None and act.head.iter is None:
-        warn(self.loc, f"goal has been scheduled but one of it's dependents is not: '{act.head.name}'")
+        warn(self.loc,
+             f"goal has been scheduled but one of it's dependents is not: "
+             f"'{act.head.name}'")
 
       if self.is_completed() and (not act.duration or not act.effort.real):
-        warn(self.loc, f"goal '{self.name}' is achieved but one of it's actions is missing tracking data")
+        warn(self.loc,
+             f"goal '{self.name}' is achieved but "
+             f"one of it's actions is missing tracking data")
 
   def dump(self, p):
     p.writeln(self.name + (' (dummy)' if self.dummy else ''))
@@ -574,7 +578,9 @@ class Net:
         if old_attr is None:
           setattr(g, attr_name, new_attr)
         elif less(old_attr, new_attr):
-          warn(g.loc, f"inferred ({new_attr}) and assigned ({old_attr}) {attr_name} for goal '{g.name}' do not match")
+          warn(g.loc,
+               f"inferred ({new_attr}) and assigned ({old_attr}) {attr_name} "
+               f"for goal '{g.name}' do not match")
           setattr(g, attr_name, new_attr)
     self.visit_goals(callback=assign_inferred_attrs)
 
@@ -648,7 +654,8 @@ class Net:
       num_actions[0] += len(g.preds)
     self.visit_goals(callback=update_num_actions)
     # TODO: more stats
-    p.writeln(f"Network contains {len(self.name_to_goal)} goals ({len(self.roots)} roots) and {num_actions[0]} actions\n")
+    p.writeln(f"Network contains {len(self.name_to_goal)} goals ({len(self.roots)} roots) and "
+              f"{num_actions[0]} actions\n")
 
     for g in self.roots:
       g.dump(p)
@@ -683,9 +690,9 @@ class Net:
 
     for root in self.roots:
       path = []
-      def enter(g, path):
+      def enter(g, path=path):  # pylint: disable=dangerous-default-value
         error_if(g.name in path, "found a cycle: %s" % '\n  '.join(path))
         path.append(g.name)
-      def exit(g, path):
+      def exit(g, path=path):  # pylint: disable=dangerous-default-value
         path[:] = path[:-1]
-      root.visit(before=lambda g: enter(g, path=path), after=lambda g: exit(g, path))
+      root.visit(before=lambda g: enter(g, path), after=lambda g: exit(g, path)) # pylint: disable=cell-var-from-loop,consider-using-sys-exit

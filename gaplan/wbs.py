@@ -31,7 +31,7 @@ class Task:
       self.goal = self.prio = self.complete = None
       self.duration = self.deadline = None
     if act is not None:
-      self._set_action(act)
+      self.set_action(act)
     else:
       self.act = self.duration = None
 
@@ -66,7 +66,7 @@ class Task:
       self.duration = I.Interval(goal.completion_date)
     self.deadline = self.goal.deadline
 
-  def _set_action(self, act):
+  def set_action(self, act):
     self.act = act
     self.duration = act.duration
 
@@ -85,7 +85,7 @@ class Task:
 
   def pretty_name(self):
     if self.goal is None and self.parent is not None:
-      return f"{self.parent.pretty_name()}: {self.name}";
+      return f"{self.parent.pretty_name()}: {self.name}"
     return self.name
 
   def update_activities(self):
@@ -174,7 +174,7 @@ def _create_goal_task(goal, parent, ids):
       # TODO: use a.id
       subtask = Task(f'{id}_{task_num}',
                      f"Implementation {task_num}", task, act=a)
-      task._add_subtask(subtask)
+      task.subtasks.append(subtask)
       task_num += 1
 
   return task
@@ -302,7 +302,7 @@ def _optimize_task(task, ancestors):
       t = task.activities[0]
       logger.debug(f"_optimize_task: merging activity {t.id} ({t.name})")
       assert not task.act
-      task._set_action(t.act)
+      task.set_action(t.act)
       task.depends.update(t.depends)
       task.activities = []
 

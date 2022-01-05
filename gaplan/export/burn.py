@@ -10,9 +10,12 @@
 import datetime
 import io
 from collections import defaultdict
+import subprocess
 
 import gaplan.goal as G
 import gaplan.common.printers as PR
+from gaplan.common.error import error
+from gaplan.common import platform
 
 def export(net, goal, duration, dump):
   """Generate gnuplot chart for all children of goal within time interval."""
@@ -27,7 +30,7 @@ def export(net, goal, duration, dump):
       counts[g.completion_date] += 1
     else:
       partial[0] += g.complete() / 100.0
-  G.visit_goals([goal], callback=scan_completed, hierarchical=True)
+  net.visit_goals([goal], callback=scan_completed, hierarchical=True)
 
   # Also count partially completed tasks
   today = datetime.date.today()

@@ -43,11 +43,11 @@ class Lexer(PA.BaseLexer):
   """Lexer for declarative plans."""
 
   def __init__(self):
-    super(Lexer, self).__init__()
+    super().__init__()
     self.mode = LexerMode.NORMAL
 
-  def reset(self, filename, f):
-    super(Lexer, self).reset(filename, f)
+  def reset(self, filename, lines):
+    super().reset(filename, lines)
     self.mode = LexerMode.NORMAL
 
   def update_on_newline(self):
@@ -73,7 +73,7 @@ class Lexer(PA.BaseLexer):
         for i, c in enumerate(self.line):
           if c == ',' and not nest:
             break
-          elif c == '(':
+          if c == '(':
             nest += 1
           elif c == ')':
             nest -= 1
@@ -116,11 +116,11 @@ class Parser(PA.BaseParser):
   """Parser for declarative plans."""
 
   def __init__(self):
-    super(Parser, self).__init__(Lexer())
+    super().__init__(Lexer())
     self.dummy_goal_count = self.project_attrs = self.names = None
 
-  def reset(self, filename, f):
-    super(Parser, self).reset(filename, f)
+  def reset(self, filename, lines):
+    super().reset(filename, lines)
     self.dummy_goal_count = 0
     self.project_attrs = {}
     self.names = {}

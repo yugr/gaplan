@@ -126,6 +126,7 @@ class BaseLexer:
 
   def __init__(self):
     self.lexemes = []
+    self.lines = []
     self.filename = self.line = self.lineno = None
 
   def _loc(self):
@@ -148,7 +149,6 @@ class BaseLexer:
   # Override in children
   def update_on_newline(self):
     """Update state on newline."""
-    pass
 
   # Override in children
   def next_internal(self):
@@ -211,10 +211,10 @@ class BaseParser:
     self.lex = lex
 
   # Override in children
-  def reset(self, filename, f):
+  def reset(self, filename, lines):
     """Resets lexer's state."""
-    self.lex.reset(filename, f)
+    self.lex.reset(filename, lines)
 
   # Override in children
-  def parse(self, W):
+  def parse(self, W):  # pylint: disable=no-self-use
     return None

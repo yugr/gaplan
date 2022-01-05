@@ -301,8 +301,9 @@ class Scheduler:
     # 
     # TODO: relieve the assumption of uniform 'ts' and 't'
     ts = start
-    for a in alloc:
-      ts = self.sched.get_earliest_after(a.name, ts)
+    #for a in alloc:  TODO
+    #  self.get_earliest_after(a.name, ts)
+    ts = None
     t = W / sum(a.efficiency for a in alloc)
     return [(ts, t)] * len(alloc)
 
@@ -347,10 +348,10 @@ class Scheduler:
           if not act.overlaps:
             act_start = max(act_start, self.sched.get_completion_date(act.head))
           else:
-            for pred in self.head.preds:
+            for pred in act.head.preds:
               overlap = act.overlaps.get(pred.id)
               if overlap is not None:
-                pred_iv = selt.sched.get_duration(pred)
+                pred_iv = self.sched.get_duration(pred)
                 span = (pred_iv.finish - pred_iv.start) * (1 - overlap)
                 act_start = max(act_start, pred_iv.start + span)
 

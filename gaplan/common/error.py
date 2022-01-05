@@ -26,8 +26,7 @@ def error(*args) -> NoReturn:
     sys.stderr.write(f"{_me}: error: {msg}\n")
   if _print_stack:
     raise RuntimeError
-  else:
-    sys.exit(1)
+  sys.exit(1)
 
 def error_if(cond, *args):
   """Report error if condition is true."""

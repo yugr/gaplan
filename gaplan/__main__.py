@@ -136,7 +136,7 @@ Examples:
     f = sys.stdin
   else:
     filename = args.plan
-    f = open(filename, 'r')
+    f = open(filename, 'r')  # pylint: disable=consider-using-with
 
   parser = PA.Parser()
   parser.reset(filename, f)
@@ -169,7 +169,7 @@ Examples:
   elif args.action in ('burn', 'burndown'):
     if args.iter is None:
       duration = project.duration
-      goal = roots[0]
+      goal = net.roots[0]
     else:
       goals = net.iter_to_goals.get(args.iter)
       error_if(goals is None, f"iteration '{args.phase}' is not present in plan")
