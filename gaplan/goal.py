@@ -688,4 +688,4 @@ class Net:
         path.append(g.name)
       def exit(g, path):
         path[:] = path[:-1]
-      root.visit(before=lambda g: enter(g, path), after=lambda g: exit(g, path))
+      root.visit(before=lambda g: enter(g, path=path), after=lambda g: exit(g, path))

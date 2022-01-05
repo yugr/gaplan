@@ -9,13 +9,14 @@
 
 import sys
 import os.path
+from typing import NoReturn
 
 from gaplan.common.location import Location
 
 _print_stack = False
 _me = os.path.basename(sys.argv[0])
 
-def error(*args):
+def error(*args) -> NoReturn:
   """Prints pretty error message and terminates."""
   if isinstance(args[0], Location):
     loc, msg = args

@@ -192,6 +192,7 @@ class BaseLexer:
     if l.type in type if isinstance(type, list) else l.type == type:
       self.skip()
       return l
+    raise ValueError("unreachable")
 
   def expect(self, type):
     """Return current lexeme and advance if type matches."""
