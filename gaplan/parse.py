@@ -244,7 +244,9 @@ class Parser(PA.BaseParser):
         logger.debug(f"parse_goal: parsed existing goal: {goal.name}")
 
     if goal_attrs:
-      error_if(was_defined, loc, f"duplicate definition of goal '{goal.name}' (previous definition was in {goal.loc})")
+      error_if(was_defined, loc,
+               f"duplicate definition of goal '{goal.name}' "
+               f"(previous definition was in {goal.loc})")
       goal.add_attrs(goal_attrs, loc)
 
     # TODO: Gaperton's examples contain interwined checks and deps

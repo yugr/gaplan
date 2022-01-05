@@ -32,10 +32,12 @@ from gaplan.export import burn
 def main():
   set_basename('gaplan')
 
-  class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter): pass
+  class Formatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
+    pass
   parser = argparse.ArgumentParser(
     formatter_class=Formatter,
-    description="A toolset for working with declarative plans (google 'Gaperton notepad' for more details).",
+    description="A toolset for working with declarative plans "
+                "(google 'Gaperton notepad' for more details).",
     epilog="""\
 
 ACTION should be one of
@@ -104,7 +106,9 @@ Examples:
     action='store_true')
   parser.add_argument(
     '--dump',
-    help="Print generated internal files to stdout (instead of passing them to external programs like Graphviz or TaskJuggler).",
+    help="Print generated internal files to stdout "
+         "(instead of passing them to external programs "
+         "like Graphviz or TaskJuggler).",
     action='store_true')
 
   args = parser.parse_args()

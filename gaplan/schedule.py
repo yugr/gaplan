@@ -307,7 +307,8 @@ class Scheduler:
     return [(ts, t)] * len(alloc)
 
   def _schedule_goal(self, goal, start, alloc, par, warn_if_past=True):
-    logger.debug(f"_schedule_goal: scheduling goal '{goal.name}': start={start}, alloc={alloc}, par={par}")
+    logger.debug(f"_schedule_goal: scheduling goal '{goal.name}': "
+                 f"start={start}, alloc={alloc}, par={par}")
 
     if self.sched.is_completed(goal):
       return self.sched.get_completion_date(goal)
@@ -381,7 +382,8 @@ class Scheduler:
 
       iv, assigned_rcs = self.sched.assign_best_rcs(rcs, act_start, act_effort, act_par)
       assignees = '/'.join(rc.name for rc in assigned_rcs)
-      logger.debug(f"_schedule_goal: assignment for activity '{act.name}': @{assignees}, duration {iv}")
+      logger.debug(f"_schedule_goal: assignment for activity '{act.name}': "
+                   f"@{assignees}, duration {iv}")
 
       self.sched.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)
@@ -395,7 +397,8 @@ class Scheduler:
     return completion_date
 
   def _schedule_block(self, block, start, alloc, par):
-    logger.debug(f"_schedule_block: scheduling block in {block.loc}: start={start}, alloc={alloc}, par={par}")
+    logger.debug(f"_schedule_block: scheduling block in {block.loc}: "
+                 f"start={start}, alloc={alloc}, par={par}")
 
     alloc = block.alloc or alloc
     par = block.parallel or par
