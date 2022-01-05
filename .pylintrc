@@ -11,6 +11,7 @@ disable = trailing-whitespace,    # In copyrights
           redefined-builtin,      # 'id'
           duplicate-code,         # deadline attribute handling in goal/schedule
           no-self-use,            # Virtual bases have empty bodies
+          bad-whitespace,         # Alignment of assignments
           missing-class-docstring, missing-function-docstring, # TODO: add docstrings
           logging-fstring-interpolation,                       # TODO: what's this?
           too-many-locals, too-many-branches, too-many-boolean-expressions, too-many-instance-attributes,
@@ -19,6 +20,7 @@ disable = trailing-whitespace,    # In copyrights
 [FORMAT]
 
 indent-string = '  '
+indent-after-paren = '  '
 
 [IMPORT]
 

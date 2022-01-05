@@ -99,7 +99,7 @@ def _print_task(p, task, abs_ids, prj, est):
     p.writeln(f'end {act.duration.finish}')
     p.writeln('scheduled')
 
-  for subtask in (task.activities + task.milestones):
+  for subtask in task.activities + task.milestones:
     _print_task(p, subtask, abs_ids, prj, est)
 
   for child in task.subtasks:
@@ -240,7 +240,7 @@ export msproject "{prj.name}" {{
     if not os.path.exists(tj_dir):
       os.mkdir(tj_dir)
 
-    if 0 != subprocess.call(['tj3', '-o', tj_dir, tjp_file]):
+    if subprocess.call(['tj3', '-o', tj_dir, tjp_file]) != 0:
       error("failed to run tj3; do you have TaskJuggler installed?")
 
     platform.open_file(os.path.join(tj_dir, 'GanttChart.html'))

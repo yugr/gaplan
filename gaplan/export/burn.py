@@ -84,7 +84,7 @@ plot "-" using 1:2 title 'Real' with lines, "-" using 1:2 title "Planned" with l
 
     try:
       with open(png_file, 'w') as f:
-        if 0 != subprocess.call(['gnuplot', '-'], stdin=p.out, stdout=f):
+        if subprocess.call(['gnuplot', '-'], stdin=p.out, stdout=f) != 0:
           error("failed to run gnuplot(1); do you have Gnuplot installed?")
     except FileNotFoundError:
       error("gnuplot program not found; do you have Gnuplot installed?")

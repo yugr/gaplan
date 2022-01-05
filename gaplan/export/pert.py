@@ -85,7 +85,7 @@ graph [rankdir = LR]
 
     try:
       with open(pdf_file, 'wb') as f:
-        if 0 != subprocess.call(['dot', '-Tpdf', gv_file], stdout=f):
+        if subprocess.call(['dot', '-Tpdf', gv_file], stdout=f) != 0:
           error("failed to run dot(1); do you have Graphviz installed?")
     except FileNotFoundError:
       error("dot program not found; do you have Graphviz installed?")
