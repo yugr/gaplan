@@ -15,9 +15,9 @@ from gaplan.common.error import error_if
 def open_file(filename):
   """Open file with appropriate reader."""
   if sys.platform == 'cygwin':
-    rc = os.system('cygstart %s' % filename)
+    rc = os.system(f'cygstart {filename}')
   elif sys.platform.startswith('win'):
-    rc = os.system('explorer %s' % filename)
+    rc = os.system(f'explorer {filename}')
   else:
-    rc = os.system('xdg-open %s' % filename)
+    rc = os.system(f'xdg-open {filename}')
   error_if(rc != 0, f"failed to open pdf file '{filename}'")

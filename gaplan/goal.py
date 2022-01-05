@@ -68,10 +68,10 @@ class TrackerLink:
 
   def dump(self, p):
     if self.tasks:
-      p.writeln('Tasks: %s' % ', '.join(self.tasks))
+      p.writeln('Tasks: ' + ', '.join(self.tasks))
 
     if self.prs:
-      p.writeln('PRs: %s' % ', '.join(self.prs))
+      p.writeln('PRs: ' + ', '.join(self.prs))
 
 class Condition:
   """Class which describes single completion condition of a goal."""
@@ -86,7 +86,7 @@ class Condition:
 
   def add_attrs(self, attrs, loc):
     attrs = add_common_attrs(loc, self, attrs)
-    error_if(attrs, loc, "unknown condition attribute(s): %s" % ', '.join(attrs))
+    error_if(attrs, loc, "unknown condition attribute(s): " + ', '.join(attrs))
 
   def done(self):
     """Is Condition completed?"""
@@ -190,9 +190,10 @@ class Activity:
 
   @property
   def name(self):
-    return "%s -> %s%s" % (self.head.pretty_name if self.head else '',
-                           self.tail.pretty_name if self.tail else '',
-                           (" (%s)" if self.id else ""))
+    head_name = self.head.pretty_name if self.head else ''
+    tail_name = self.tail.pretty_name if self.tail else ''
+    maybe_id = " (%s)" if self.id else ""
+    return f"{head_name} -> {tail_name}{maybe_id}"
 
   def dump(self, p):
     p.writeln(self.name)
@@ -214,12 +215,12 @@ class Activity:
       par = self.parallel
     else:
       par = 'non'
-    p.writeln("allocated: %s (%s-parallel)%s"
-            % (', '.join(self.alloc) if self.alloc else 'any', par,
-               ("(actual %s)" % ', '.join(self.real_alloc)) if self.real_alloc else ""))
+    allocs = ', '.join(self.alloc) if self.alloc else 'any'
+    maybe_actuals = f"(actual {', '.join(self.real_alloc)}" if self.real_alloc else ""
+    p.writeln(f"allocated: {allocs} ({par}-parallel){maybe_actuals}")
     if self.overlaps:
       p.write("overlaps: ")
-      p.writeln(', '.join('%s (%g)' % (id, over) for id, over in sorted(self.overlaps.items())))
+      p.writeln(', '.join(f'{id} ({over})' for id, over in sorted(self.overlaps.items())))
 
     p.exit()
 
@@ -474,52 +475,52 @@ class Goal:
         name = attr
       v = getattr(self, attr)
       if v is not None:
-        p.writeln("%s: %s" % (name, v))
+        p.writeln(f"{name}: {v}")
 
     self.tracker.dump(p)
 
     if self.checks:
-      p.writeln("%d check(s):" % len(self.checks))
+      p.writeln(f"{len(self.checks)} check(s):")
       with p:
         for check in self.checks:
-          p.writeln("[%s] %s" % (check.status, check.name))
+          p.writeln(f"[{check.status}] {check.name}")
 
     if self.preds:
-      p.writeln("%d preceeding activity(s):" % len(self.preds))
+      p.writeln(f"{len(self.preds)} preceeding activity(s):")
       with p:
         for act in self.preds:
           act.dump(p)
 
     if self.global_preds:
-      p.writeln("%d global preceeding activity(s):" % len(self.global_preds))
+      p.writeln(f"{len(self.global_preds)} global preceeding activity(s):")
       with p:
         for act in self.global_preds:
           act.dump(p)
 
     if self.succs:
-      p.writeln("%d succeeding activity(s):" % len(self.succs))
+      p.writeln(f"{len(self.succs)} succeeding activity(s):")
       with p:
         for act in self.succs:
           act.dump(p)
 
     if self.global_succs:
-      p.writeln("%d global succeeding activity(s):" % len(self.global_succs))
+      p.writeln(f"{len(self.global_succs)} global succeeding activity(s):")
       with p:
         for act in self.global_succs:
           act.dump(p)
 
     parents = self.parents()
     if parents:
-      p.writeln("%d parent(s):" % len(self.parents()))
+      p.writeln(f"{len(self.parents)} parent(s):")
       with p:
         for g in parents:
-          p.writeln('* %s' % g.name)
+          p.writeln(f'* {g.name}')
 
     if self.children:
-      p.writeln("%d child(ren):" % len(self.children))
+      p.writeln(f"{len(self.children)} child(ren):")
       with p:
         for i, g in enumerate(self.children):
-          p.write("#%d:" % i)
+          p.write(f"#{i}:")
           with p:
             g.dump(p)
 
@@ -647,8 +648,7 @@ class Net:
       num_actions[0] += len(g.preds)
     self.visit_goals(callback=update_num_actions)
     # TODO: more stats
-    p.writeln("Network contains %d goals (%d roots) and %d actions\n"
-              % (len(self.name_to_goal), len(self.roots), num_actions[0])) 
+    p.writeln(f"Network contains {len(self.name_to_goal)} goals ({len(self.roots)} roots) and {num_actions[0]} actions\n")
 
     for g in self.roots:
       g.dump(p)

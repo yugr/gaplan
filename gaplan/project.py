@@ -37,8 +37,8 @@ class Resource:
     p.writeln(f"Developer {self.name} ({self.loc}, {self.efficiency})")
     vv = []
     for iv in self.vacations:
-      vv.append('%s' % iv)
-    p.writeln("  vacations: %s" % ', '.join(vv))
+      vv.append(f'{iv}')
+    p.writeln("  vacations: " + ', '.join(vv))
 
 class Team:
   """Describes a team of developers."""

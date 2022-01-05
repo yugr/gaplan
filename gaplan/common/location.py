@@ -21,7 +21,7 @@ class Location:
   def __str__(self):
     if not self:
       return '?:?'
-    return '%s:%d' % (self.filename, self.lineno)
+    return f'{self.filename}:{self.lineno}'
 
   def __bool__(self):
     return self.filename is not None

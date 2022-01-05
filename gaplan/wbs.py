@@ -85,7 +85,7 @@ class Task:
 
   def pretty_name(self):
     if self.goal is None and self.parent is not None:
-      return "%s: %s" % (self.parent.pretty_name(), self.name)
+      return f"{self.parent.pretty_name()}: {self.name}";
     return self.name
 
   def update_activities(self):
@@ -97,7 +97,7 @@ class Task:
         setattr(task, attr, getattr(self, attr))
 
   def dump(self, p):
-    p.writeln("Task %s \"%s\"" % (self.id, self.pretty_name()))
+    p.writeln(f"Task {self.id} \"{self.pretty_name()}\"")
     with p:
       if self.goal:
         p.writeln(f"Goal \"{self.goal.name}\"")
@@ -172,7 +172,7 @@ def _create_goal_task(goal, parent, ids):
       task.depends.add(a.head.name)
     elif not _is_activity_ignored(a):
       # TODO: use a.id
-      subtask = Task(id + '_%d' % task_num,
+      subtask = Task(f'{id}_{task_num}',
                      f"Implementation {task_num}", task, act=a)
       task._add_subtask(subtask)
       task_num += 1
@@ -191,8 +191,8 @@ def _create_wbs_iterative(net, ids):
   for i in user_iters + [None]:
     i_num = last_iter if i is None else i
 
-    task = Task('iter_%d' % i_num, f'Iteration {i_num}', None)
-    task.depends.add('iter_%d' % (i_num - 1))
+    task = Task(f'iter_{i_num}', f'Iteration {i_num}', None)
+    task.depends.add(f'iter_{i_num - 1}')
     tasks.append(task)
 
     for g in net.iter_to_goals[i]:
@@ -222,7 +222,7 @@ def _create_goal_task_hierarchical(goal, parent, ids, ancestors):
       ms_num += 1
       task.milestones.append(t)
     else:
-      t = Task("%s_%d" % (id, task_num), f"Implementation {task_num}", task, act=a)
+      t = Task(f"{id}_{task_num}", f"Implementation {task_num}", task, act=a)
       t.depends.add(a.head.name)
       task_num += 1
       task.activities.append(t)
@@ -321,7 +321,7 @@ def create_wbs(net, hierarchy):
       if g.id is not None:
         ids[g.name] = g.id
       else:
-        ids[g.name] = 'id_%d' % next_id[0]
+        ids[g.name] = f'id_{next_id[0]}'
         next_id[0] += 1
   net.visit_goals(callback=assign_id)
 

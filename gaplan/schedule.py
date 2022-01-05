@@ -67,7 +67,8 @@ class SchedBlock:
       error(loc, f"unknown block attribute '{k}'")
 
   def dump(self, p):
-    p.writeln("%s sched block (%s)" % ("Sequential" if self.seq else "Parallel", self.loc))
+    block_type = "Sequential" if self.seq else "Parallel"
+    p.writeln(f"{block_type} sched block ({self.loc})")
     with p:
       if self.duration is not None:
         p.writeln(f"Duration: {self.duration}")
@@ -132,7 +133,7 @@ class GoalInfo:
     self.completion_date = completion_date
 
   def dump(self, p):
-    p.writeln("%s: %s" % (self.name, self.completion_date))
+    p.writeln(f"{self.name}: {self.completion_date}")
 
 class ActivityInfo:
   """Represents info about scheduled activity."""
@@ -144,8 +145,8 @@ class ActivityInfo:
 
   def dump(self, p):
     s = '/'.join([rc.name for rc in self.alloc])
-    p.writeln("%s: %s%s" % (self.act.name, self.iv,
-                            (" @%s" % s) if s else ""))
+    assignee = f" @{s}" if s else ""
+    p.writeln(f"{self.act.name}: {self.iv}{assignee}")
 
 class ResourceInfo:
   """Represents info about resource allocations."""
@@ -185,8 +186,9 @@ class ResourceInfo:
   def dump(self, p):
     ss = []
     for iv in self.sheet:
-      ss.append("%s - %s" % (iv.start, iv.finish))
-    p.writeln("%s: %s" % (self.name, ', '.join(ss)))
+      ss.append(f"{iv.start} - {iv.finish}")
+    names = ', '.join(ss)
+    p.writeln(f"{self.name}: {names}")
 
 class Schedule:
   """Holds detailed scheduling info."""
@@ -224,8 +226,8 @@ class Schedule:
     # How many chunks we can split work to?
     n = min(parallel, len(rcs))
 
-    logger.debug("assign_best_rcs: allocate %sh @%s ||%d"
-                 % (effort, '/'.join(rc.name for rc in rcs), parallel))
+    assignees = '/'.join(rc.name for rc in rcs)
+    logger.debug(f"assign_best_rcs: allocate {effort}h @{assignees} ||{parallel}")
 
     # Find optimal resource count
     best_allocs = best_finish = None
@@ -243,8 +245,8 @@ class Schedule:
       if best_finish is None or finish < best_finish:
         best_allocs = sched_data[:i]
         best_finish = finish
-      logger.debug("assign_best_rcs: finishing on %s @%s"
-                   % (iv.finish, '/'.join(name for name, _2, _3, _4 in sched_data[:i])))
+      assignees = '/'.join(name for name, _2, _3, _4 in sched_data[:i])
+      logger.debug(f"assign_best_rcs: finishing on {iv.finish} @{assignees}")
 
     # We found optimal number of resources so perform allocation
     total_iv = None
@@ -260,8 +262,7 @@ class Schedule:
   def dump(self, p):
     p.writeln("= Schedule =\n")
 
-    p.writeln("Scheduled %d goals and %d activities\n"
-              % (len(self.goals), len(self.acts)))
+    p.writeln(f"Scheduled {len(self.goals)} goals and {len(self.acts)} activities\n")
 
     p.writeln("Goals:")
     with p:
@@ -360,9 +361,10 @@ class Scheduler:
       if alloc:
         rcs = self.prj.get_resources(alloc)
         if any(rc for rc in rcs if rc not in plan_rcs):
-          error("allocations defined in schedule (%s) do not match "
-                "allocations defined in action (%s)"
-                % ('/'.join(alloc), '/'.join(rc.name for rc in plan_rcs)))
+          allocs = '/'.join(alloc)
+          assignees = '/'.join(rc.name for rc in plan_rcs)
+          error(f"allocations defined in schedule ({allocs}) do not match "
+                f"allocations defined in action ({assignees})")
       else:
         rcs = plan_rcs
 
@@ -373,12 +375,13 @@ class Scheduler:
       act_effort, _ = self.est.estimate(act)
       act_effort *= 1 - act.effort.completion
 
-      logger.debug("_schedule_goal: scheduling activity '%s': start=%s, effort=%s, par=%s, rcs=%s"
-                % (act.name, act_start, act_effort, act_par, '/'.join(rc.name for rc in rcs)))
+      assignees = '/'.join(rc.name for rc in rcs)
+      logger.debug(f"_schedule_goal: scheduling activity '{act.name}': "
+                   f"start={act_start}, effort={act_effort}, par={act_par}, rcs={assignees}")
 
       iv, assigned_rcs = self.sched.assign_best_rcs(rcs, act_start, act_effort, act_par)
-      logger.debug("_schedule_goal: assignment for activity '%s': @%s, duration %s"
-                % (act.name, '/'.join(rc.name for rc in assigned_rcs), iv))
+      assignees = '/'.join(rc.name for rc in assigned_rcs)
+      logger.debug(f"_schedule_goal: assignment for activity '{act.name}': @{assignees}, duration {iv}")
 
       self.sched.set_duration(act, iv, assigned_rcs)
       completion_date = max(completion_date, iv.finish)

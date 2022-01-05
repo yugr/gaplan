@@ -117,7 +117,7 @@ def _print_goal(g, uids, ids, out):
   i = 1
   for act in g.preds:
    if not act.is_instant():
-     _print_activity(act, '%s (%d)' % (g.name, i), uids, out)
+     _print_activity(act, f'{g.name} ({i})', uids, out)
      i += 1
 
   # TODO:

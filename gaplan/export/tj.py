@@ -36,7 +36,8 @@ def _print_jira_links(p, tracker, prj):
 def _print_task(p, task, abs_ids, prj, est):
   abs_id = abs_ids[task.id]
 
-  p.writeln('task %s "%s" {' % (task.id, _escape(task.name)))
+  escaped_name = _escape(task.name)
+  p.writeln(f'task {task.id} "{escaped_name}" {{')
   p.enter()
 
   p.writeln('scheduling asap')
@@ -108,12 +109,13 @@ def _print_task(p, task, abs_ids, prj, est):
   p.writeln('}')
 
   if task.deadline is not None:
-    p.writeln('task %s_deadline "%s (deadline)" {' % (task.id, _escape(task.name)))
+    escaped_name = _escape(task.name)
+    p.writeln(f'task {task.id}_deadline "{escaped_name} (deadline)" {{')
     p.write('  scheduling asap')
     p.write('  milestone')
     p.write(f'  depends {abs_id}')
     #p.write('%s  start %s' % task.deadline.strftime(time_format))
-    p.write('  maxstart %s' % task.deadline.strftime(time_format))
+    p.write('  maxstart ' + task.deadline.strftime(time_format))
     p.write('}')
 
 def export(prj, wbs, est, dump=False):
@@ -153,17 +155,17 @@ flags internal
         ('Victory day',       '05-09'),
         ('Independence day',  '06-12'),
         ('Unity day',         '11-04')]:
-      p.writeln('leaves holiday "%s %d" %d-%s' % (name, y, y, dates))
+      p.writeln(f'leaves holiday "{name} {y}" {y}-{dates}')
   p.writeln('')
 
   # Print resources
 
   p.writeln('resource dev "Developers" {')
   for dev in prj.members:
-    p.writeln('  resource %s "%s" {' % (dev.name, dev.name))
-    p.writeln('    efficiency %f' % dev.efficiency)
+    p.writeln(f'  resource {dev.name} "{dev.name}" {{')
+    p.writeln(f'    efficiency {dev.efficiency}')
     for iv in dev.vacations:
-      p.writeln('    vacation %s - %s' % (iv.start, iv.finish))
+      p.writeln(f'    vacation {iv.start} - {iv.finish}')
     p.writeln('  }')
   p.writeln('}')
 
@@ -174,7 +176,8 @@ flags internal
     if task.parent is None:
       abs_ids[task.id] = task.id
     else:
-      abs_ids[task.id] = '%s.%s' % (abs_ids[task.parent.id], task.id)
+      parent_id = abs_ids[task.parent.id]
+      abs_ids[task.id] = f'{parent_id}.{task.id}'
   wbs.visit_tasks(cache_abs_id)
 
   for task in wbs.tasks:

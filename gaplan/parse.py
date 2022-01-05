@@ -215,7 +215,7 @@ class Parser(PA.BaseParser):
         subgoal.add_activity(act, not is_pred)
 
   def _make_dummy_goal(self, loc):
-    name = 'dummy_%d' % self.dummy_goal_count
+    name = f'dummy_{self.dummy_goal_count}'
     self.dummy_goal_count += 1
     goal = G.Goal(name, loc, dummy=True)
     self.names[name] = goal
@@ -274,7 +274,7 @@ class Parser(PA.BaseParser):
         break
 
     def expect_one_value(loc, name, vals):
-      error_if(len(vals) != 1, loc, "too many values for attribute '%s': %s" % (name, ', '.join(vals)))
+      error_if(len(vals) != 1, loc, f"too many values for attribute '{name}': " + ', '.join(vals))
 
     if name in {'name', 'tracker_link', 'pr_link'}:
       expect_one_value(l.loc, name, rhs)

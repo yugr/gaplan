@@ -27,7 +27,7 @@ def _get_node_label(g, visible=False):
     return ''
 
   caps = [g.name, ' (']
-  caps.append('%d%%' % g.complete())
+  caps.append(f'{g.complete()}%%')
   if g.deadline:
     caps.append(', ' + g.deadline.strftime('%b %d'))
   caps.append(')')
@@ -39,21 +39,22 @@ def _get_node_label(g, visible=False):
 
 def _print_node(g, p):
   box_color, text_color = _get_node_colors(g)
-  p.writeln('"%s" [ label="%s", color=%s, fontcolor = %s ];'
-            % (_get_node_label(g),
-               _get_node_label(g, True),
-               box_color, text_color))
+  label = _get_node_label(g)
+  text = _get_node_label(g, True)
+  p.writeln(f'"{label}" [ label="{text}", color={box_color}, fontcolor={text_color} ];')
 
 def _print_node_edges(g, p):
   cap = _get_node_label(g)
   for act in g.preds:
     if act.head:
-      p.writeln('"%s" -> "%s";' % (_get_node_label(act.head), cap))
+      head_label = _get_node_label(act.head)
+      p.writeln(f'"{head_label}" -> "{cap}";')
 
   while g is not None:
     for act in g.global_preds:
       if act.head:
-        p.writeln('"%s" -> "%s";' % (_get_node_label(act.head), cap))
+        head_label = _get_node_label(act.head)
+        p.writeln(f'"{head_label}" -> "{cap}";')
     g = g.parent
 
 def export(net, dump=False):

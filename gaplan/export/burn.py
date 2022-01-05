@@ -66,11 +66,12 @@ plot "-" using 1:2 title 'Real' with lines, "-" using 1:2 title "Planned" with l
 
   for date in sorted_dates:
     n = counts[date]
-    p.writeln('  %s %d' % (date, total_children[0] - n))
+    left = total_children[0] - n
+    p.writeln(f'  {date} {left}')
   p.writeln('e')
 
-  p.writeln('  %s %d' % (duration.start, total_children[0]))
-  p.writeln('  %s %d' % (duration.finish, 0))
+  p.writeln(f'  {duration.start} {total_children[0]}')
+  p.writeln(f'  {duration.finish} {0}')
   p.writeln('e')
 
   if dump:

@@ -119,7 +119,7 @@ class Lexeme:
     self.text = text
 
   def __repr__(self):
-    return '%s: %s: %s' % (self.loc, self.type, self.data)
+    return f'{self.loc}: {self.type}: {self.data}'
 
 class BaseLexer:
   """Base class for lexers."""
@@ -198,7 +198,7 @@ class BaseLexer:
     l = self.next()
     if isinstance(type, list):
       if l.type not in type:
-        type_str = ', '.join(map(lambda t: '\'%s\'' % t, type))
+        type_str = ', '.join(map(lambda t: f"'{type}'"))
         error(l.loc, f"expecting '{type_str}', got '{l.type}'")
     elif l.type != type:
       error(l.loc, f"expecting '{type}', got '{l.type}'")
