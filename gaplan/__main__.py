@@ -136,7 +136,7 @@ Examples:
     f = sys.stdin
   else:
     filename = args.plan
-    f = open(filename, 'r')  # pylint: disable=consider-using-with
+    f = open(filename, 'r')  # pylint: disable=R1732 (consider-using-with)
 
   parser = PA.Parser()
   parser.reset(filename, f)

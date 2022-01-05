@@ -71,7 +71,7 @@ class Task:
     self.duration = act.duration
 
   def merge(self, task):
-    for t in (task.subtasks + task.milestones + task.activities):
+    for t in task.subtasks + task.milestones + task.activities:
       t.parent = self
     self.subtasks += task.subtasks
     self.milestones += task.milestones
@@ -262,7 +262,7 @@ def _optimize_task(task, ancestors):
       # But be careful to update milestones and activities
       # which depended on it.
       task.depends.discard(t.name)
-      for task_ in (task.milestones + task.activities):
+      for task_ in task.milestones + task.activities:
         if t.name in task_.depends:
           task_.depends.discard(t.name)
           for t_ in t.milestones:

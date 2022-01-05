@@ -23,6 +23,7 @@ def read_fraction(s, loc):
   if M.search(r'^([0-9]+)%$', s):
     return int(M.group(1)) / 100
   error(loc, f"unexpected fraction syntax: {s}")
+  raise ValueError("silly Pylint fails to understand NoReturn")
 
 def read_effort(s, loc):
   """Parse effort estimate e.g. "1h" or "3d"."""
