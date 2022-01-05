@@ -12,7 +12,7 @@ disable = trailing-whitespace,    # In copyrights
           duplicate-code,         # deadline attribute handling in goal/schedule
           no-self-use,            # Virtual bases have empty bodies
           bad-whitespace,         # Alignment of assignments
-          W1203,                  # TODO: logging-format-interpolation, logging-fstring-interpolation
+          W1202, W1203,           # TODO: logging-format-interpolation, logging-fstring-interpolation
           missing-class-docstring, missing-function-docstring,        # TODO: add docstrings
           too-many-locals, too-many-branches, too-many-boolean-expressions, too-many-instance-attributes,
           too-many-arguments, too-many-nested-blocks, too-many-statements, too-few-public-methods
