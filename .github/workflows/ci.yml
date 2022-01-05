@@ -31,7 +31,6 @@ jobs:
     - name: Run tests
       run: scripts/travis.sh
   Pylint:
-    #if: false  # Pip3 crashed on my code :(
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
