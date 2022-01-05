@@ -25,3 +25,7 @@ indent-after-paren = 2
 [IMPORT]
 
 allow-wildcard-with-all = yes
+
+[TYPECHECK]
+
+disable = bad-option-value  # consider-using-with is unsupported in some versions
