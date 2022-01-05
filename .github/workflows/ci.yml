@@ -12,16 +12,38 @@ on:
     - 'LICENSE.txt'
     - 'README.md'
 jobs:
+  Baseline:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04, ubuntu-latest]
+        py: [python2.7, python3.5, python3.6, python3.7, python3]
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHON: ${{ matrix.py }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install deps
+      run: |
+        sudo add-apt-repository ppa:deadsnakes/ppa
+        sudo apt-get update
+        scripts/install-deps.sh
+    - name: Run tests
+      run: scripts/travis.sh
   Coverage:
+    needs: Baseline
     runs-on: ubuntu-latest
     environment: secrets
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      PYTHON: python3
       PYTEST: 'py.test --cov-report=xml --cov=gaplan gaplan/test'
     steps:
     - uses: actions/checkout@v2
     - name: Install deps
-      run: sudo pip3 install pytest-cov codecov
+      run: |
+        scripts/install-deps.sh
+        sudo ${PYTHON} -mpip install pytest-cov codecov
     - name: Run tests
       run: scripts/travis.sh
     - name: Upload coverage

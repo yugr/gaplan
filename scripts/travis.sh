@@ -15,7 +15,9 @@ fi
 
 cd $(dirname $0)/..
 
-python3 -mpip install -e .
+PYTHON=${PYTHON:-python3}
 
-export PYTEST="${PYTEST:-python3 -mpytest}"
+$PYTHON -mpip install -e .
+
+export PYTEST="${PYTEST:-$PYTHON -mpytest}"
 $PYTEST gaplan
