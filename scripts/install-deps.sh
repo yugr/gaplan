@@ -12,6 +12,7 @@ set -x
 
 PYTHON=${PYTHON:-python3}
 
+sudo apt-get update
 sudo apt-get -y install $PYTHON
 sudo apt-get -y install $PYTHON-pip || true
 sudo $PYTHON -m pip install setuptools pytest
