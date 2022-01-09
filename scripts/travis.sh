@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2020-2021 Yury Gribov
+# Copyright 2020-2022 Yury Gribov
 #
 # The MIT License (MIT)
 # 
