@@ -15,4 +15,6 @@ PYTHON=${PYTHON:-python3}
 sudo apt-get update
 sudo apt-get -y install $PYTHON
 sudo apt-get -y install $PYTHON-pip || true
+# distutils is needed by pip
+sudo apt-get -y install $PYTHON-distutils || true
 sudo $PYTHON -m pip install setuptools pytest
